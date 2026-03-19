@@ -1,0 +1,268 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+
+  /* Paleta Novi - Estética RPG/Videojuego */
+
+  /* Fondo base */
+  --background: #08091a;
+  --foreground: #ffffff;
+
+  /* Colores principales */
+  --primary: #3054ff;
+  --primary-foreground: #ffffff;
+  --primary-glow: rgba(48, 84, 255, 0.4);
+  --primary-surface: rgba(48, 84, 255, 0.1);
+  --primary-border: rgba(48, 84, 255, 0.3);
+
+  --secondary: #007d15;
+  --secondary-foreground: #ffffff;
+  --secondary-glow: rgba(0, 125, 21, 0.4);
+  --secondary-surface: rgba(0, 125, 21, 0.1);
+  --secondary-border: rgba(0, 125, 21, 0.3);
+
+  --accent: #ffd000;
+  --accent-foreground: #000000;
+  --accent-glow: rgba(255, 208, 0, 0.4);
+  --accent-surface: rgba(255, 208, 0, 0.1);
+
+  --purple: #8b67ff;
+  --purple-foreground: #ffffff;
+  --purple-glow: rgba(139, 103, 255, 0.4);
+  --purple-surface: rgba(139, 103, 255, 0.1);
+
+  --danger: #ff4b4b;
+  --danger-foreground: #ffffff;
+
+  --yellow: #ffd000;
+  --yellow-foreground: #000000;
+
+  /* Textos */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.35);
+
+  /* Glassmorphism cards */
+  --card: rgba(255, 255, 255, 0.04);
+  --card-foreground: #ffffff;
+  --card-border: rgba(255, 255, 255, 0.08);
+
+  /* UI Elements */
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.08);
+  --input-background: rgba(255, 255, 255, 0.04);
+  --ring: #1cb0f6;
+
+  /* Tipografía - Nunito */
+  --font-family: "Nunito", sans-serif;
+  --font-weight-bold: 900;
+  --font-weight-semibold: 800;
+  --font-weight-medium: 700;
+  --font-weight-normal: 600;
+
+  /* Escala de tamaños de texto */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  /* Espaciados */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Radios - Generosos según spec */
+  --radius: 1rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Sombras con glow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-glow-primary: 0 0 20px var(--primary-glow);
+  --shadow-glow-secondary: 0 0 20px var(--secondary-glow);
+  --shadow-glow-accent: 0 0 20px var(--accent-glow);
+  --shadow-glow-purple: 0 0 20px var(--purple-glow);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-normal);
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
+/* Animaciones personalizadas Novi */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(-3deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 3.5s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+/* Utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
