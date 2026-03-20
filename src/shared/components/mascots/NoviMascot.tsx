@@ -18,7 +18,6 @@ export function NoviMascot({
 }: NoviMascotProps) {
   const [isBlinking, setIsBlinking] = useState(false);
   const bodyControls = useAnimation();
-  const faceControls = useAnimation();
   const shadowControls = useAnimation();
   const glowControls = useAnimation();
 
@@ -214,6 +213,7 @@ export function NoviMascot({
   const expression = getFaceExpression();
   const center = size / 2;
   const bodyRadius = size * 0.32;
+  const roundedBodySize = bodyRadius * 1.85;
 
   // Configuración de brazos según mood
   const getArmPaths = () => {
@@ -244,6 +244,31 @@ export function NoviMascot({
   };
 
   const armPaths = getArmPaths();
+  const bodyPath =
+    shape === 'circle'
+      ? `
+        M ${center} ${center - bodyRadius}
+        A ${bodyRadius} ${bodyRadius} 0 1 1 ${center - 0.1} ${center - bodyRadius}
+        Z
+      `
+      : shape === 'square'
+        ? `
+          M ${center - roundedBodySize / 2} ${center - roundedBodySize / 2}
+          L ${center + roundedBodySize / 2} ${center - roundedBodySize / 2}
+          L ${center + roundedBodySize / 2} ${center + roundedBodySize / 2}
+          L ${center - roundedBodySize / 2} ${center + roundedBodySize / 2}
+          Z
+        `
+        : `
+          M ${center} ${center - bodyRadius}
+          C ${center + bodyRadius * 1.2} ${center - bodyRadius * 0.8},
+            ${center + bodyRadius * 1.1} ${center + bodyRadius * 0.6},
+            ${center} ${center + bodyRadius}
+          C ${center - bodyRadius * 1.1} ${center + bodyRadius * 0.6},
+            ${center - bodyRadius * 1.2} ${center - bodyRadius * 0.8},
+            ${center} ${center - bodyRadius}
+          Z
+        `;
 
   // Función para derivar colores del color base
   const getColorScheme = (baseColor: string) => {
@@ -298,18 +323,9 @@ export function NoviMascot({
           viewBox={`0 0 ${size} ${size}`}
           style={{ overflow: 'visible' }}
         >
-          {/* Body - blob shape */}
+          {/* Body shape (blob, circle or square) */}
           <motion.path
-            d={`
-              M ${center} ${center - bodyRadius}
-              C ${center + bodyRadius * 1.2} ${center - bodyRadius * 0.8},
-                ${center + bodyRadius * 1.1} ${center + bodyRadius * 0.6},
-                ${center} ${center + bodyRadius}
-              C ${center - bodyRadius * 1.1} ${center + bodyRadius * 0.6},
-                ${center - bodyRadius * 1.2} ${center - bodyRadius * 0.8},
-                ${center} ${center - bodyRadius}
-              Z
-            `}
+            d={bodyPath}
             fill={`url(#bodyGradient-${color.replace('#', '')})`}
             initial={false}
             animate={mood === 'streak' ? {

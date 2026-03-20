@@ -1,12 +1,14 @@
-import type { AddClassButtonProps } from '@/types/add-class-button.types'
+import type { AddClassButtonProps } from "@/features/dashboard/teacher/types";
 
 const AddClassButton = ({
-  label = 'Nueva clase',
-  icon = '➕',
-  className = ''
+  label = "Nueva clase",
+  icon = "➕",
+  className = "",
+  onClick,
 }: AddClassButtonProps) => {
   return (
     <button
+      onClick={onClick}
       type="button"
       className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#1CB0F6] text-white font-semibold shadow-sm ${className}`}
       aria-label="Agregar nueva clase"
@@ -14,7 +16,7 @@ const AddClassButton = ({
       <span aria-hidden>{icon}</span>
       <span>{label}</span>
     </button>
-  )
-}
+  );
+};
 
-export default AddClassButton
+export default AddClassButton;

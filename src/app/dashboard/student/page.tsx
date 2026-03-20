@@ -1,7 +1,7 @@
-import DashboardStudent from '@/views/DashboardStudent'
+import { StudentDashboardView } from '@/features/dashboard/student/views'
 
 export default function page() {
   return (
-    <DashboardStudent />
+    <StudentDashboardView />
   )
 }
