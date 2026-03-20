@@ -1,6 +1,5 @@
 "use client";
-import { NoviMascot } from "@/components/dolls/NoviMascot";
-import { EducationMascot } from "@/components/dolls/EducationMascot";
+import { EducationMascot, NoviMascot } from "@/shared/components/mascots";
 
 export default function Home() {
   return (

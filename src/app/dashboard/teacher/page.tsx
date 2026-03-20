@@ -1,8 +1,8 @@
-import DashboardTeacherLogic from "@/components/DashboardTeacherLogic/DashboardTeacherLogic";
+import { TeacherDashboardView } from "@/features/dashboard/teacher/views";
 import React from "react";
 
 const dashboardTeacher = () => {
-  return <DashboardTeacherLogic />;
+  return <TeacherDashboardView />;
 };
 
 export default dashboardTeacher;

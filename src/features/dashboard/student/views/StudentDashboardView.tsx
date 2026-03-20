@@ -1,26 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { EducationMascot } from "@/components/dolls/EducationMascot";
+import { EducationMascot } from "@/shared/components/mascots";
+import { STUDENT_CHARACTERS } from "@/features/dashboard/student/data";
+import type { CharacterType } from "@/features/dashboard/student/types";
 
-type CharacterType =
-  | "orbit"
-  | "spark"
-  | "petal"
-  | "focus"
-  | "leaf"
-  | "bounce";
-
-const characters: { id: CharacterType; label: string }[] = [
-  { id: "orbit", label: "Naranja" },
-  { id: "spark", label: "Azul" },
-  { id: "leaf", label: "Verde" },
-  { id: "petal", label: "Violeta" },
-  { id: "focus", label: "Rojo" },
-  { id: "bounce", label: "Amarillo" },
-];
-
-export default function DashboardStudent() {
+export default function StudentDashboardView() {
   const [selected, setSelected] = useState<CharacterType>("orbit");
 
   return (
@@ -42,7 +27,7 @@ export default function DashboardStudent() {
           />
 
           <span className="mt-4 bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-semibold">
-            {characters.find((c) => c.id === selected)?.label}
+            {STUDENT_CHARACTERS.find((c) => c.id === selected)?.label}
           </span>
         </div>
       </section>
@@ -55,7 +40,7 @@ export default function DashboardStudent() {
           
           {/* -------- GRID PERSONAJES -------- */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-            {characters.map((char) => {
+            {STUDENT_CHARACTERS.map((char) => {
               const isSelected = selected === char.id;
 
               return (

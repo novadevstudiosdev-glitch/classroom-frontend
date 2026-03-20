@@ -1,5 +1,5 @@
 import React from 'react'
-import type { DashboardTopbarProps } from '@/types/dashboard-topbar.types'
+import type { DashboardTopbarProps } from '@/shared/types'
 
 const DashboardTopbar = ({
   initials = 'AA',
