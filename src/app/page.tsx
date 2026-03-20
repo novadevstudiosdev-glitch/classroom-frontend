@@ -1,10 +1,13 @@
 import Home from "@/views/Home";
+import NavbarLayout from "@/components/ui/NavbarLayout";
 
 export default function HomePage() {
   return (
-    <div>
-      <Home />
-    </div>
+    <NavbarLayout>
+      <div>
+        <Home />
+      </div>
+    </NavbarLayout>
       
   );
 }
