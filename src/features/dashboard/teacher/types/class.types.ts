@@ -1,5 +1,6 @@
 
 export interface TeacherClass {
+  id?: string;
   emoji: string;
   name: string;
   studentCount: number;
@@ -9,7 +10,6 @@ export interface TeacherClass {
   behind: number;
   code: string;
 }
-
 
 export interface ClassCardProps extends TeacherClass {
   onView?: () => void;
@@ -37,4 +37,30 @@ export interface ArchiveClassModalProps {
   onClose: () => void;
   classData: Pick<TeacherClass, "name" | "code"> | null;
   onConfirm: (classCode: string) => void;
+}
+
+/* Swagger-confirmed parts */
+export interface UpdateClassroomParams {
+  id: string;
+}
+
+export interface UpdateClassroomRequest {
+  name?: string;
+  description?: string;
+  grade_level?: string;
+  is_archived?: boolean;
+}
+
+export interface RegenerateClassroomCodeParams {
+  id: string;
+}
+
+export interface RegenerateClassroomCodeResponse {
+  invite_code: string;
+}
+
+export interface ApiErrorResponse {
+  message: string;
+  error: string;
+  statusCode: number;
 }

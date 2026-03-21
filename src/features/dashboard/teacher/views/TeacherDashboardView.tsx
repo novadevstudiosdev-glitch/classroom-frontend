@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AddClassButton,
   ArchiveClassModal,
@@ -11,36 +12,36 @@ import {
   ClassCard,
 } from "@/features/dashboard/teacher/components";
 import { TeacherClass } from "../types";
-
-const initialClasses: TeacherClass[] = [
-  {
-    emoji: "🔢",
-    name: "Matemática 4° A",
-    studentCount: 24,
-    isActive: true,
-    completionPercent: 87,
-    activeToday: 18,
-    behind: 3,
-    code: "MAT4A-2026",
-  },
-  {
-    emoji: "📖",
-    name: "Lengua 4° B",
-    studentCount: 22,
-    isActive: true,
-    completionPercent: 92,
-    activeToday: 15,
-    behind: 1,
-    code: "LEN4B-2026",
-  },
-];
+import { TEACHER_CLASSES_MOCK } from "../data";
+import { getTeacherClassrooms } from "../services";
 
 const TeacherDashboardView = () => {
+  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<TeacherClass | null>(null);
-  const [classes, setClasses] = useState<TeacherClass[]>(initialClasses);
+  const [classes, setClasses] = useState<TeacherClass[]>(TEACHER_CLASSES_MOCK);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTeacherClassrooms = async () => {
+      try {
+        const response = await getTeacherClassrooms();
+        if (!mounted || response.length === 0) return;
+        setClasses(response);
+      } catch {
+        // Fallback to mock data when API is unavailable or unauthorized.
+      }
+    };
+
+    loadTeacherClassrooms();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleCreateClass = (data: TeacherClass) => {
     setClasses((prev) => [data, ...prev]);
@@ -145,7 +146,9 @@ const TeacherDashboardView = () => {
             <ClassCard
               key={item.code}
               {...item}
-              onView={() => console.log("Ver", item.code)}
+              onView={() =>
+                router.push(`/dashboard/teacher/classes/${item.id ?? item.code}`)
+              }
               onEdit={() => handleOpenEditModal(item)}
               onArchive={() => handleOpenArchiveModal(item)}
             />

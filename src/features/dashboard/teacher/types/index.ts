@@ -1,4 +1,5 @@
 export type { AddClassButtonProps } from "./add-class-button.types";
+
 export type {
   TeacherClass,
   ClassCardProps,
@@ -6,4 +7,12 @@ export type {
   NewClassModalProps,
   EditClassModalProps,
   ArchiveClassModalProps,
+  UpdateClassroomParams,
+  UpdateClassroomRequest,
+  RegenerateClassroomCodeParams,
+  RegenerateClassroomCodeResponse,
+  ApiErrorResponse,
 } from "./class.types";
+
+export * from "./class-detail.types";
+export * from "./student-progress.types";
