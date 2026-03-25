@@ -16,3 +16,4 @@ export type {
 
 export * from "./class-detail.types";
 export * from "./student-progress.types";
+export * from "./teacher-dashboard-ui.types";
