@@ -7,3 +7,6 @@ export { default as ArchiveClassModal } from "./ArchiveClassModal";
 export { default as ClassProgressMatrixTable } from "./ClassProgressMatrixTable";
 export { default as StudentProgressRow } from "./StudentProgressRow";
 export { default as StudentsProgressTable } from "./StudentsProgressTable";
+export { default as TeacherDashboardHero } from "./TeacherDashboardHero";
+export { default as TeacherNeedsAttentionSection } from "./TeacherNeedsAttentionSection";
+export { default as TeacherDashboardBottomNavigation } from "./TeacherDashboardBottomNavigation";
