@@ -25,7 +25,7 @@ body {
     var(--color-bg-deep),
     var(--color-bg-dark)
   );
-  color: white;
+  color: rgb(255, 255, 255);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -52,7 +52,7 @@ h3 {
 p {
   font-weight: 400;
   line-height: 1.6;
-  color: rgba(11, 11, 11, 11);
+  color: rgb(255, 255, 255);
 }
 
 /* 🔥 UTILIDADES */
@@ -90,7 +90,7 @@ p {
 
 .btn-accent {
   background: var(--color-accent);
-  color: black;
+  color: rgb(0, 0, 0);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-main);
   font-weight: 700;
@@ -109,4 +109,30 @@ p {
 ::-webkit-scrollbar-thumb {
   background: var(--color-primary);
   border-radius: 10px;
+}
+
+@layer components {
+  .landing-module-shell {
+    @apply min-h-screen bg-[radial-gradient(circle_at_top,rgba(48,84,255,0.2),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(139,103,255,0.15),transparent_45%),linear-gradient(to_bottom,#050816,#0a0f2c,#050816)] text-white;
+  }
+
+  .landing-module-content {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .landing-module-card {
+    @apply rounded-2xl border border-white/15 bg-white/8 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-md;
+  }
+
+  .landing-module-title {
+    @apply text-2xl font-extrabold text-white;
+  }
+
+  .landing-module-subtitle {
+    @apply text-sm text-white/70;
+  }
+
+  .landing-module-link {
+    @apply inline-flex items-center gap-1 text-sm font-semibold text-red-300 transition-colors hover:text-red-200;
+  }
 }

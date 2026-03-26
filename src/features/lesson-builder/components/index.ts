@@ -7,3 +7,7 @@ export { default as LessonBuilderAiToolsAside } from "./LessonBuilderAiToolsAsid
 export { default as LessonBuilderSettingsCard } from "./LessonBuilderSettingsCard";
 export { default as LessonBuilderPerformanceCard } from "./LessonBuilderPerformanceCard";
 export { default as LessonBuilderAside } from "./LessonBuilderAside";
+export { default as LessonBuilderMinigameCard } from "./LessonBuilderMinigameCard";
+export { default as LessonBuilderExercisesSummaryCard } from "./LessonBuilderExercisesSummaryCard";
+export { default as MinigamePicker } from "./MinigamePicker";
+export { default as LessonBuilderSectionTabs } from "./LessonBuilderSectionTabs";

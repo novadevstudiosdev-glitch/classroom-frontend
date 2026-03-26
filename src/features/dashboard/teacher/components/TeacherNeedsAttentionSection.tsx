@@ -6,17 +6,17 @@ const TeacherNeedsAttentionSection = ({
 }: TeacherNeedsAttentionSectionProps) => {
   return (
     <div className="px-6 pb-6">
-      <h2 className="mb-4 text-xl font-bold text-gray-600">{title}</h2>
+      <h2 className="mb-4 text-xl font-bold text-white">{title}</h2>
 
-      <div className="divide-y rounded-2xl border bg-white shadow-sm">
+      <div className="divide-y divide-white/15 rounded-2xl border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
         {students.map((student) => (
           <div key={student.id} className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-600">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 font-bold text-white">
               {student.name[0]}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-gray-600">{student.name}</p>
-              <p className="text-xs text-gray-600">{student.className}</p>
+              <p className="text-sm font-bold text-white">{student.name}</p>
+              <p className="text-xs text-white/70">{student.className}</p>
               <p className="mt-1 text-xs font-medium text-[#FF9600]">{student.issue}</p>
             </div>
           </div>

@@ -17,19 +17,19 @@ const ClassCard = ({
   onArchive,
 }: ClassCardProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border p-5">
+    <div className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur-md">
       {/* ------------------Header------------- */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/20 text-3xl">
           {emoji}
         </div>
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-gray-700 mb-1">{name}</h3>
-          <p className="text-sm text-gray-500">{studentCount} alumnos</p>
+          <h3 className="mb-1 text-lg font-bold text-white">{name}</h3>
+          <p className="text-sm text-white/70">{studentCount} alumnos</p>
           <div className="mt-2">
             <span
               className={`inline-block px-3 py-1 text-white text-xs rounded-full ${
-                isActive ? "bg-[#58CC02]" : "bg-gray-400"
+                isActive ? "bg-[var(--color-secondary)]" : "bg-white/30"
               }`}
             >
               {isActive ? "Activa" : "Inactiva"}
@@ -44,23 +44,23 @@ const ClassCard = ({
           <p className="text-lg font-bold text-[#58CC02]">
             {completionPercent}%
           </p>
-          <p className="text-xs text-gray-500">Completitud</p>
+          <p className="text-xs text-white/70">Completitud</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-[#1CB0F6]">{activeToday}</p>
-          <p className="text-xs text-gray-500">Activos hoy</p>
+          <p className="text-lg font-bold text-[var(--color-primary)]">{activeToday}</p>
+          <p className="text-xs text-white/70">Activos hoy</p>
         </div>
         <div className="text-center">
           <p className="text-lg font-bold text-[#FF9600]">{behind}</p>
-          <p className="text-xs text-gray-500">Atrasados</p>
+          <p className="text-xs text-white/70">Atrasados</p>
         </div>
       </div>
 
       {/* --------------Footer carrd------------- */}
-      <div className="flex items-center justify-between pt-3 border-t">
+      <div className="flex items-center justify-between border-t border-white/20 pt-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Código:</span>
-          <span className="px-3 py-1 bg-[#1CB0F6]/10 text-[#1CB0F6] text-sm font-bold rounded-full">
+          <span className="text-xs text-white/70">Código:</span>
+          <span className="rounded-full bg-[var(--color-primary)]/20 px-3 py-1 text-sm font-bold text-[var(--color-primary)]">
             {code}
           </span>
         </div>

@@ -47,13 +47,13 @@ const ClassDetailView = ({classId}: ClassDetailViewProps) => {
   );
   if (!classDetail) {
     return (
-      <main className="min-h-screen p-6">
-        <p className="text-gray-600">Clase no encontrada.</p>
+      <main className="landing-module-shell p-6">
+        <p className="text-white/80">Clase no encontrada.</p>
       </main>
     );
   }
   return (
-     <main className="min-h-screen bg-gray-50 p-6">
+     <main className="landing-module-shell p-6">
       <section className="mb-4">
         <BackForwardNavigation
           previous={{ href: "/dashboard/teacher", label: "Atras" }}
@@ -61,19 +61,19 @@ const ClassDetailView = ({classId}: ClassDetailViewProps) => {
       </section>
 
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{classDetail.className}</h1>
-        <p className="text-sm text-gray-500">Código: {classDetail.classCode}</p>
+        <h1 className="text-2xl font-bold text-white">{classDetail.className}</h1>
+        <p className="text-sm text-white/70">Código: {classDetail.classCode}</p>
       </header>
 
       <section className="mb-6">
-        <div className="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+        <div className="inline-flex rounded-xl border border-white/20 bg-white/10 p-1 shadow-sm backdrop-blur-md">
           <button
             type="button"
             onClick={() => setActiveTab("students")}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               activeTab === "students"
                 ? "bg-orange-600 text-white"
-                : "text-gray-700 hover:bg-gray-100"
+                : "text-white/80 hover:bg-white/10"
             }`}
           >
             Lista de alumnos
@@ -84,7 +84,7 @@ const ClassDetailView = ({classId}: ClassDetailViewProps) => {
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               activeTab === "progress"
                 ? "bg-green-600 text-white"
-                : "text-gray-700 hover:bg-gray-100"
+                : "text-white/80 hover:bg-white/10"
             }`}
           >
             Tabla de progreso
@@ -94,14 +94,14 @@ const ClassDetailView = ({classId}: ClassDetailViewProps) => {
 
       {activeTab === "students" && (
         <section>
-          <h2 className="text-lg font-bold text-gray-700 mb-3">Lista de alumnos</h2>
+          <h2 className="mb-3 text-lg font-bold text-white">Lista de alumnos</h2>
           <StudentsProgressTable students={classDetail.students} />
         </section>
       )}
 
       {activeTab === "progress" && (
         <section>
-          <h2 className="text-lg font-bold text-gray-700 mb-3">
+          <h2 className="mb-3 text-lg font-bold text-white">
             Tabla de progreso de la clase
           </h2>
           {classProgress ? (
@@ -111,7 +111,7 @@ const ClassDetailView = ({classId}: ClassDetailViewProps) => {
               matrix={classProgress.matrix}
             />
           ) : (
-            <p className="text-sm text-gray-500">No hay datos de progreso para esta clase.</p>
+            <p className="text-sm text-white/70">No hay datos de progreso para esta clase.</p>
           )}
         </section>
       )}

@@ -1,3 +1,5 @@
+import type { LessonBuilderMinigame } from "./lesson-builder-minigame.types";
+
 export interface LessonBuilderMetric {
   id: string;
   label: string;
@@ -23,6 +25,7 @@ export interface LessonBuilderData {
   metrics: LessonBuilderMetric[];
   video: LessonBuilderVideoInfo;
   exercises: LessonBuilderExercise[];
+  minigames: LessonBuilderMinigame[];
   aiTools: LessonBuilderAiToolsData;
   settings: LessonBuilderSettingsData;
   performance: LessonBuilderPerformanceData;
@@ -32,6 +35,16 @@ export interface LessonBuilderTopBarProps {
   backHref: string;
   backLabel: string;
   className: string;
+  forwardHref?: string;
+  forwardLabel?: string;
+}
+
+export type LessonBuilderSection = "builder" | "exercises";
+
+export interface LessonBuilderSectionTabsProps {
+  activeSection: LessonBuilderSection;
+  builderHref?: string;
+  exercisesHref?: string;
 }
 
 export interface LessonBuilderControlBarProps {
@@ -53,6 +66,13 @@ export interface LessonBuilderExerciseCardProps {
 
 export interface LessonBuilderExercisesSectionProps {
   exercises: LessonBuilderExercise[];
+  addExerciseHref?: string;
+}
+
+export interface LessonBuilderExercisesSummaryCardProps {
+  totalExercises: number;
+  manageExercisesHref?: string;
+  addExerciseHref?: string;
 }
 
 export interface LessonBuilderAiToolItem {

@@ -1,25 +1,41 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   LessonBuilderAside,
   LessonBuilderControlBar,
-  LessonBuilderExercisesSection,
+  LessonBuilderExercisesSummaryCard,
+  LessonBuilderMinigameCard,
+  LessonBuilderSectionTabs,
   LessonBuilderTopBar,
   LessonBuilderVideoSection,
+  MinigamePicker,
 } from "@/features/lesson-builder/components";
 import { LESSON_BUILDER_MOCK } from "@/features/lesson-builder/data";
 
 const LessonBuilderView = () => {
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const shouldShowForward = from === "exercise-new";
   const [isPublished, setIsPublished] = useState(false);
+  const [isMinigamePickerOpen, setIsMinigamePickerOpen] = useState(false);
+  const [selectedMinigameId, setSelectedMinigameId] = useState<string | null>(
+    LESSON_BUILDER_MOCK.minigames[0]?.id ?? null,
+  );
+  const selectedMinigame =
+    LESSON_BUILDER_MOCK.minigames.find((item) => item.id === selectedMinigameId) ?? null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="landing-module-shell">
       <LessonBuilderTopBar
         backHref="/dashboard/teacher"
         backLabel="Clases"
         className={LESSON_BUILDER_MOCK.className}
+        forwardHref={shouldShowForward ? "/lesson-builder/exercises/new" : undefined}
+        forwardLabel="Adelante"
       />
+      <LessonBuilderSectionTabs activeSection="builder" />
 
       <LessonBuilderControlBar
         className={LESSON_BUILDER_MOCK.className}
@@ -29,10 +45,18 @@ const LessonBuilderView = () => {
         onTogglePublished={() => setIsPublished((prev) => !prev)}
       />
 
-      <main className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
+      <main className="landing-module-content grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <LessonBuilderVideoSection video={LESSON_BUILDER_MOCK.video} />
-          <LessonBuilderExercisesSection exercises={LESSON_BUILDER_MOCK.exercises} />
+          <LessonBuilderExercisesSummaryCard
+            totalExercises={LESSON_BUILDER_MOCK.exercises.length}
+            manageExercisesHref="/lesson-builder/exercises"
+            addExerciseHref="/lesson-builder/exercises/new"
+          />
+          <LessonBuilderMinigameCard
+            selectedMinigameName={selectedMinigame?.name ?? null}
+            onOpenPicker={() => setIsMinigamePickerOpen(true)}
+          />
         </div>
 
         <LessonBuilderAside
@@ -41,6 +65,17 @@ const LessonBuilderView = () => {
           performance={LESSON_BUILDER_MOCK.performance}
         />
       </main>
+
+      <MinigamePicker
+        isOpen={isMinigamePickerOpen}
+        minigames={LESSON_BUILDER_MOCK.minigames}
+        selectedMinigameId={selectedMinigameId}
+        onSelect={(minigameId) => {
+          setSelectedMinigameId(minigameId);
+          setIsMinigamePickerOpen(false);
+        }}
+        onClose={() => setIsMinigamePickerOpen(false)}
+      />
     </div>
   );
 };
