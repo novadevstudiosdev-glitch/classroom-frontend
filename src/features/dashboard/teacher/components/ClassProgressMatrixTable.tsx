@@ -22,15 +22,15 @@ const ClassProgressMatrixTable = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
       <table className="min-w-full text-sm">
-        <thead className="bg-gray-50 border-b">
+        <thead className="border-b border-white/20 bg-white/10">
           <tr>
-            <th className="text-left px-4 py-3 font-semibold text-gray-700">Alumno</th>
+            <th className="px-4 py-3 text-left font-semibold text-white">Alumno</th>
             {lessons.map((lesson) => (
               <th
                 key={lesson.id}
-                className="text-center px-4 py-3 font-semibold text-gray-700"
+                className="px-4 py-3 text-center font-semibold text-white"
               >
                 {lesson.title}
               </th>
@@ -39,8 +39,8 @@ const ClassProgressMatrixTable = ({
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={student.id} className="border-b last:border-b-0">
-              <td className="px-4 py-3 text-gray-700 font-medium">
+            <tr key={student.id} className="border-b border-white/10 last:border-b-0">
+              <td className="px-4 py-3 font-medium text-white">
                 {student.firstName} {student.lastName}
               </td>
               {lessons.map((lesson) => {
@@ -51,14 +51,14 @@ const ClassProgressMatrixTable = ({
                       <span
                         className={`inline-flex items-center justify-center min-w-14 px-2 py-1 rounded-full text-xs font-bold ${
                           progress.completed
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-blue-100 text-blue-700'
+                            ? 'bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]'
+                            : 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]'
                         }`}
                       >
                         {progress.progressPercent}%
                       </span>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-white/50">-</span>
                     )}
                   </td>
                 )

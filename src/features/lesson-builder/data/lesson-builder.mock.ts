@@ -36,6 +36,28 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
       points: 8,
     },
   ],
+  minigames: [
+    {
+      id: "quiz-relampago",
+      name: "Quiz relámpago",
+      description: "Preguntas rápidas contra reloj.",
+    },
+    {
+      id: "memoria-numerica",
+      name: "Memoria numérica",
+      description: "Empareja operaciones y resultados.",
+    },
+    {
+      id: "arrastra-resuelve",
+      name: "Arrastra y resuelve",
+      description: "Completa ejercicios moviendo piezas.",
+    },
+    {
+      id: "reto-final",
+      name: "Reto final",
+      description: "Desafío mixto con puntaje acumulado.",
+    },
+  ],
   aiTools: {
     title: "Herramientas IA",
     subtitle: "Acelera la creación de la lección con sugerencias automáticas.",

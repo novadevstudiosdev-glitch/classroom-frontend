@@ -41,18 +41,18 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
 
   if (!lesson) {
     return (
-      <main className="min-h-screen p-6">
-        <p className="text-gray-600">Leccion no encontrada.</p>
+      <main className="landing-module-shell p-6">
+        <p className="text-white/80">Leccion no encontrada.</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="landing-module-shell">
       <AssignedLessonHeader currentIndex={activeBlockIndex} totalBlocks={totalBlocks} hearts={3} />
       <AssignedLessonSummary lesson={lesson} />
 
-      <section className="px-6 pb-6">
+      <section className="landing-module-content px-6 pb-6">
         <AssignedLessonBlocks
           key={`${lesson.id}-${safeBlockIndex}`}
           lesson={lesson}

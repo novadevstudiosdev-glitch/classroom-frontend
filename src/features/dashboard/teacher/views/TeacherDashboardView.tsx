@@ -124,7 +124,7 @@ const TeacherDashboardView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="landing-module-shell pb-24">
       <TeacherDashboardTopbar />
       <TeacherDashboardHero
         title="¡Bienvenido/a de nuevo! 👋"
@@ -158,8 +158,8 @@ const TeacherDashboardView = () => {
       />
 
       {/* Mis clases */}
-      <div className="px-6 pb-6 ">
-        <h2 className="text-xl text-gray-600 font-bold mb-4 ">Mis clases</h2>
+      <div className="px-6 pb-6">
+        <h2 className="mb-4 text-xl font-bold text-white">Mis clases</h2>
         <div className="space-y-4">
           {classes.map((item) => (
             <ClassCard

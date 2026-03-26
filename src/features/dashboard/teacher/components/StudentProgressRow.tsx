@@ -9,12 +9,12 @@ type StudentProgressRowProps = {
 const StudentProgressRow = ({ student }: StudentProgressRowProps) => {
 
   return (
-    <div className="p-4 flex items-center justify-between border-b last:border-b-0">
+    <div className="flex items-center justify-between border-b border-white/15 p-4 last:border-b-0">
       <div>
-        <p className="font-semibold text-gray-800">{student.fullName}</p>
-        <p className="text-xs text-gray-500">{student.lastActivity ?? "Sin actividad"}</p>
+        <p className="font-semibold text-white">{student.fullName}</p>
+        <p className="text-xs text-white/70">{student.lastActivity ?? "Sin actividad"}</p>
       </div>
-      <div className="text-sm font-bold text-[#1CB0F6]">{student.progressPercent}%</div>
+      <div className="text-sm font-bold text-[var(--color-primary)]">{student.progressPercent}%</div>
     </div>
   )
 }
