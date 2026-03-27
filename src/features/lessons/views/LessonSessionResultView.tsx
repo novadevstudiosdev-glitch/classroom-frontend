@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   SessionResultActions,
   SessionResultCelebration,
@@ -9,47 +8,15 @@ import {
   SessionResultStars,
   SessionResultXpCounter,
 } from "@/features/lessons/components";
-import { SESSION_RESULT_MOCK } from "@/features/lessons/data";
-import type { LessonSessionResultViewProps, SessionResultData } from "@/features/lessons/types";
-
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-const normalizeStars = (value: number): 1 | 2 | 3 => {
-  if (value >= 3) return 3;
-  if (value <= 1) return 1;
-  return 2;
-};
+import { useLessonSession } from "@/features/lessons/hooks";
+import type { LessonSessionResultViewProps } from "@/features/lessons/types";
 
 const LessonSessionResultView = ({
   lessonId,
   searchParams,
 }: LessonSessionResultViewProps) => {
-  const resultData = useMemo<SessionResultData>(() => {
-    // Comentario coloquial:
-    // por ahora usamos query params + fallback mock.
-    // cuando backend esté listo, aquí solo reemplazas por respuesta real del endpoint de "session complete".
-    const earnedXp = toNumber(searchParams?.xp, SESSION_RESULT_MOCK.earnedXp);
-    const stars = normalizeStars(toNumber(searchParams?.stars, SESSION_RESULT_MOCK.stars));
-    const correctAnswers = toNumber(searchParams?.correct, SESSION_RESULT_MOCK.correctAnswers);
-    const totalExercises = toNumber(searchParams?.total, SESSION_RESULT_MOCK.totalExercises);
-    const levelBefore = toNumber(searchParams?.levelBefore, SESSION_RESULT_MOCK.levelBefore);
-    const levelAfter = toNumber(searchParams?.levelAfter, SESSION_RESULT_MOCK.levelAfter);
-
-    return {
-      lessonId,
-      lessonTitle: searchParams?.lessonTitle ?? SESSION_RESULT_MOCK.lessonTitle,
-      earnedXp,
-      stars,
-      correctAnswers,
-      totalExercises,
-      levelBefore,
-      levelAfter,
-      didLevelUp: levelAfter > levelBefore,
-    };
-  }, [lessonId, searchParams]);
+  const { resolveSessionResult } = useLessonSession();
+  const resultData = resolveSessionResult(lessonId, searchParams);
 
   console.log("[LessonSessionResultView] data de resultado", resultData);
 

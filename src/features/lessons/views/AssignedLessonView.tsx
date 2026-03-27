@@ -8,11 +8,13 @@ import {
   AssignedLessonSummary,
 } from "../components";
 import { LESSONS_MOCK } from "../data";
+import { useLessonSession } from "../hooks";
 import { getLessonById } from "../services";
 import type { AssignedLessonViewProps, Lesson } from "../types";
 
 const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
   const router = useRouter();
+  const { finalizeSession } = useLessonSession();
   const [lesson, setLesson] = useState<Lesson | null>(() => LESSONS_MOCK.find((l) => l.id === lessonId) ?? null);
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [correctExercises, setCorrectExercises] = useState(0);
@@ -41,8 +43,6 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
   const totalBlocks = useMemo(() => lesson?.content_json.blocks.length ?? 0, [lesson]);
   const lastBlockIndex = Math.max(0, totalBlocks - 1);
   const safeBlockIndex = Math.min(activeBlockIndex, lastBlockIndex);
-  const hasPrevious = safeBlockIndex > 0;
-  const hasNext = safeBlockIndex < lastBlockIndex;
   const totalExercises = useMemo(() => {
     const blocks = lesson?.content_json.blocks ?? [];
     return blocks.filter((block) =>
@@ -69,17 +69,7 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
           lesson={lesson}
           activeBlockIndex={safeBlockIndex}
           totalBlocks={totalBlocks}
-          hasPrevious={hasPrevious}
-          hasNext={hasNext}
-          onPrevious={() => {
-            console.log("[AssignedLessonView] bloque anterior");
-            setActiveBlockIndex((prev) => Math.max(0, prev - 1));
-          }}
-          onNext={() => {
-            console.log("[AssignedLessonView] bloque siguiente");
-            setActiveBlockIndex((prev) => Math.min(lastBlockIndex, prev + 1));
-          }}
-          onContinue={() => {
+          onContinue={async () => {
             // Log de control: te sirve para checar si "continuar" del bloque dispara bien.
             console.log("[AssignedLessonView] continuar desde bloque", safeBlockIndex);
             const currentBlock = lesson.content_json.blocks[safeBlockIndex];
@@ -97,33 +87,26 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
               : correctExercises;
 
             if (safeBlockIndex >= lastBlockIndex) {
-              const earnedXp = nextCorrectExercises * 10 + 20;
-              const ratio = totalExercises > 0 ? nextCorrectExercises / totalExercises : 0;
-              const stars = ratio >= 0.9 ? 3 : ratio >= 0.7 ? 2 : 1;
-              const levelBefore = 2;
-              const initialXp = 80;
-              const nextLevelXp = 120;
-              const levelAfter = initialXp + earnedXp >= nextLevelXp ? 3 : 2;
-
-              // Comentario coloquial:
-              // por ahora mando estos datos por query para avanzar el front.
-              // cuando el backend de "finalizar sesión" esté, se reemplaza esta parte por su response.
-              const params = new URLSearchParams({
-                xp: String(earnedXp),
-                stars: String(stars),
-                correct: String(nextCorrectExercises),
-                total: String(totalExercises),
-                levelBefore: String(levelBefore),
-                levelAfter: String(levelAfter),
+              const sessionResult = await finalizeSession({
+                lessonId,
                 lessonTitle: lesson.title,
+                correctAnswers: nextCorrectExercises,
+                totalExercises,
+              });
+
+              const params = new URLSearchParams({
+                xp: String(sessionResult.earnedXp),
+                stars: String(sessionResult.stars),
+                correct: String(sessionResult.correctAnswers),
+                total: String(sessionResult.totalExercises),
+                levelBefore: String(sessionResult.levelBefore),
+                levelAfter: String(sessionResult.levelAfter),
+                lessonTitle: sessionResult.lessonTitle,
               });
 
               console.log("[AssignedLessonView] fin de lección, navegando a resultado", {
                 lessonId,
-                earnedXp,
-                stars,
-                nextCorrectExercises,
-                totalExercises,
+                sessionResult,
               });
 
               router.push(`/lessons/${lessonId}/result?${params.toString()}`);

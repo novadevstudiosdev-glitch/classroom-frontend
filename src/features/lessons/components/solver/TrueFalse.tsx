@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { TrueFalseProps } from "@/features/lessons/types";
+import SolverOptionalMedia from "./SolverOptionalMedia";
 
 const TrueFalse = ({ block, onContinue }: TrueFalseProps) => {
   const [selectedValue, setSelectedValue] = useState<boolean | null>(null);
@@ -9,6 +10,11 @@ const TrueFalse = ({ block, onContinue }: TrueFalseProps) => {
 
   return (
     <div className="space-y-4">
+      <SolverOptionalMedia
+        imageSrc={block.imageSrc}
+        imageAlt={block.imageAlt}
+        imageCaption={block.imageCaption}
+      />
       <h2 className="text-xl font-bold text-white">{block.prompt}</h2>
 
       <div className="grid grid-cols-2 gap-3">

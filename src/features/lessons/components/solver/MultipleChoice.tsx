@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { MultipleChoiceProps } from "@/features/lessons/types";
+import SolverOptionalMedia from "./SolverOptionalMedia";
 
 const MultipleChoice = ({ block, onContinue }: MultipleChoiceProps) => {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -29,6 +30,12 @@ const MultipleChoice = ({ block, onContinue }: MultipleChoiceProps) => {
 
   return (
     <div className="space-y-4">
+      <SolverOptionalMedia
+        imageSrc={block.imageSrc}
+        imageAlt={block.imageAlt}
+        imageCaption={block.imageCaption}
+      />
+
       <h2 className="text-xl font-bold text-white">{block.prompt}</h2>
 
       <div className="space-y-3">
@@ -83,7 +90,13 @@ const MultipleChoice = ({ block, onContinue }: MultipleChoiceProps) => {
           className={`rounded-2xl p-5 text-white ${isCorrect ? "bg-[#58CC02]" : "bg-[#FF4B4B]"}`}
         >
           {isCorrect ? (
-            <p className="text-lg font-bold">¡Excelente! Respuesta correcta ✓</p>
+            <>
+              <p className="text-lg font-bold">¡Excelente! Respuesta correcta ✓</p>
+              <div className="mt-2 inline-flex items-center gap-2 text-sm font-bold">
+                <span>⚡</span>
+                <span>+{block.rewardXp ?? 10} XP</span>
+              </div>
+            </>
           ) : (
             <>
               <p className="text-lg font-bold">Casi, intenta otra vez ✗</p>

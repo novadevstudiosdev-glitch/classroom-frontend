@@ -25,7 +25,7 @@ const ActiveLessonBlockRenderer = ({ block, onContinue }: ActiveLessonBlockRende
   // Cuando backend agregue nuevos tipos de bloque, se amplía aquí.
   switch (block.type) {
     case "paragraph":
-      return <ActiveLessonTextBlock block={block as LessonParagraphBlock} />;
+      return <ActiveLessonTextBlock block={block as LessonParagraphBlock} onContinue={onContinue} />;
 
     case "image":
       return <ActiveLessonImageBlock block={block as LessonImageBlock} />;

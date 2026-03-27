@@ -1,17 +1,10 @@
 import type { AssignedLessonBlocksProps } from "../types";
-import {
-  ActiveLessonBlockRenderer,
-  ActiveLessonNavigation,
-} from "./active-lesson";
+import { ActiveLessonBlockRenderer } from "./active-lesson";
 
 const AssignedLessonBlocks = ({
   lesson,
   activeBlockIndex,
   totalBlocks,
-  hasPrevious = false,
-  hasNext = false,
-  onPrevious,
-  onNext,
   onContinue,
 }: AssignedLessonBlocksProps) => {
   const block = lesson.content_json.blocks[activeBlockIndex];
@@ -29,15 +22,6 @@ const AssignedLessonBlocks = ({
 
         <ActiveLessonBlockRenderer block={block} onContinue={onContinue} />
       </div>
-
-      {onPrevious && onNext ? (
-        <ActiveLessonNavigation
-          hasPrevious={hasPrevious}
-          hasNext={hasNext}
-          onPrevious={onPrevious}
-          onNext={onNext}
-        />
-      ) : null}
     </div>
   );
 };

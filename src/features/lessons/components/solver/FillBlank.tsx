@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { FillBlankProps } from "@/features/lessons/types";
+import SolverOptionalMedia from "./SolverOptionalMedia";
 
 const FillBlank = ({ block, onContinue }: FillBlankProps) => {
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -31,6 +32,11 @@ const FillBlank = ({ block, onContinue }: FillBlankProps) => {
 
   return (
     <div className="space-y-4">
+      <SolverOptionalMedia
+        imageSrc={block.imageSrc}
+        imageAlt={block.imageAlt}
+        imageCaption={block.imageCaption}
+      />
       <h2 className="text-xl font-bold text-white">{block.prompt}</h2>
 
       <div className="space-y-3 rounded-2xl border border-white/20 bg-white/10 p-4">

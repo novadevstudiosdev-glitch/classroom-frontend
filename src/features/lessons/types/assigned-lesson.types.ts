@@ -31,10 +31,6 @@ export interface AssignedLessonBlocksProps {
   lesson: Lesson;
   activeBlockIndex: number;
   totalBlocks: number;
-  hasPrevious?: boolean;
-  hasNext?: boolean;
-  onPrevious?: () => void;
-  onNext?: () => void;
   onContinue?: () => void;
 }
 
