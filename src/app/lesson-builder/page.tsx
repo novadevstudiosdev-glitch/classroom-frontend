@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { LessonBuilderView } from "@/features/lesson-builder/views";
 
 const LessonBuilderPage = () => {

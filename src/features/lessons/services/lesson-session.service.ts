@@ -74,7 +74,7 @@ export const getSessionResultCacheByLessonId = (
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)) return null;
-    return parsed as SessionResultData;
+    return parsed as unknown as SessionResultData;
   } catch {
     return null;
   }
@@ -96,9 +96,9 @@ export const completeLessonSession = async (
 
     let normalized: CompleteLessonSessionResponse | null = null;
     if (isRecord(payload) && isRecord(payload.data)) {
-      normalized = payload.data as CompleteLessonSessionResponse;
+      normalized = payload.data as unknown as CompleteLessonSessionResponse;
     } else if (isRecord(payload)) {
-      normalized = payload as CompleteLessonSessionResponse;
+      normalized = payload as unknown as CompleteLessonSessionResponse;
     }
 
     if (normalized) {
