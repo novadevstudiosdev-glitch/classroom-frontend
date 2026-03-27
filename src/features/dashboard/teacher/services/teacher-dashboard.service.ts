@@ -52,5 +52,5 @@ export const getTeacherClassrooms = async (): Promise<TeacherClass[]> => {
         ? data.data
         : [];
 
-  return rows.map((row) => toTeacherClass(row as Record<string, unknown>));
+  return (rows as Record<string, unknown>[]).map((row) => toTeacherClass(row));
 };
