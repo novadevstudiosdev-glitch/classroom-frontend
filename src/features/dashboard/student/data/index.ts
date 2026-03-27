@@ -1,1 +1,0 @@
-export { STUDENT_CHARACTERS } from './student-characters.data'

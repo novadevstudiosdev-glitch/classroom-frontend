@@ -1,4 +1,4 @@
-import type { StudentCharacterOption } from '@/features/dashboard/student/types'
+import type { StudentCharacterOption } from '@/features/class-code/types'
 
 export const STUDENT_CHARACTERS: StudentCharacterOption[] = [
   { id: 'orbit', label: 'Naranja' },
