@@ -40,13 +40,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff
 .err{color:#fca5a5;font-size:13px;font-weight:700;text-align:center;display:none;padding:8px;background:rgba(239,68,68,.1);border-radius:8px}
 .back-link{color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;margin-top:-4px}
 .back-link:hover{color:#fff}
-.quiz-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;padding-right:4px}
-.quiz-list::-webkit-scrollbar{width:4px}
-.quiz-list::-webkit-scrollbar-thumb{background:var(--glass2);border-radius:4px}
-.quiz-item{background:var(--glass);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center}
-.quiz-item:hover{border-color:var(--purple);background:rgba(124,58,237,.12)}
-.quiz-item-title{font-size:15px;font-weight:800}
-.quiz-item-meta{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
 .lobby-wrap{width:100%;max-width:900px;display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto auto 1fr auto;gap:16px;align-items:start}
 .lobby-header{grid-column:1/-1;text-align:center}
 .lobby-quiz-name{font-size:22px;font-weight:900}
@@ -139,59 +132,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff
     <div class="home-title">Partida multijugador</div>
     <div class="home-sub">Elegí tu rol para continuar</div>
     <div class="role-btns">
-      <button class="role-btn" onclick="show('s-teacher-login')"><span class="icon">🎓</span>Profe</button>
+      <button class="role-btn" onclick="show('s-teacher')"><span class="icon">🎓</span>Profe</button>
       <button class="role-btn cyan" onclick="show('s-student')"><span class="icon">🎒</span>Alumno</button>
     </div>
   </div>
 </div>
 
-<!-- TEACHER LOGIN -->
-<div id="s-teacher-login" class="screen">
+<!-- TEACHER CREATE -->
+<div id="s-teacher" class="screen">
   <div class="logo">NO<span>VI</span></div>
   <div class="card">
-    <div style="font-size:18px;font-weight:900;text-align:center">Iniciar sesión</div>
+    <div style="font-size:18px;font-weight:900;text-align:center">Crear sala</div>
     <div class="field">
-      <label>Email</label>
-      <input class="inp" id="t-email" type="email" placeholder="tu@email.com"
-        onkeydown="if(event.key==='Enter')document.getElementById('t-pass').focus()"/>
+      <label>ID del quiz</label>
+      <input class="inp" id="t-quiz-id" placeholder="Pegá el ID del quiz aquí"
+        onkeydown="if(event.key==='Enter')document.getElementById('t-alias').focus()"/>
     </div>
     <div class="field">
-      <label>Contraseña</label>
-      <input class="inp" id="t-pass" type="password" placeholder="••••••••"
-        onkeydown="if(event.key==='Enter')teacherLogin()"/>
-    </div>
-    <div class="err" id="t-login-err"></div>
-    <button class="btn btn-purple" id="t-login-btn" onclick="teacherLogin()">Ingresar →</button>
-    <div class="back-link" onclick="show('s-home')">← Volver</div>
-  </div>
-</div>
-
-<!-- QUIZ PICK -->
-<div id="s-teacher-quizzes" class="screen">
-  <div class="logo">NO<span>VI</span></div>
-  <div class="card" style="max-width:500px">
-    <div style="font-size:18px;font-weight:900">Elegí un quiz</div>
-    <div class="err" id="q-list-err"></div>
-    <div class="quiz-list" id="quiz-list">
-      <div style="text-align:center;color:var(--muted);padding:20px;font-weight:700">Cargando...</div>
-    </div>
-    <div class="back-link" onclick="show('s-teacher-login')">← Volver</div>
-  </div>
-</div>
-
-<!-- TEACHER ALIAS -->
-<div id="s-teacher-alias" class="screen">
-  <div class="logo">NO<span>VI</span></div>
-  <div class="card">
-    <div style="font-size:18px;font-weight:900;text-align:center">Tu alias en la partida</div>
-    <div class="field">
-      <label>Alias</label>
+      <label>Tu alias</label>
       <input class="inp" id="t-alias" placeholder="Ej: Profe Valen" maxlength="20"
         onkeydown="if(event.key==='Enter')createRoom()"/>
     </div>
     <div class="err" id="t-alias-err"></div>
     <button class="btn btn-purple" id="t-alias-btn" onclick="createRoom()">Crear sala →</button>
-    <div class="back-link" onclick="show('s-teacher-quizzes')">← Volver</div>
+    <div class="back-link" onclick="show('s-home')">← Volver</div>
   </div>
 </div>
 
@@ -312,8 +276,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff
 </div>
 
 <script>
-const API = (typeof NOVI_CONFIG !== 'undefined' ? NOVI_CONFIG.API_URL : 'https://classroom-backend.up.railway.app/api');
-const WS  = 'https://classroom-backend.up.railway.app';
+const WS = 'https://classroom-backend.up.railway.app';
 const $   = id => document.getElementById(id);
 const esc = s  => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const rankEmoji = r => r===1?'🥇':r===2?'🥈':r===3?'🥉':'#'+r;
@@ -324,65 +287,30 @@ function show(id) {
 }
 
 // State
-let token = '', myAlias = '', roomCode = '', isHost = false;
-let selectedQuizId = '', selectedQuizTitle = '';
+let myAlias = '', roomCode = '', isHost = false;
 let socket = null, timerIv = null;
 let timerLeft = 20, timerTotal = 20;
 let answered = false, totalQ = 0, currentIdx = 0, myScore = 0;
 
-// Pre-fill code from URL ?code=
+// Pre-fill quiz ID from URL ?code= (used when clicking 🌐 from the admin panel)
 const urlCode = new URLSearchParams(location.search).get('code');
-if (urlCode) { var sc = $('s-code'); if(sc) sc.value = urlCode; }
-
-// Teacher login
-async function teacherLogin() {
-  const email = $('t-email').value.trim();
-  const pass  = $('t-pass').value;
-  const err   = $('t-login-err');
-  const btn   = $('t-login-btn');
-  err.style.display = 'none';
-  if (!email || !pass) { err.textContent = 'Completá todos los campos.'; err.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = 'Ingresando...';
-  try {
-    const res  = await fetch(API + '/auth/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
-    });
-    const body = await res.json();
-    if (!res.ok) { err.textContent = body.message || 'Email o contraseña incorrectos.'; err.style.display = 'block'; return; }
-    token = (body.data && body.data.access_token) ? body.data.access_token : body.access_token;
-    await loadQuizzes();
-    show('s-teacher-quizzes');
-  } catch(e) { err.textContent = 'Error de conexión.'; err.style.display = 'block'; }
-  finally { btn.disabled = false; btn.textContent = 'Ingresar →'; }
-}
-
-async function loadQuizzes() {
-  var listEl = $('quiz-list'), errEl = $('q-list-err');
-  listEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-weight:700">Cargando...</div>';
-  try {
-    const res  = await fetch(API + '/minigame-instances', { headers: { Authorization: 'Bearer ' + token } });
-    const body = await res.json();
-    const arr  = Array.isArray(body && body.data ? body.data : body) ? (body.data || body) : [];
-    if (!arr.length) { listEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-weight:700">No tenés quizzes creados.</div>'; return; }
-    listEl.innerHTML = '';
-    arr.forEach(function(q) {
-      var nQ = Array.isArray(q.content_json) ? q.content_json.length : '?';
-      var item = document.createElement('div');
-      item.className = 'quiz-item';
-      item.innerHTML = '<div><div class="quiz-item-title">' + esc(q.title) + '</div><div class="quiz-item-meta">' + nQ + ' pregunta' + (nQ !== 1 ? 's' : '') + '</div></div><div style="color:var(--muted);font-size:18px">&#8250;</div>';
-      item.onclick = function() { selectedQuizId = q.id; selectedQuizTitle = q.title; $('t-alias').value = ''; show('s-teacher-alias'); };
-      listEl.appendChild(item);
-    });
-  } catch(e) { errEl.textContent = 'Error al cargar quizzes.'; errEl.style.display = 'block'; }
+if (urlCode) {
+  var tqi = document.getElementById('t-quiz-id');
+  if (tqi) tqi.value = urlCode;
+  // also pre-fill student code field
+  var sc = document.getElementById('s-code');
+  if (sc) sc.value = urlCode;
 }
 
 function createRoom() {
-  var alias = $('t-alias').value.trim(), err = $('t-alias-err');
+  var quizId = $('t-quiz-id').value.trim();
+  var alias  = $('t-alias').value.trim();
+  var err    = $('t-alias-err');
   err.style.display = 'none';
-  if (!alias) { err.textContent = 'Poné un alias.'; err.style.display = 'block'; return; }
-  myAlias = alias; roomCode = selectedQuizId; isHost = true;
-  connectSocket(selectedQuizId, alias, true);
+  if (!quizId) { err.textContent = 'Ingresá el ID del quiz.'; err.style.display = 'block'; return; }
+  if (!alias)  { err.textContent = 'Poné un alias.'; err.style.display = 'block'; return; }
+  myAlias = alias; roomCode = quizId; isHost = true;
+  connectSocket(quizId, alias, true);
 }
 
 function studentJoin() {
@@ -436,7 +364,7 @@ function connectSocket(instanceId, alias, host) {
 
 function connErr(msg) {
   var errId = isHost ? 't-alias-err' : 's-join-err';
-  var scrId = isHost ? 's-teacher-alias' : 's-student';
+  var scrId = isHost ? 's-teacher' : 's-student';
   $(errId).textContent = msg; $(errId).style.display = 'block';
   show(scrId); if (socket) socket.disconnect();
 }
