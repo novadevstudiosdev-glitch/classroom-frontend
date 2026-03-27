@@ -18,7 +18,7 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
             Subí de nivel <br />
             mientras&nbsp;
-            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
               aprendés
             </span>
           </h1>
@@ -57,7 +57,7 @@ export default function Home() {
 
       {/* -----QUIEN SOS----- */}
       <section className="relative flex items-center justify-center px-6 md:px-16 py-10 md:py-28">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20" />
+        <div className="absolute inset-0 bg-linear-to-br from-blue-500/20 to-purple-600/20" />
 
         <div className="relative z-10 w-full max-w-5xl grid md:grid-cols-2 gap-2">
           {/* DOCENTE */}
@@ -148,14 +148,14 @@ export default function Home() {
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">
           Asi se ve una aventura en Novi
         </h2>
-        <div className="max-w-5xl mx-auto rounded-2xl p-[1px] bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-blue-500/40">
+        <div className="max-w-5xl mx-auto rounded-2xl p-px bg-linear-to-r from-blue-500/40 via-purple-500/40 to-blue-500/40">
           {/* CARD */}
           <div className="rounded-2xl bg-[#0B0F2A]/80 backdrop-blur-xl p-6 md:p-8">
             {/* HEADER */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               {/* IZQUIERDA */}
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-2xl">
+                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-2xl">
                   🎮
                 </div>
 
@@ -196,7 +196,7 @@ export default function Home() {
               </div>
 
               <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
-                <div className="w-[45%] h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-[0_0_15px_rgba(255,200,0,0.6)]" />
+                <div className="w-[45%] h-full bg-linear-to-r from-yellow-400 to-orange-500 rounded-full shadow-[0_0_15px_rgba(255,200,0,0.6)]" />
               </div>
             </div>
 

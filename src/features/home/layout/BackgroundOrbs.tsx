@@ -52,13 +52,13 @@ export function BackgroundOrbs() {
       </style>
 
       {/* 🌌 FONDO AZUL OSCURO */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#050816] via-[#0a0f2c] to-[#050816]" />
+      <div className="absolute inset-0 bg-linear-to-b from-[#050816] via-[#0a0f2c] to-[#050816]" />
 
       {/* ORBES */}
 
       {/* Azul */}
       <div
-        className="absolute w-[250px] h-[250px] md:w-[400px] md:h-[400px] rounded-full blur-3xl"
+        className="absolute w-62.5 h-62.5 md:w-100 md:h-100 rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(48,84,255,0.4) 0%, transparent 70%)",
@@ -70,7 +70,7 @@ export function BackgroundOrbs() {
 
       {/* Verde */}
       <div
-        className="absolute w-[250px] h-[250px] md:w-[400px] md:h-[400px] rounded-full blur-3xl"
+        className="absolute w-62.5 h-62.5 md:w-100 md:h-100 rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(0,125,21,0.4) 0%, transparent 70%)",
@@ -83,7 +83,7 @@ export function BackgroundOrbs() {
 
       {/* Morado */}
       <div
-        className="absolute w-[250px] h-[250px] md:w-[400px] md:h-[400px] rounded-full blur-3xl"
+        className="absolute w-62.5 h-62.5 md:w-100 md:h-100 rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(139,103,255,0.4) 0%, transparent 70%)",
@@ -96,7 +96,7 @@ export function BackgroundOrbs() {
 
       {/* Dorado */}
       <div
-        className="absolute w-[250px] h-[250px] md:w-[400px] md:h-[400px] rounded-full blur-3xl"
+        className="absolute w-62.5 h-62.5 md:w-100 md:h-100 rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(255,208,0,0.3) 0%, transparent 70%)",

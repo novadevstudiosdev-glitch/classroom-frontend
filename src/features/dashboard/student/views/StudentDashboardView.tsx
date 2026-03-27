@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { EducationMascot } from "@/shared/components/mascots";
+
 
 export default function StudentDashboardPage() {
   const [xpWidth, setXpWidth] = useState(0);
@@ -16,52 +16,15 @@ export default function StudentDashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFAF4] flex">
-      {/* SIDEBAR */}
-      <aside className="w-70 bg-white p-8 flex flex-col gap-8 shadow-[4px_0_20px_rgba(124,77,255,0.08)]">
-        <div className="text-center justify-center center">
-          <div className="mt-6 justify-center center group-hover:scale-110 transition">
-            <EducationMascot character="bounce" expression="happy" size={100} />
-          </div>
-          
-          <h3 className="text-2xl font-bold text-[#8B67FF] mb-2">
-            Sofía García
-          </h3>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex flex-col gap-2">
-          <a href="/dashboard/student" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold bg-gradient-to-r from-[#7C4DFF] to-[#E0569E] text-white shadow-[0_4px_12px_rgba(124,77,255,0.3)]">
-            <span className="text-xl">🏠</span>
-            <span>Inicio</span>
-          </a>
-          <a href="/dashboard/student/lessons" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF] transition-all hover:translate-x-1">
-            <span className="text-xl">📚</span>
-            <span>Mis Clases</span>
-          </a>
-          <a href="/dashboard/student/lesson-builder" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF] transition-all hover:translate-x-1">
-            <span className="text-xl">🏆</span>
-            <span>Logros</span>
-          </a>
-          <a href="/dashboard/student/friends" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF] transition-all hover:translate-x-1">
-            <span className="text-xl">👥</span>
-            <span>Amigos</span>
-          </a>
-          <a href="/dashboard/student/settings" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF] transition-all hover:translate-x-1">
-            <span className="text-xl">⚙️</span>
-            <span>Configuración</span>
-          </a>
-        </nav>
-      </aside>
-
+    <div className="min-h-screen flex">
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-10 overflow-y-auto">
+      <main className="flex-1 p-6 overflow-y-auto">
         {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-4xl font-[900] text-gray-800 mb-2" style={{ fontFamily: "'Fredoka One', cursive" }}>
+        <header className="mb-6">
+          <h2 className="text-2xl font-black text-gray-800 mb-2">
             ¡Hola, Sofía! 👋
-          </h1>
-          <p className="text-gray-00">¿Lista para otra aventura de aprendizaje?</p>
+          </h2>
+          <p className="text-gray-800">¿Lista para otra aventura de aprendizaje?</p>
         </header>
 
         {/* Cards Grid */}
@@ -72,10 +35,10 @@ export default function StudentDashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="col-span-2 bg-gradient-to-br from-[#7C4DFF] to-[#E0569E] rounded-[20px] p-6 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
+            className="col-span-2 bg-linear-to-br from-[#050816] to-[#3054FF] rounded-[20px] p-6 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
           >
             <div className="flex justify-between items-start mb-5">
-              <h3 className="text-xl font-[900]" style={{ fontFamily: "'Fredoka One', cursive" }}>Misión del Día</h3>
+              <h3 className="text-xl font-black">Misión del Día</h3>
               <span className="text-3xl">✨</span>
             </div>
             
@@ -119,8 +82,7 @@ export default function StudentDashboardPage() {
             className="col-span-2 bg-white rounded-[20px] p-6 shadow-lg hover:shadow-xl transition-all"
           >
             <div className="flex justify-between items-start mb-5">
-              <h3 className="text-xl font-[900] text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>Mapa de Materias</h3>
-              <span className="text-3xl">🗺️</span>
+              <h3 className="text-xl font-black text-gray-800">Mapa de Materias</h3>
             </div>
             
             <div className="grid grid-cols-3 gap-4">
@@ -142,9 +104,9 @@ export default function StudentDashboardPage() {
                   style={{ backgroundColor: subject.color }}
                 >
                   <div className="absolute inset-0 opacity-10" style={{ backgroundColor: subject.color }} />
-                  <span className="text-4xl relative z-10">{subject.icon}</span>
-                  <span className="font-bold text-sm text-gray-800 relative z-10">{subject.name}</span>
-                  <span className="text-xs font-semibold text-gray-600 relative z-10">{subject.progress} completo</span>
+                  <span className="text-8xl relative z-10">{subject.icon}</span>
+                  <span className="font-bold text-lg text-white relative z-10">{subject.name}</span>
+                  <span className="text-sm font-semibold text-white relative z-10">{subject.progress} completo</span>
                 </motion.div>
               ))}
             </div>
@@ -158,7 +120,7 @@ export default function StudentDashboardPage() {
             className="bg-white rounded-[20px] p-6 shadow-lg hover:shadow-xl transition-all"
           >
             <div className="flex justify-between items-start mb-5">
-              <h3 className="text-xl font-[900] text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>Actividad Reciente</h3>
+              <h3 className="text-xl font-black text-gray-800">Actividad Reciente</h3>
               <span className="text-3xl">📊</span>
             </div>
             
@@ -175,7 +137,7 @@ export default function StudentDashboardPage() {
                   transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-[#F3F0FF] transition-all hover:translate-x-1 cursor-pointer"
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: activity.bg }}>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
                     {activity.icon}
                   </div>
                   <div className="flex-1">
@@ -203,7 +165,7 @@ export default function StudentDashboardPage() {
             className="bg-white rounded-[20px] p-6 shadow-lg hover:shadow-xl transition-all"
           >
             <div className="flex justify-between items-start mb-5">
-              <h3 className="text-xl font-[900] text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>Tabla de Posiciones</h3>
+              <h3 className="text-xl font-black text-gray-800">Tabla de Posiciones</h3>
               <span className="text-3xl">🏆</span>
             </div>
             
@@ -222,18 +184,18 @@ export default function StudentDashboardPage() {
                   transition={{ duration: 0.4, delay: 0.4 + i * 0.1 }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:translate-x-1 ${
                     player.current 
-                      ? 'bg-gradient-to-r from-[#F3F0FF] to-[#FFF4E6] border-2 border-[#7C4DFF]' 
+                      ? 'bg-linear-to-r from-[#F3F0FF] to-[#FFF4E6] border-2 border-[#7C4DFF]' 
                       : 'bg-gray-50'
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                     player.rank <= 3 
-                      ? 'bg-gradient-to-br from-[#FFD84D] to-[#FB923C] text-white' 
+                      ? 'bg-linear-to-br from-[#FFD84D] to-[#FB923C] text-white' 
                       : 'bg-gray-300 text-gray-600'
                   }`}>
                     {player.rank}
                   </div>
-                  <img 
+                  <img
                     src={`https://api.dicebear.com/9.x/micah/svg?seed=${player.avatar}`}
                     alt={player.name}
                     className="w-10 h-10 rounded-full border-2 border-gray-200"
@@ -253,7 +215,7 @@ export default function StudentDashboardPage() {
             className="bg-white rounded-[20px] p-6 shadow-lg hover:shadow-xl transition-all"
           >
             <div className="flex justify-between items-start mb-5">
-              <h3 className="text-xl font-[900] text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>Mis Logros</h3>
+              <h3 className="text-xl font-black text-gray-800">Mis Logros</h3>
               <span className="text-3xl">🎖️</span>
             </div>
             
@@ -276,7 +238,7 @@ export default function StudentDashboardPage() {
                   whileHover={{ scale: badge.unlocked ? 1.1 : 1 }}
                   className={`aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
                     badge.unlocked 
-                      ? 'bg-gradient-to-br from-[#FFD84D] to-[#FB923C]' 
+                      ? 'bg-linear-to-br from-[#FFD84D] to-[#FB923C]' 
                       : 'bg-[#F3F0FF] opacity-30 grayscale'
                   }`}
                 >
@@ -292,10 +254,10 @@ export default function StudentDashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="bg-gradient-to-br from-[#FB923C] to-[#F43F5E] rounded-[20px] p-6 text-white shadow-lg hover:shadow-xl transition-all text-center cursor-pointer hover:-translate-y-1"
+            className="bg-linear-to-br from-[#FB923C] to-[#F43F5E] rounded-[20px] p-6 text-white shadow-lg hover:shadow-xl transition-all text-center cursor-pointer hover:-translate-y-1"
           >
             <div className="flex justify-between items-start mb-3">
-              <h3 className="text-xl font-[900]" style={{ fontFamily: "'Fredoka One', cursive" }}>Racha de Estudio</h3>
+              <h3 className="text-xl font-black">Racha de Estudio</h3>
             </div>
             
             <motion.div 
@@ -306,7 +268,7 @@ export default function StudentDashboardPage() {
               🔥
             </motion.div>
             
-            <div className="text-7xl font-[900] my-4" style={{ fontFamily: "'Fredoka One', cursive", textShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+            <div className="text-7xl font-black my-4">
               7
             </div>
             
@@ -314,15 +276,6 @@ export default function StudentDashboardPage() {
           </motion.div>
         </div>
       </main>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
-        
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
     </div>
   );
 }
