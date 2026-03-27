@@ -47,18 +47,43 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff
 .quiz-item:hover{border-color:var(--purple);background:rgba(124,58,237,.12)}
 .quiz-item-title{font-size:15px;font-weight:800}
 .quiz-item-meta{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
-.lobby-wrap{width:100%;max-width:620px;display:flex;flex-direction:column;gap:20px}
-.lobby-quiz-name{font-size:24px;font-weight:900;margin-bottom:6px;text-align:center}
-.code-box{background:var(--glass);border:1.5px solid var(--border);border-radius:14px;padding:16px;text-align:center;cursor:pointer}
-.code-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
-.code-val{font-size:17px;font-weight:900;color:var(--cyan);word-break:break-all}
-.code-hint{font-size:11px;color:var(--muted);margin-top:4px}
-.players-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px}
+.lobby-wrap{width:100%;max-width:900px;display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto auto 1fr auto;gap:16px;align-items:start}
+.lobby-header{grid-column:1/-1;text-align:center}
+.lobby-quiz-name{font-size:22px;font-weight:900}
+.code-box{background:var(--glass);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center;cursor:pointer;grid-column:1/-1}
+.code-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px}
+.code-val{font-size:16px;font-weight:900;color:var(--cyan);word-break:break-all}
+.code-hint{font-size:11px;color:var(--muted);margin-top:3px}
+/* Players */
+.players-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;grid-column:1;grid-row:3}
 .players-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
-.players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;min-height:40px}
-.p-chip{background:var(--glass);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;min-height:40px}
+.p-chip{background:var(--glass);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);display:flex;flex-direction:column;align-items:center;gap:4px}
 .p-chip.host{border-color:var(--gold);color:var(--gold)}
+.p-chip .avatar{font-size:22px;line-height:1}
 @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+/* Chat */
+.chat-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;grid-column:2;grid-row:3;display:flex;flex-direction:column;gap:10px;height:320px}
+.chat-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--glass2);border-radius:3px}
+.chat-msg{font-size:13px;line-height:1.4;word-break:break-word}
+.chat-msg .who{font-weight:800;margin-right:4px}
+.chat-msg.system{color:var(--muted);font-style:italic;font-size:12px}
+.chat-msg.me .who{color:var(--cyan)}
+.chat-input-row{display:flex;gap:8px}
+.chat-inp{flex:1;background:var(--glass);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:#fff;font-family:inherit;font-size:13px;font-weight:600;outline:none}
+.chat-inp:focus{border-color:var(--purple)}
+.chat-inp::placeholder{color:var(--muted)}
+.chat-send{background:var(--purple);border:none;border-radius:8px;padding:8px 12px;color:#fff;cursor:pointer;font-size:16px;line-height:1;transition:opacity .15s}
+.chat-send:hover{opacity:.8}
+/* Action zone */
+.lobby-action{grid-column:1/-1}
+@media(max-width:700px){
+  .lobby-wrap{grid-template-columns:1fr;max-width:420px}
+  .chat-box{grid-column:1;grid-row:auto;height:260px}
+}
 .cd-num{font-size:110px;font-weight:900;color:var(--cyan);line-height:1}
 .cd-label{font-size:20px;font-weight:700;color:var(--muted);margin-top:10px}
 .q-wrap{width:100%;max-width:740px;display:flex;flex-direction:column;gap:16px}
@@ -194,22 +219,48 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff
 <!-- LOBBY -->
 <div id="s-lobby" class="screen">
   <div class="lobby-wrap">
-    <div class="lobby-quiz-name" id="lobby-quiz-name">—</div>
+
+    <!-- Header -->
+    <div class="lobby-header">
+      <div class="lobby-quiz-name" id="lobby-quiz-name">—</div>
+    </div>
+
+    <!-- Código -->
     <div class="code-box" onclick="copyCode()">
-      <div class="code-label">Código · compartí con tus amigos</div>
+      <div class="code-label">Código de sala · compartí con tus amigos</div>
       <div class="code-val" id="lobby-code">—</div>
       <div class="code-hint">📋 Clic para copiar</div>
     </div>
+
+    <!-- Jugadores -->
     <div class="players-box">
-      <div class="players-title" id="players-title">Jugadores (0)</div>
-      <div class="players-grid" id="players-grid"></div>
+      <div class="players-title" id="players-title">Jugadores conectados (0)</div>
+      <div class="players-grid" id="players-grid">
+        <div style="color:var(--muted);font-size:13px;font-weight:700;grid-column:1/-1">Esperando jugadores...</div>
+      </div>
     </div>
-    <div id="host-zone" style="display:none">
-      <button class="btn btn-green" id="btn-start" onclick="startGame()">▶ Empezar partida</button>
+
+    <!-- Chat -->
+    <div class="chat-box">
+      <div class="chat-title">💬 Chat de sala</div>
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-input-row">
+        <input class="chat-inp" id="chat-inp" placeholder="Escribí algo..." maxlength="200"
+          onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="chat-send" onclick="sendChat()">➤</button>
+      </div>
     </div>
-    <div id="guest-zone" style="display:none;text-align:center;color:var(--muted);font-size:14px;font-weight:700">
-      ⏳ Esperando que el profe inicie...
+
+    <!-- Botón acción -->
+    <div class="lobby-action">
+      <div id="host-zone" style="display:none">
+        <button class="btn btn-green" id="btn-start" onclick="startGame()">▶ Empezar partida</button>
+      </div>
+      <div id="guest-zone" style="display:none;text-align:center;color:var(--muted);font-size:14px;font-weight:700;padding:8px">
+        ⏳ Esperando que el profe inicie la partida...
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -361,13 +412,20 @@ function connectSocket(instanceId, alias, host) {
   });
 
   socket.on('room-update', function(data) {
-    $('players-title').textContent = 'Jugadores (' + data.players.length + ')';
-    $('players-grid').innerHTML = data.players.map(function(p) {
+    $('players-title').textContent = 'Jugadores conectados (' + data.players.length + ')';
+    var avatars = ['🚀','🌙','⭐','🪐','☄️','🌟','👾','🛸','🌌','🔭'];
+    $('players-grid').innerHTML = data.players.map(function(p, i) {
       var me = p.alias === myAlias, h = p.alias === data.hostAlias;
-      return '<div class="p-chip' + (h ? ' host' : '') + '">' + (h ? '👑 ' : '') + esc(p.alias) + (me ? ' (vos)' : '') + '</div>';
-    }).join('') || '<div style="color:var(--muted);font-size:13px;font-weight:700;padding:8px">Esperando...</div>';
+      var av = h ? '👑' : avatars[i % avatars.length];
+      return '<div class="p-chip' + (h ? ' host' : '') + '">' +
+        '<span class="avatar">' + av + '</span>' +
+        esc(p.alias) + (me ? ' ✦' : '') +
+        '</div>';
+    }).join('') || '<div style="color:var(--muted);font-size:13px;font-weight:700;grid-column:1/-1">Esperando jugadores...</div>';
     var bs = $('btn-start'); if (bs) bs.disabled = data.players.length < 1;
   });
+
+  socket.on('chat', function(data) { addChatMsg(data); });
 
   socket.on('game-started', function(data) { totalQ = data.totalQuestions; startCountdown(); });
   socket.on('question', function(data) { currentIdx = data.index; totalQ = data.total; renderQuestion(data.question, data.timeLimitMs); });
@@ -384,6 +442,28 @@ function connErr(msg) {
 }
 
 function startGame() { if (!socket) return; $('btn-start').disabled = true; $('btn-start').textContent = '⏳ Iniciando...'; socket.emit('start-game'); }
+
+function sendChat() {
+  var inp = $('chat-inp');
+  var text = inp.value.trim();
+  if (!text || !socket) return;
+  socket.emit('chat-message', { text: text });
+  inp.value = '';
+}
+
+function addChatMsg(data) {
+  var msgs = $('chat-msgs');
+  var div = document.createElement('div');
+  var isMe = !data.system && data.alias === myAlias;
+  div.className = 'chat-msg' + (data.system ? ' system' : isMe ? ' me' : '');
+  if (data.system) {
+    div.textContent = data.text;
+  } else {
+    div.innerHTML = '<span class="who">' + esc(data.alias) + ':</span>' + esc(data.text);
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
 function copyCode() {
   navigator.clipboard.writeText(roomCode).then(function() {
