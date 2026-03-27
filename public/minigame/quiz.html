@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz · NOVI</title>
+  <script src="config.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --space:  #06080f;
+      --glass:  rgba(255,255,255,0.06);
+      --glass2: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.10);
+      --purple: #7c3aed;
+      --cyan:   #06b6d4;
+      --gold:   #f59e0b;
+      --text:   #e2e8f0;
+      --muted:  #64748b;
+      --opt-a:  #ef4444;
+      --opt-b:  #3b82f6;
+      --opt-c:  #f59e0b;
+      --opt-d:  #10b981;
+      --opt-e:  #8b5cf6;
+      --opt-f:  #06b6d4;
+    }
+
+    html,body{height:100%;overflow:hidden;font-family:'Nunito',system-ui,sans-serif;background:var(--space);color:var(--text)}
+
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+    @keyframes twinkle{0%,100%{opacity:.12}50%{opacity:.7}}
+    .nebula{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+    .neb1{width:500px;height:500px;background:rgba(124,58,237,.09);top:-100px;left:-100px}
+    .neb2{width:400px;height:400px;background:rgba(6,182,212,.07);bottom:-80px;right:-60px}
+
+    /* ── Screens ──────────────────────────────────── */
+    .screen{display:none;height:100vh;position:relative;z-index:1}
+    .screen.active{display:flex}
+
+    /* ── Loading ──────────────────────────────────── */
+    #screen-loading{flex-direction:column;align-items:center;justify-content:center;gap:20px}
+    .spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #screen-loading p{font-size:16px;font-weight:700;color:var(--muted)}
+
+    /* ── Lobby ─────────────────────────────────────── */
+    #screen-lobby{flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;overflow-y:auto}
+    .lobby-rocket{font-size:56px;animation:float 2.5s ease-in-out infinite;line-height:1}
+    @keyframes float{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-14px) rotate(5deg)}}
+    .lobby-card{background:var(--glass);border:1.5px solid var(--border);border-radius:28px;backdrop-filter:blur(16px);padding:32px 40px;text-align:center;max-width:520px;width:100%;animation:slideUp .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+    .lobby-title{font-size:28px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2}
+    .lobby-desc{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:18px;line-height:1.5}
+    .lobby-pills{display:flex;gap:8px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+    .pill{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800}
+    .pill-purple{background:rgba(124,58,237,.2);color:#a78bfa;border:1.5px solid rgba(124,58,237,.3)}
+    .pill-cyan{background:rgba(6,182,212,.15);color:#67e8f9;border:1.5px solid rgba(6,182,212,.25)}
+    .pill-gold{background:rgba(245,158,11,.15);color:#fcd34d;border:1.5px solid rgba(245,158,11,.3)}
+    .pill-muted{background:var(--glass);color:var(--muted);border:1.5px solid var(--border)}
+    .lobby-code-box{background:rgba(124,58,237,.1);border:1.5px dashed rgba(124,58,237,.4);border-radius:16px;padding:14px 20px;margin-bottom:20px}
+    .lobby-code-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#a78bfa;margin-bottom:4px}
+    .lobby-code-val{font-size:13px;font-weight:800;color:#c4b5fd;letter-spacing:.5px;word-break:break-all;cursor:pointer;transition:color .15s}
+    .lobby-code-val:hover{color:#fff}
+    .lobby-code-hint{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+    .btn-play{width:100%;padding:17px;background:linear-gradient(135deg,var(--purple),#5b21b6);color:#fff;font-family:inherit;font-size:18px;font-weight:900;border:none;border-radius:16px;cursor:pointer;box-shadow:0 6px 0 #3b0f8c,0 10px 30px rgba(124,58,237,.4);transition:transform .1s,box-shadow .1s;letter-spacing:.5px}
+    .btn-play:hover{transform:translateY(-2px);box-shadow:0 8px 0 #3b0f8c,0 14px 36px rgba(124,58,237,.5)}
+    .btn-play:active{transform:translateY(3px);box-shadow:0 2px 0 #3b0f8c}
+
+    /* ── Countdown ─────────────────────────────────── */
+    #screen-countdown{flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .countdown-num{font-size:160px;font-weight:900;color:#fff;line-height:1;animation:countPop .7s cubic-bezier(.34,1.56,.64,1);text-shadow:0 0 60px rgba(124,58,237,.6)}
+    @keyframes countPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+    .countdown-label{font-size:18px;font-weight:800;color:var(--muted)}
+
+    /* ── Quiz screen ────────────────────────────────── */
+    #screen-quiz{flex-direction:column}
+
+    .quiz-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(6,8,15,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+    .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+    .nav-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+    .nav-logo-name{font-size:18px;font-weight:900;color:#fff;letter-spacing:-.5px}
+    .nav-logo-name span{color:var(--cyan)}
+    .nav-back{display:flex;align-items:center;gap:6px;background:var(--glass);border:1.5px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;cursor:pointer;transition:background .15s}
+    .nav-back:hover{background:var(--glass2)}
+    .nav-q-info{font-size:15px;font-weight:800;color:var(--muted)}
+
+    .quiz-body{flex:1;display:flex;overflow:hidden}
+
+    .quiz-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 24px;gap:12px;overflow:hidden;min-width:0}
+    .quiz-inner{width:100%;max-width:960px;display:flex;flex-direction:column;gap:14px}
+
+    /* Question card */
+    .question-card{background:#fff;border-radius:16px;padding:28px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;box-shadow:0 6px 24px rgba(0,0,0,.35);animation:qSlideIn .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes qSlideIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .question-text{font-size:30px;font-weight:900;color:#1a1a2e;text-align:center;line-height:1.4}
+    .question-img{max-width:100%;max-height:220px;border-radius:10px;object-fit:contain;display:none;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+
+    /* Timer */
+    .timer-strip-wrap{height:5px;background:var(--glass2);border-radius:999px;overflow:hidden;flex-shrink:0}
+    .timer-strip{height:100%;background:var(--cyan);border-radius:999px;transition:width .1s linear,background .5s}
+    .timer-strip.warn{background:var(--gold)}
+    .timer-strip.danger{background:#ef4444}
+
+    /* Options grid */
+    .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .options-grid.cols-1{grid-template-columns:1fr}
+
+    .opt-btn{
+      display:flex;align-items:center;gap:10px;padding:0 14px;
+      border:none;border-radius:12px;cursor:pointer;
+      font-family:inherit;font-size:18px;font-weight:800;
+      color:#fff;text-align:left;
+      box-shadow:0 3px 0 rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.2);
+      transition:transform .1s,box-shadow .1s,filter .15s;
+      min-height:76px;position:relative;overflow:hidden;
+      /* start hidden for cascade */
+      opacity:0;transform:translateY(-24px) scale(.97);
+    }
+    .opt-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:42%;background:rgba(255,255,255,.12);border-radius:14px 14px 60% 60%;pointer-events:none}
+    .opt-btn.dropped{opacity:1;transform:translateY(0) scale(1);transition:opacity .35s ease, transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .1s, filter .15s}
+    .opt-btn:hover:not(:disabled).dropped{transform:translateY(-3px);box-shadow:0 7px 0 rgba(0,0,0,.3),0 12px 24px rgba(0,0,0,.25)}
+    .opt-btn:active:not(:disabled){transform:translateY(2px)!important;box-shadow:0 2px 0 rgba(0,0,0,.3)!important}
+    .opt-btn:disabled{cursor:default}
+    .opt-btn.dim{filter:brightness(.28) saturate(.2);transform:none!important;box-shadow:0 3px 0 rgba(0,0,0,.2)!important}
+    .opt-btn.correct{outline:4px solid rgba(255,255,255,.9);outline-offset:2px;animation:correctPop .35s ease}
+    .opt-btn.wrong{filter:brightness(.32)}
+    @keyframes correctPop{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .opt-icon{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+    .opt-text{flex:1;line-height:1.3}
+
+    /* ── BIG FEEDBACK BANNER (top-center, no full-screen takeover) ── */
+    #big-feedback{
+      position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
+      display:none;flex-direction:row;align-items:center;gap:14px;
+      padding:18px 32px;border-radius:20px;
+      z-index:300;min-width:280px;max-width:560px;
+      box-shadow:0 12px 40px rgba(0,0,0,.45);
+      pointer-events:none;
+    }
+    #big-feedback.show{display:flex;animation:fbIn .28s cubic-bezier(.34,1.56,.64,1) forwards}
+    @keyframes fbIn{from{opacity:0;transform:translateX(-50%) translateY(-28px) scale(.9)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+    #big-feedback.fb-correct{background:rgba(16,185,129,.97);border:2px solid rgba(255,255,255,.25)}
+    #big-feedback.fb-wrong{background:rgba(239,68,68,.97);border:2px solid rgba(255,255,255,.2)}
+    #big-feedback.fb-timeout{background:rgba(139,92,246,.97);border:2px solid rgba(255,255,255,.2)}
+
+    .bf-icon{font-size:42px;flex-shrink:0;animation:iconBounce .35s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes iconBounce{from{transform:scale(.3) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(0deg);opacity:1}}
+    .bf-content{display:flex;flex-direction:column;gap:2px}
+    .bf-label{
+      font-size:32px;font-weight:900;color:#fff;
+      letter-spacing:-1px;line-height:1;
+      text-shadow:0 2px 8px rgba(0,0,0,.3);
+      animation:labelPop .3s .04s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes labelPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    .bf-answer-row{font-size:14px;font-weight:700;color:rgba(255,255,255,.88);animation:fadeInUp .3s .1s ease both}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .bf-pts{font-size:20px;font-weight:900;color:rgba(255,255,255,.95);animation:fadeInUp .3s .15s ease both}
+
+    /* ── Sidebar ────────────────────────────────── */
+    .quiz-sidebar{width:210px;flex-shrink:0;background:rgba(13,22,53,.6);backdrop-filter:blur(12px);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:24px 20px;gap:4px;overflow:hidden}
+    .sidebar-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px}
+    .sidebar-value{font-size:28px;font-weight:900;color:#fff;line-height:1;margin-bottom:14px}
+    .sidebar-value.cyan{color:var(--cyan)}
+    .sidebar-value.gold{color:var(--gold)}
+    .sidebar-value.purple{color:#a78bfa}
+    .sidebar-divider{height:1px;background:var(--border);margin:10px 0}
+    .sidebar-menu-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px}
+    .sidebar-btn{display:flex;align-items:center;gap:10px;background:var(--glass);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;font-weight:800;color:var(--text);cursor:pointer;transition:background .15s,transform .1s;width:100%;margin-bottom:7px}
+    .sidebar-btn:hover{background:var(--glass2);transform:translateX(2px)}
+    .vol-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .vol-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center}
+    #vol-slider{flex:1;height:4px;accent-color:var(--cyan);cursor:pointer;border-radius:999px}
+    #vol-slider::-webkit-slider-thumb{width:14px;height:14px}
+    .sidebar-btn-icon{font-size:16px;flex-shrink:0}
+    .sidebar-timer-circle{width:72px;height:72px;border-radius:50%;border:3px solid var(--cyan);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:14px;transition:border-color .5s;box-shadow:0 0 16px rgba(6,182,212,.15)}
+    .sidebar-timer-circle.warn{border-color:var(--gold);box-shadow:0 0 16px rgba(245,158,11,.2)}
+    .sidebar-timer-circle.danger{border-color:#ef4444;box-shadow:0 0 16px rgba(239,68,68,.25);animation:pulse .5s ease-in-out infinite alternate}
+    @keyframes pulse{to{transform:scale(1.06)}}
+    .sidebar-timer-num{font-size:24px;font-weight:900;color:#fff;line-height:1}
+    .sidebar-timer-circle.danger .sidebar-timer-num{color:#ef4444}
+    .sidebar-timer-sub{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase}
+
+    /* ── Results ──────────────────────────────────── */
+    #screen-results{flex-direction:column;justify-content:flex-start}
+    .results-header{width:100%;padding:28px 20px 24px;text-align:center;position:relative;z-index:1;flex-shrink:0}
+    .results-emoji{font-size:60px;display:block;margin-bottom:10px;animation:float 2s ease-in-out infinite}
+    .results-title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-.5px}
+    .results-sub{font-size:14px;color:rgba(255,255,255,.55);margin-top:6px;font-weight:600}
+    .results-card{background:rgba(13,22,53,.97);border-top:1.5px solid var(--border);border-radius:28px 28px 0 0;flex:1;width:100%;max-width:520px;margin:0 auto;padding:26px 24px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;animation:slideUp .4s cubic-bezier(.34,1.56,.64,1)}
+    .score-big{text-align:center}
+    .score-num{font-size:64px;font-weight:900;color:#fff;line-height:1}
+    .score-max{font-size:13px;color:var(--muted);margin-top:4px;font-weight:600}
+    .progress-row{background:var(--glass2);border-radius:999px;height:12px;overflow:hidden}
+    .progress-fill{height:100%;border-radius:999px;transition:width 1s ease}
+    .stats-row{display:flex;gap:10px}
+    .stat-box{flex:1;background:var(--glass);border:1.5px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+    .stat-num{font-size:22px;font-weight:900;color:#fff}
+    .stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .stars-row{text-align:center;font-size:38px;letter-spacing:6px}
+    .xp-badge{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(245,158,11,.15);border:1.5px solid rgba(245,158,11,.3);border-radius:999px;padding:10px 22px;font-size:15px;font-weight:800;color:#fcd34d}
+    .practice-badge{text-align:center;color:var(--muted);font-size:13px;font-weight:700}
+    .results-btns{display:flex;gap:10px}
+    .btn-secondary{flex:1;padding:13px;border:1.5px solid var(--border);border-radius:13px;background:var(--glass);font-family:inherit;font-size:14px;font-weight:800;color:var(--text);cursor:pointer;transition:background .15s,transform .1s}
+    .btn-secondary:hover{background:var(--glass2);transform:translateY(-2px)}
+    .btn-primary-sm{flex:1;padding:13px;border:none;border-radius:13px;background:linear-gradient(135deg,var(--purple),#5b21b6);font-family:inherit;font-size:14px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 0 #3b0f8c;transition:transform .1s,box-shadow .1s}
+    .btn-primary-sm:hover{transform:translateY(-2px);box-shadow:0 6px 0 #3b0f8c}
+
+    .confetti-piece{position:fixed;top:-20px;border-radius:2px;pointer-events:none;z-index:200;animation:confettiFall linear forwards}
+    @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+    /* ── Global Navbar ───────────────────────────────────── */
+    #app-nav{position:fixed;top:0;left:0;right:0;height:52px;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(6,8,15,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08);transition:opacity .2s,transform .2s}
+    #app-nav.hidden{opacity:0;pointer-events:none;transform:translateY(-100%)}
+    .nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;font-size:17px;font-weight:900;color:#fff;letter-spacing:-.5px}
+    .nav-brand-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--purple),var(--cyan));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .nav-brand span{color:var(--cyan)}
+    #nav-right{display:flex;align-items:center;gap:8px}
+    .nav-btn{padding:7px 14px;border-radius:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s}
+    .nav-btn-ghost{background:var(--glass);border:1.5px solid var(--border);color:var(--text)}
+    .nav-btn-ghost:hover{background:var(--glass2)}
+    .nav-btn-primary{background:linear-gradient(135deg,var(--purple),#5b21b6);color:#fff;border:none;box-shadow:0 3px 0 #3b0f8c}
+    .nav-btn-primary:hover{filter:brightness(1.1)}
+    .nav-chip{display:flex;align-items:center;gap:9px;background:var(--glass);border:1.5px solid var(--border);border-radius:10px;padding:6px 12px}
+    .nav-chip-info{display:flex;flex-direction:column;gap:1px}
+    .nav-chip-email{font-size:12px;font-weight:700;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .nav-chip-role{font-size:10px;font-weight:800;color:var(--cyan)}
+    .nav-chip-out{background:none;border:none;cursor:pointer;font-size:15px;opacity:.5;transition:opacity .15s;padding:0 2px;color:#fff}
+    .nav-chip-out:hover{opacity:1}
+
+    /* ── Auth Modals ──────────────────────────────────────── */
+    .auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+    .auth-overlay.show{display:flex}
+    .auth-box{background:#0d1635;border:1.5px solid rgba(255,255,255,.1);border-radius:22px;padding:28px 24px;width:100%;max-width:390px;position:relative;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
+    .auth-close-btn{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;transition:color .15s}
+    .auth-close-btn:hover{color:#fff}
+    .auth-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px}
+    .auth-sub{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:20px}
+    .auth-tabs{display:flex;gap:4px;background:var(--glass);border-radius:10px;padding:4px;margin-bottom:18px}
+    .auth-tab{flex:1;padding:8px;border:none;border-radius:7px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
+    .auth-tab.active{background:linear-gradient(135deg,var(--purple),#5b21b6);color:#fff}
+    .auth-field{margin-bottom:12px}
+    .auth-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px}
+    .auth-input{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:9px;padding:10px 13px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;transition:border-color .15s}
+    .auth-input:focus{border-color:rgba(124,58,237,.5)}
+    .auth-input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .auth-err{font-size:12px;font-weight:700;margin-bottom:10px;display:none}
+    .auth-err.error{color:#fca5a5}
+    .auth-err.success{color:#6ee7b7}
+    .auth-submit{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--purple),#5b21b6);color:#fff;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #3b0f8c;transition:filter .15s;margin-top:2px}
+    .auth-submit:hover:not(:disabled){filter:brightness(1.1)}
+    .auth-submit:disabled{opacity:.6;cursor:default}
+
+    /* Screens offset for navbar */
+    .screen{height:calc(100vh - 52px);margin-top:52px}
+
+    @media(max-width:640px){
+      .quiz-body{flex-direction:column}
+      .quiz-sidebar{width:100%;flex-direction:row;flex-wrap:wrap;gap:12px;padding:12px 16px;border-left:none;border-top:1px solid var(--border)}
+      .sidebar-timer-circle{width:52px;height:52px;margin-bottom:0}
+      .sidebar-timer-num{font-size:18px}
+      .sidebar-value{font-size:20px;margin-bottom:0}
+      .sidebar-divider{display:none}
+      .sidebar-menu-title{display:none}
+      .sidebar-btn{padding:8px 12px;margin-bottom:0;width:auto;flex:1}
+      .quiz-main{padding:12px}
+      .lobby-card{padding:24px 20px}
+      .bf-label{font-size:24px}
+      #big-feedback{top:60px;padding:14px 20px;gap:10px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── GLOBAL NAVBAR ─────────────────────────── -->
+<nav id="app-nav">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🚀</div>
+    NO<span>VI</span>
+  </a>
+  <div id="nav-right"></div>
+</nav>
+
+<!-- ── LOGIN MODAL ──────────────────────────── -->
+<div id="login-overlay" class="auth-overlay" onclick="if(event.target===this)closeLoginModal()">
+  <div class="auth-box">
+    <button class="auth-close-btn" onclick="closeLoginModal()">✕</button>
+    <div class="auth-title">Iniciar sesión</div>
+    <div class="auth-sub">Entrá a tu cuenta NOVI</div>
+    <div class="auth-field">
+      <div class="auth-label">Email</div>
+      <input id="login-email" class="auth-input" type="email" placeholder="tu@email.com"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="auth-field">
+      <div class="auth-label">Contraseña</div>
+      <input id="login-pass" class="auth-input" type="password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')submitLogin()"/>
+    </div>
+    <div class="auth-err error" id="login-err"></div>
+    <button class="auth-submit" id="login-btn" onclick="submitLogin()">Ingresar 🚀</button>
+  </div>
+</div>
+
+<!-- ── REGISTER MODAL ───────────────────────── -->
+<div id="register-overlay" class="auth-overlay" onclick="if(event.target===this)closeRegisterModal()">
+  <div class="auth-box">
+    <button class="auth-close-btn" onclick="closeRegisterModal()">✕</button>
+    <div class="auth-title">Crear cuenta</div>
+    <div class="auth-sub">¿Quién sos?</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-teacher" onclick="switchRegTab('teacher')">🎓 Soy profe</button>
+      <button class="auth-tab"        id="tab-student" onclick="switchRegTab('student')">🎒 Soy alumno</button>
+    </div>
+
+    <!-- Profe -->
+    <div id="reg-teacher">
+      <div class="auth-input-row">
+        <div><div class="auth-label">Nombre</div><input id="reg-t-fname" class="auth-input" placeholder="Juan"/></div>
+        <div><div class="auth-label">Apellido</div><input id="reg-t-lname" class="auth-input" placeholder="Pérez"/></div>
+      </div>
+      <div class="auth-field"><div class="auth-label">País</div><input id="reg-t-country" class="auth-input" placeholder="Argentina"/></div>
+      <div class="auth-field"><div class="auth-label">Email</div><input id="reg-t-email" class="auth-input" type="email" placeholder="tu@email.com"/></div>
+      <div class="auth-field"><div class="auth-label">Contraseña</div><input id="reg-t-pass" class="auth-input" type="password" placeholder="Mínimo 8 caracteres" onkeydown="if(event.key==='Enter')submitRegister()"/></div>
+    </div>
+
+    <!-- Alumno -->
+    <div id="reg-student" style="display:none">
+      <div class="auth-field"><div class="auth-label">Alias</div><input id="reg-s-alias" class="auth-input" placeholder="Ej: sofia123"/></div>
+      <div class="auth-field"><div class="auth-label">Email</div><input id="reg-s-email" class="auth-input" type="email" placeholder="tu@email.com"/></div>
+      <div class="auth-field"><div class="auth-label">Contraseña</div><input id="reg-s-pass" class="auth-input" type="password" placeholder="Mínimo 8 caracteres"/></div>
+      <div class="auth-field">
+        <div class="auth-label">Código de invitación <span style="color:var(--muted);font-weight:600;text-transform:none">(opcional)</span></div>
+        <input id="reg-s-code" class="auth-input" placeholder="ABC123" maxlength="6" onkeydown="if(event.key==='Enter')submitRegister()"/>
+      </div>
+    </div>
+
+    <div class="auth-err" id="reg-err"></div>
+    <button class="auth-submit" id="reg-btn" onclick="submitRegister()">Crear cuenta ✨</button>
+  </div>
+</div>
+
+<div id="stars"></div>
+<div class="nebula neb1"></div>
+<div class="nebula neb2"></div>
+
+<!-- ── FEEDBACK BANNER ──────────── -->
+<div id="big-feedback">
+  <div class="bf-icon" id="bf-icon"></div>
+  <div class="bf-content">
+    <div class="bf-label"      id="bf-label"></div>
+    <div class="bf-answer-row" id="bf-answer"></div>
+    <div class="bf-pts"        id="bf-pts"></div>
+  </div>
+</div>
+
+<!-- ── LOADING ─────────────────────────── -->
+<div id="screen-loading" class="screen active">
+  <div class="spinner"></div>
+  <p>Preparando el juego...</p>
+</div>
+
+<!-- ── LOBBY ──────────────────────────── -->
+<div id="screen-lobby" class="screen">
+  <div class="lobby-rocket">🚀</div>
+  <div class="lobby-card">
+    <h1 class="lobby-title" id="lobby-title">Quiz</h1>
+    <p  class="lobby-desc"  id="lobby-desc"></p>
+    <div class="lobby-pills">
+      <span class="pill pill-purple" id="pill-q"></span>
+      <span class="pill pill-gold"   id="pill-time"></span>
+      <span class="pill"             id="pill-mode"></span>
+    </div>
+    <div class="lobby-code-box" id="lobby-code-box" style="display:none">
+      <div class="lobby-code-label">Código del juego</div>
+      <div class="lobby-code-val" id="lobby-code-val" onclick="copyCode()"></div>
+      <div class="lobby-code-hint">📋 Clic para copiar · compartí con tus alumnos</div>
+    </div>
+    <button class="btn-play" id="btn-start">▶&nbsp;&nbsp;EMPEZAR</button>
+  </div>
+</div>
+
+<!-- ── COUNTDOWN ──────────────────────── -->
+<div id="screen-countdown" class="screen">
+  <div class="countdown-num" id="countdown-num">3</div>
+  <div class="countdown-label">Preparate...</div>
+</div>
+
+<!-- ── QUIZ ────────────────────────────── -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-nav">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">🚀</div>
+      <span class="nav-logo-name">NO<span>VI</span></span>
+    </a>
+    <span class="nav-q-info" id="nav-q-info"></span>
+    <button class="nav-back" onclick="location.href='index.html'">✕ Salir</button>
+  </div>
+
+  <div class="quiz-body">
+    <div class="quiz-main">
+      <div class="quiz-inner">
+        <div class="question-card">
+          <img id="question-img" class="question-img" alt=""/>
+          <p class="question-text" id="question-text"></p>
+        </div>
+        <div class="timer-strip-wrap">
+          <div class="timer-strip" id="timer-bar" style="width:100%"></div>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+      </div>
+    </div>
+
+    <div class="quiz-sidebar">
+      <div class="sidebar-timer-circle" id="timer-circle">
+        <span class="sidebar-timer-num" id="timer-num">20</span>
+        <span class="sidebar-timer-sub">seg</span>
+      </div>
+      <div class="sidebar-label">Tiempo total</div>
+      <div class="sidebar-value cyan" id="sb-elapsed">0:00</div>
+      <div class="sidebar-label">Puntos</div>
+      <div class="sidebar-value gold" id="sb-score">0</div>
+      <div class="sidebar-label">Mejor puntaje</div>
+      <div class="sidebar-value purple" id="sb-best">0</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Progreso</div>
+      <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:8px" id="sb-q-label">Pregunta 1 de 1</div>
+      <div style="height:6px;background:var(--glass2);border-radius:999px;overflow:hidden;margin-bottom:10px">
+        <div id="q-progress" style="width:0%;height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:999px;transition:width .4s ease"></div>
+      </div>
+      <button class="sidebar-btn" style="margin-bottom:14px;background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.25);color:#fca5a5" onclick="skipQuestion()">
+        <span class="sidebar-btn-icon">⏭</span> Saltar
+      </button>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-menu-title">Opciones</div>
+      <button class="sidebar-btn" onclick="restartQuiz()"><span class="sidebar-btn-icon">🔄</span> Repetir</button>
+      <div class="sidebar-label">🎵 Volumen</div>
+      <div class="vol-row">
+        <span class="vol-icon" id="vol-icon">🔊</span>
+        <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+      </div>
+      <button class="sidebar-btn" onclick="location.href='index.html'"><span class="sidebar-btn-icon">🏠</span> Inicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS ──────────────────────────── -->
+<div id="screen-results" class="screen">
+  <div class="results-header">
+    <span class="results-emoji" id="results-emoji">🏆</span>
+    <div class="results-title" id="results-title">¡PERFECTO!</div>
+    <div class="results-sub"   id="results-sub">¡Sin errores!</div>
+  </div>
+  <div class="results-card">
+    <div class="score-big">
+      <div class="score-num" id="results-score">0</div>
+      <div class="score-max" id="results-max">de 0 puntos</div>
+    </div>
+    <div class="progress-row"><div class="progress-fill" id="results-bar" style="width:0%"></div></div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correctas</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Precisión</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-time">0s</div><div class="stat-label">Tiempo</div></div>
+    </div>
+    <div class="stars-row" id="results-stars">☆☆☆</div>
+    <div id="results-xp"></div>
+    <div class="results-btns">
+      <button class="btn-secondary"  id="btn-retry">🔄 Reintentar</button>
+      <button class="btn-primary-sm" id="btn-home">🏠 Inicio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Stars ──────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<100;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*1.8+.4;
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*3}s;`;
+    c.appendChild(s);
+  }
+})();
+
+// ── Config ────────────────────────────────────────────────────────
+const API_BASE   = (typeof NOVI_CONFIG!=='undefined' ? NOVI_CONFIG.API_URL : 'http://localhost:3000/api');
+const OPT_COLORS = ['var(--opt-a)','var(--opt-b)','var(--opt-c)','var(--opt-d)','var(--opt-e)','var(--opt-f)'];
+const OPT_ICONS  = ['▲','◆','●','■','★','♥'];
+
+// ── State ─────────────────────────────────────────────────────────
+const STATE = {
+  quizData:null, instanceId:null, token:null,
+  idx:0, score:0, answers:[], startedAt:null,
+  qStartMs:0, muted:false,
+};
+let timerInterval   = null;
+let elapsedInterval = null;
+let dropTimers      = [];
+
+// ── Utils ─────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(`screen-${name}`).classList.add('active');
+  // Ocultar navbar durante el quiz activo para no duplicar con quiz-nav
+  if($('app-nav')) $('app-nav').classList.toggle('hidden', name==='quiz');
+}
+function getParams(){
+  const p = new URLSearchParams(location.search);
+  const raw = p.get('token') || localStorage.getItem('novi_token');
+  return {
+    instanceId: p.get('instanceId'),
+    token: (raw && raw !== 'null' && raw !== 'undefined') ? raw : null,
+  };
+}
+function getBest(id){ return parseInt(localStorage.getItem(`novi_best_${id}`)||'0') }
+function setBest(id,s){ if(s>getBest(id)) localStorage.setItem(`novi_best_${id}`,s) }
+function copyCode(){
+  navigator.clipboard.writeText(STATE.instanceId||'').catch(()=>{});
+  const el=$('lobby-code-val');
+  el.textContent='¡Copiado! ✓'; el.style.color='#10b981';
+  setTimeout(()=>{ el.textContent=STATE.instanceId; el.style.color=''; },1500);
+}
+
+// ════════════════════════════════════════════════════════
+//  AUDIO ENGINE
+// ════════════════════════════════════════════════════════
+const AUDIO = (() => {
+  let ctx = null;
+  let masterVolume = 0.7;   // 0–1, maps to slider 0–100
+
+  // ── Background music scheduler ───────────────────────
+  let bgGain = null;
+  let bgNextNote = 0;
+  let bgBeat = 0;
+  let bgTimer = null;
+  const BPM = 96;
+  const B   = 60 / BPM;
+
+  // Calm flowing melody in C major — triangle wave, relaxed game feel
+  // [freq, beats, vol]
+  const MEL = [
+    [523.25,.5,.20],[659.25,.5,.18],[783.99,1,.22],[659.25,.5,.18],[523.25,.5,.20],
+    [440,1,.18],[392,.5,.15],[440,.5,.17],[523.25,1,.20],
+    [587.33,.5,.18],[659.25,.5,.20],[783.99,.5,.22],[880,.5,.20],
+    [783.99,.5,.18],[659.25,.5,.16],[587.33,1.5,.20],
+    [523.25,.5,.18],[659.25,.5,.20],[783.99,.75,.22],[659.25,.25,.16],
+    [587.33,.5,.18],[523.25,.5,.20],[493.88,.5,.17],[440,1,.18],
+    [392,.5,.15],[440,.5,.17],[523.25,.5,.20],[587.33,.5,.18],
+    [659.25,.5,.20],[523.25,.5,.18],[440,.5,.16],[392,1.5,.18],
+    [523.25,.5,.20],[659.25,.5,.22],[783.99,.5,.24],[659.25,.5,.20],
+    [523.25,.5,.18],[440,.5,.16],[392,.5,.15],[523.25,2,.22],
+  ];
+  const BASS = [
+    [130.81,2,.18],[110,2,.16],
+    [130.81,2,.18],[146.83,2,.16],
+    [130.81,2,.18],[110,2,.16],
+    [130.81,2,.18],[130.81,2,.16],
+    [130.81,2,.18],[110,2,.16],
+  ];
+
+  function getCtx(){
+    if(!ctx) ctx = new(window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+
+  function schedNote(freq, type, dur, vol, t){
+    const c=getCtx();
+    const o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.value=freq;
+    o.connect(g); g.connect(bgGain||c.destination);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur*B*0.72);
+    o.start(t); o.stop(t+dur*B+0.01);
+  }
+
+  function bgGainVal(){ return masterVolume * 0.65; }
+
+  function bgSchedule(){
+    if(!bgGain) return;
+    const c=getCtx();
+    while(bgNextNote < c.currentTime + 0.22){
+      const mi = bgBeat % MEL.length;
+      const bi = bgBeat % BASS.length;
+      const [mf,md,mv]=MEL[mi];
+      const [bf,bd,bv]=BASS[bi];
+      schedNote(mf,'triangle',md,mv,bgNextNote);
+      schedNote(bf,'sine',bd,bv,bgNextNote);
+      bgNextNote += MEL[mi][1] * B;
+      bgBeat++;
+    }
+    bgTimer = setTimeout(bgSchedule, 50);
+  }
+
+  // ── SFX ──────────────────────────────────────────────
+  function sfx(fn){ if(masterVolume>0){ try{ fn(getCtx()); }catch(_){} } }
+
+  return {
+    startMusic(){
+      if(bgGain) return;
+      const c=getCtx();
+      bgGain=c.createGain();
+      bgGain.gain.value = bgGainVal();
+      bgGain.connect(c.destination);
+      bgNextNote = c.currentTime + 0.12;
+      bgBeat = 0;
+      bgSchedule();
+    },
+    stopMusic(){
+      if(bgTimer){ clearTimeout(bgTimer); bgTimer=null; }
+      if(bgGain){ bgGain.gain.setTargetAtTime(0, getCtx().currentTime, 0.4); bgGain=null; }
+    },
+    setVolume(v){
+      masterVolume = Math.max(0, Math.min(1, v));
+      if(bgGain) bgGain.gain.setTargetAtTime(bgGainVal(), getCtx().currentTime, 0.15);
+    },
+    tick(){
+      sfx(c=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.type='square'; o.frequency.value=1000;
+        o.connect(g); g.connect(c.destination);
+        g.gain.setValueAtTime(0.05,c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.06);
+        o.start(); o.stop(c.currentTime+0.07);
+      });
+    },
+    correct(){
+      sfx(c=>{
+        [523.25,659.25,783.99,1046.5].forEach((f,i)=>{
+          const o=c.createOscillator(),g=c.createGain();
+          o.type='triangle'; o.frequency.value=f;
+          o.connect(g); g.connect(c.destination);
+          const t=c.currentTime+i*0.1;
+          g.gain.setValueAtTime(0.13,t);
+          g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+          o.start(t); o.stop(t+0.31);
+        });
+      });
+    },
+    wrong(){
+      sfx(c=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.type='sawtooth'; o.frequency.value=160;
+        o.frequency.exponentialRampToValueAtTime(80,c.currentTime+0.38);
+        o.connect(g); g.connect(c.destination);
+        g.gain.setValueAtTime(0.08,c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.38);
+        o.start(); o.stop(c.currentTime+0.39);
+      });
+    },
+    timeout(){
+      sfx(c=>{
+        [440,330].forEach((f,i)=>{
+          const o=c.createOscillator(),g=c.createGain();
+          o.type='sine'; o.frequency.value=f;
+          o.connect(g); g.connect(c.destination);
+          const t=c.currentTime+i*0.22;
+          g.gain.setValueAtTime(0.08,t);
+          g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+          o.start(t); o.stop(t+0.31);
+        });
+      });
+    },
+    beep(freq=660){
+      sfx(c=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        o.connect(g); g.connect(c.destination);
+        g.gain.setValueAtTime(0.13,c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.18);
+        o.start(); o.stop(c.currentTime+0.19);
+      });
+    },
+  };
+})();
+
+// ════════════════════════════════════════════════════════
+//  NAVBAR & AUTH
+// ════════════════════════════════════════════════════════
+let _regTab = 'teacher';
+
+function isTokenExpired(tok){
+  try{ const p=JSON.parse(atob(tok.split('.')[1])); return p.exp*1000 < Date.now(); }
+  catch{ return true; }
+}
+
+function initNavbar(){
+  const savedTok  = localStorage.getItem('novi_token');
+  const savedUser = JSON.parse(localStorage.getItem('novi_user')||'null');
+  const valid     = savedTok && savedTok!=='null' && savedTok!=='undefined' && !isTokenExpired(savedTok);
+  // Si el token expiró, limpiarlo silenciosamente
+  if(savedTok && !valid){ localStorage.removeItem('novi_token'); localStorage.removeItem('novi_user'); }
+  const nr        = $('nav-right');
+  if(valid && savedUser){
+    const role = savedUser.role==='teacher' ? '🎓 Profe' : '🎒 Alumno';
+    nr.innerHTML=`<div class="nav-chip">
+      <div class="nav-chip-info">
+        <div class="nav-chip-email">${savedUser.email||''}</div>
+        <div class="nav-chip-role">${role}</div>
+      </div>
+      <button class="nav-chip-out" onclick="navLogout()" title="Cerrar sesión">✕</button>
+    </div>`;
+  } else {
+    nr.innerHTML=`
+      <button class="nav-btn nav-btn-ghost" onclick="openLoginModal()">Iniciar sesión</button>
+      <button class="nav-btn nav-btn-primary" onclick="openRegisterModal()">Registrarse</button>`;
+  }
+}
+
+function openLoginModal(){
+  $('login-overlay').classList.add('show');
+  $('login-err').style.display='none';
+  setTimeout(()=>document.getElementById('login-email').focus(),80);
+}
+function closeLoginModal(){ $('login-overlay').classList.remove('show'); }
+function openRegisterModal(){ $('register-overlay').classList.add('show'); }
+function closeRegisterModal(){ $('register-overlay').classList.remove('show'); }
+
+function switchRegTab(tab){
+  _regTab=tab;
+  $('reg-teacher').style.display=tab==='teacher'?'block':'none';
+  $('reg-student').style.display=tab==='student'?'block':'none';
+  $('tab-teacher').className='auth-tab'+(tab==='teacher'?' active':'');
+  $('tab-student').className='auth-tab'+(tab==='student'?' active':'');
+}
+
+async function submitLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = $('login-err'); const btn = $('login-btn');
+  errEl.style.display='none';
+  if(!email||!pass){ errEl.className='auth-err error'; errEl.textContent='Completá email y contraseña.'; errEl.style.display='block'; return; }
+  btn.textContent='Ingresando...'; btn.disabled=true;
+  try{
+    const res  = await fetch(`${API_BASE}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const body = await res.json(); const data=body.data??body;
+    if(!res.ok){ errEl.className='auth-err error'; errEl.textContent=data?.message||'Email o contraseña incorrectos.'; errEl.style.display='block'; btn.textContent='Ingresar 🚀'; btn.disabled=false; return; }
+    localStorage.setItem('novi_token', data.access_token);
+    if(data.refresh_token) localStorage.setItem('novi_refresh_token', data.refresh_token);
+    localStorage.setItem('novi_user', JSON.stringify({email,role:data.role,id:data.profile_id}));
+    STATE.token=data.access_token;
+    closeLoginModal();
+    initNavbar();
+    if($('screen-loading').classList.contains('active')) showPortal();
+  }catch(e){ errEl.className='auth-err error'; errEl.textContent='No se pudo conectar con el servidor.'; errEl.style.display='block'; btn.textContent='Ingresar 🚀'; btn.disabled=false; }
+}
+
+async function submitRegister(){
+  const errEl=$('reg-err'); const btn=$('reg-btn');
+  errEl.style.display='none';
+  btn.textContent='Creando cuenta...'; btn.disabled=true;
+  try{
+    let url, payload;
+    if(_regTab==='teacher'){
+      const fname=document.getElementById('reg-t-fname').value.trim();
+      const lname=document.getElementById('reg-t-lname').value.trim();
+      const country=document.getElementById('reg-t-country').value.trim();
+      const email=document.getElementById('reg-t-email').value.trim();
+      const pass=document.getElementById('reg-t-pass').value;
+      if(!fname||!lname||!email||!pass||!country){ errEl.className='auth-err error'; errEl.textContent='Completá todos los campos.'; errEl.style.display='block'; btn.textContent='Crear cuenta ✨'; btn.disabled=false; return; }
+      url=`${API_BASE}/auth/register/teacher`;
+      payload={first_name:fname,last_name:lname,email,password:pass,country,recaptcha_token:'dev_skip'};
+    } else {
+      const alias=document.getElementById('reg-s-alias').value.trim();
+      const email=document.getElementById('reg-s-email').value.trim();
+      const pass=document.getElementById('reg-s-pass').value;
+      const code=document.getElementById('reg-s-code').value.trim().toUpperCase();
+      if(!alias||!email||!pass){ errEl.className='auth-err error'; errEl.textContent='Completá alias, email y contraseña.'; errEl.style.display='block'; btn.textContent='Crear cuenta ✨'; btn.disabled=false; return; }
+      url=`${API_BASE}/auth/register/student`;
+      payload={alias,email,password:pass,avatar_id:'avatar_01',recaptcha_token:'dev_skip'};
+      if(code) payload.invite_code=code;
+    }
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const body=await res.json(); const data=body.data??body;
+    if(!res.ok){ errEl.className='auth-err error'; errEl.textContent=Array.isArray(data?.message)?data.message.join(', '):(data?.message||'Error al registrarse.'); errEl.style.display='block'; btn.textContent='Crear cuenta ✨'; btn.disabled=false; return; }
+    closeRegisterModal();
+    openLoginModal();
+    const autoEmail=_regTab==='teacher'?document.getElementById('reg-t-email').value:document.getElementById('reg-s-email').value;
+    document.getElementById('login-email').value=autoEmail;
+    const loginErr=$('login-err'); loginErr.className='auth-err success'; loginErr.textContent='¡Cuenta creada! Ahora iniciá sesión.'; loginErr.style.display='block';
+  }catch(e){ errEl.className='auth-err error'; errEl.textContent='No se pudo conectar con el servidor.'; errEl.style.display='block'; btn.textContent='Crear cuenta ✨'; btn.disabled=false; }
+}
+
+function navLogout(){
+  localStorage.removeItem('novi_token');
+  localStorage.removeItem('novi_refresh_token');
+  localStorage.removeItem('novi_user');
+  STATE.token=null;
+  initNavbar();
+  if($('screen-loading').classList.contains('active')) showPortal();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+(async()=>{
+  initNavbar();
+  const { instanceId, token } = getParams();
+  STATE.instanceId = instanceId;
+  STATE.token      = token;
+
+  if(!instanceId){
+    showPortal();
+    return;
+  }
+
+  if(!token){
+    $('screen-loading').innerHTML=`
+      <div style="text-align:center;position:relative;z-index:1;padding:24px;max-width:360px">
+        <div style="font-size:48px;margin-bottom:16px">🔒</div>
+        <p style="color:#fca5a5;font-weight:800;font-size:16px;margin-bottom:8px">Necesitás iniciar sesión</p>
+        <p style="color:#64748b;font-weight:600;font-size:14px;margin-bottom:20px">Volvé al inicio, iniciá sesión y usá el botón <strong>▶ Probar</strong>.</p>
+        <a href="index.html" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-weight:800;font-size:14px;padding:12px 28px;border-radius:12px;text-decoration:none">← Ir al inicio</a>
+      </div>`;
+    return;
+  }
+
+  let playStatus = 0;
+  try{
+    const res = await fetch(`${API_BASE}/minigame-instances/${instanceId}/play`,{headers:{Authorization:`Bearer ${token}`}});
+    playStatus = res.status;
+    if(res.ok){ const b=await res.json(); STATE.quizData=b.data??b; initLobby(); return; }
+    if(res.status===401){ showSessionExpired(); return; }
+    if(res.status!==403){ const e=await res.json().catch(()=>({})); throw new Error(e.message||`Error ${res.status}`); }
+  }catch(err){ if(playStatus!==403){ showErr(err.message); return; } }
+
+  try{
+    const res = await fetch(`${API_BASE}/minigame-instances/${instanceId}`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||`Error ${res.status}`); }
+    const body=await res.json(); const inst=body.data??body;
+    STATE.token = null;
+    STATE.quizData = {
+      id:inst.id, title:inst.title,
+      description:inst.description||'👀 Vista previa del profe',
+      is_first_play:false, config:inst.config_json||{},
+      questions:(inst.content_json||[]).map(q=>({
+        id:q.question_id, text:q.text, options:q.options,
+        image_url:q.image_url||'',
+        correct_option_id:q.correct_option_id,
+        time_seconds:Math.round((q.time_limit_ms||20000)/1000),
+        xp_value:q.xp_value||10,
+      })),
+    };
+    initLobby();
+  }catch(err){ showErr(err.message); }
+})();
+
+// ── Portal (sin instanceId) ───────────────────────────────────────
+function showPortal(){
+  const savedTok  = localStorage.getItem('novi_token');
+  const savedUser = JSON.parse(localStorage.getItem('novi_user')||'null');
+  const validTok  = savedTok && savedTok!=='null' && savedTok!=='undefined' && !isTokenExpired(savedTok);
+  // Limpiar token expirado silenciosamente
+  if(savedTok && !validTok){ localStorage.removeItem('novi_token'); localStorage.removeItem('novi_user'); }
+
+  const el = $('screen-loading');
+
+  if(validTok && savedUser){
+    // ── Logged-in view ──────────────────────────────────────
+    const roleLabel = savedUser.role==='teacher' ? '🎓 Profe' : '🎒 Alumno';
+    const roleColor = savedUser.role==='teacher' ? '#a78bfa' : '#67e8f9';
+    el.innerHTML=`
+      <div style="position:relative;z-index:1;width:100%;max-width:400px;padding:24px">
+
+        <!-- User chip -->
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 18px;margin-bottom:20px">
+          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🚀</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${savedUser.email||'Usuario'}</div>
+            <div style="font-size:11px;font-weight:700;color:${roleColor};margin-top:2px">${roleLabel}</div>
+          </div>
+          <button onclick="portalLogout()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.3);color:#fca5a5;font-family:inherit;font-size:11px;font-weight:800;padding:6px 10px;border-radius:8px;cursor:pointer">Salir</button>
+        </div>
+
+        <!-- Code entry -->
+        <div style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:18px;padding:20px;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:10px">Tengo un código de juego</div>
+          <div style="display:flex;gap:8px">
+            <input id="portal-code" class="portal-input" placeholder="Pegá el ID del quiz..."
+              onkeydown="if(event.key==='Enter')portalJoin()"
+              style="flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#fff;font-family:inherit;font-size:13px;font-weight:700;outline:none"/>
+            <button onclick="portalJoin()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:#fff;font-family:inherit;font-size:13px;font-weight:800;padding:11px 18px;border-radius:10px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 0 #3b0f8c">Jugar →</button>
+          </div>
+          <div id="portal-err" style="color:#fca5a5;font-size:12px;font-weight:700;margin-top:8px;display:none"></div>
+        </div>
+
+        ${savedUser.role==='teacher' ? `
+        <a href="index.html" style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(124,58,237,.12);border:1.5px solid rgba(124,58,237,.3);color:#a78bfa;font-family:inherit;font-size:13px;font-weight:800;padding:13px;border-radius:13px;text-decoration:none;transition:background .15s"
+           onmouseover="this.style.background='rgba(124,58,237,.22)'" onmouseout="this.style.background='rgba(124,58,237,.12)'">
+          🎓 Ir a mis quizzes
+        </a>` : `
+        <a href="index.html" style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);color:#94a3b8;font-family:inherit;font-size:13px;font-weight:800;padding:13px;border-radius:13px;text-decoration:none">
+          ← Volver al inicio
+        </a>`}
+      </div>`;
+  } else {
+    // ── Login view ──────────────────────────────────────────
+    el.innerHTML=`
+      <div style="position:relative;z-index:1;width:100%;max-width:380px;padding:24px">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:44px;margin-bottom:8px">🚀</div>
+          <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px">NOVI Quiz</div>
+          <div style="font-size:13px;color:#64748b;font-weight:600;margin-top:4px">Iniciá sesión para jugar</div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;margin-bottom:14px">
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#64748b;margin-bottom:6px">Email</div>
+            <input id="portal-email" type="email" placeholder="tu@email.com"
+              style="width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;outline:none;box-sizing:border-box"
+              onkeydown="if(event.key==='Enter')$('portal-pass').focus()"/>
+          </div>
+          <div style="margin-bottom:18px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#64748b;margin-bottom:6px">Contraseña</div>
+            <input id="portal-pass" type="password" placeholder="••••••••"
+              style="width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;outline:none;box-sizing:border-box"
+              onkeydown="if(event.key==='Enter')portalLogin()"/>
+          </div>
+          <div id="portal-err" style="color:#fca5a5;font-size:12px;font-weight:700;margin-bottom:12px;display:none"></div>
+          <button id="portal-login-btn" onclick="portalLogin()"
+            style="width:100%;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:900;padding:14px;border-radius:12px;cursor:pointer;box-shadow:0 5px 0 #3b0f8c;letter-spacing:.3px">
+            Ingresar 🚀
+          </button>
+        </div>
+
+        <button onclick="portalDemo()"
+          style="width:100%;background:transparent;border:1.5px solid rgba(255,255,255,.1);color:#64748b;font-family:inherit;font-size:13px;font-weight:700;padding:11px;border-radius:12px;cursor:pointer">
+          Jugar demo sin cuenta
+        </button>
+      </div>`;
+  }
+}
+
+async function portalLogin(){
+  const email = ($('portal-email')||{}).value?.trim();
+  const pass  = ($('portal-pass')||{}).value;
+  const errEl = $('portal-err');
+  const btn   = $('portal-login-btn');
+  if(!email||!pass){ errEl.textContent='Completá email y contraseña.'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  btn.textContent='Ingresando...'; btn.disabled=true;
+  try{
+    const res  = await fetch(`${API_BASE}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const body = await res.json();
+    const data = body.data ?? body;
+    if(!res.ok){ errEl.textContent=data?.message||'Email o contraseña incorrectos.'; errEl.style.display='block'; btn.textContent='Ingresar 🚀'; btn.disabled=false; return; }
+    localStorage.setItem('novi_token', data.access_token);
+    localStorage.setItem('novi_user', JSON.stringify({email, role:data.role, id:data.profile_id}));
+    STATE.token = data.access_token;
+    initNavbar();
+    showPortal();
+  }catch(e){ errEl.textContent='No se pudo conectar con el servidor.'; errEl.style.display='block'; btn.textContent='Ingresar 🚀'; btn.disabled=false; }
+}
+
+async function portalJoin(){
+  const code  = ($('portal-code')||{}).value?.trim();
+  const errEl = $('portal-err');
+  if(!code){ if(errEl){errEl.textContent='Ingresá un código de juego.';errEl.style.display='block';} return; }
+
+  const tok = localStorage.getItem('novi_token');
+  if(!tok || tok==='null' || isTokenExpired(tok)){
+    localStorage.removeItem('novi_token');
+    localStorage.removeItem('novi_user');
+    if(errEl){errEl.textContent='Tu sesión expiró. Iniciá sesión de nuevo.';errEl.style.display='block';}
+    setTimeout(()=>showPortal(), 1500);
+    return;
+  }
+
+  // Verificar rol real del JWT
+  let jwtRole = null;
+  try { jwtRole = JSON.parse(atob(tok.split('.')[1])).role; } catch(e){}
+
+  // Cargar el quiz directo sin reload de página
+  STATE.instanceId = code;
+  STATE.token      = tok;
+
+  $('screen-loading').innerHTML = `<div class="spinner"></div><p>Cargando quiz...</p>`;
+  showScreen('loading');
+
+  // Flujo alumno: usar /play
+  if(jwtRole === 'student'){
+    try{
+      const res = await fetch(`${API_BASE}/minigame-instances/${code}/play`, {
+        headers:{ Authorization:`Bearer ${tok}` }
+      });
+      if(res.ok){
+        const b = await res.json();
+        STATE.quizData = b.data ?? b;
+        initLobby();
+        return;
+      }
+      if(res.status === 401){ showSessionExpired(); return; }
+      const e = await res.json().catch(()=>({}));
+      showErr(e.message || (res.status===404 ? 'Ese código de quiz no existe.' : `Error ${res.status}`));
+    }catch(err){ showErr('Error de conexión'); }
+    return;
+  }
+
+  // Flujo profe: usar GET /:id (vista previa)
+  try{
+    const res = await fetch(`${API_BASE}/minigame-instances/${code}`, {
+      headers:{ Authorization:`Bearer ${tok}` }
+    });
+    if(!res.ok){
+      const e = await res.json().catch(()=>({}));
+      if(res.status===403) showErr('No sos el dueño de ese quiz o no es público. Hacé el quiz público para que los alumnos puedan jugarlo.');
+      else showErr(e.message || `Error ${res.status}`);
+      return;
+    }
+    const body = await res.json();
+    const inst = body.data ?? body;
+    STATE.token = null;
+    STATE.quizData = {
+      id: inst.id, title: inst.title,
+      description: inst.description || '👀 Vista previa del profe',
+      is_first_play: false, config: inst.config_json || {},
+      questions: (inst.content_json || []).map(q => ({
+        id: q.question_id ?? q.id, text: q.text, options: q.options,
+        image_url: q.image_url || '',
+        correct_option_id: q.correct_option_id,
+        time_seconds: Math.round((q.time_limit_ms || 20000) / 1000),
+        xp_value: q.xp_value || 10,
+      })),
+    };
+    initLobby();
+  }catch(err){ showErr('Error de conexión'); }
+}
+
+function portalLogout(){ navLogout(); }
+
+function portalDemo(){
+  STATE.quizData = {
+    id:'demo', title:'Quiz Demo 🚀', description:'Modo demo · sin cuenta necesaria',
+    is_first_play:true, config:{default_time_ms:20000},
+    questions:[
+      {id:'q1',text:'¿Cuánto es 3 + 4?',time_seconds:20,xp_value:10,options:[{id:'a',text:'6'},{id:'b',text:'7'},{id:'c',text:'8'},{id:'d',text:'5'}],correct_option_id:'b'},
+      {id:'q2',text:'¿Cuántas patas tiene una araña?',time_seconds:15,xp_value:10,options:[{id:'a',text:'6'},{id:'b',text:'4'},{id:'c',text:'8'},{id:'d',text:'2'}],correct_option_id:'c'},
+      {id:'q3',text:'¿Capital de Francia?',time_seconds:20,xp_value:10,options:[{id:'a',text:'Madrid'},{id:'b',text:'Londres'},{id:'c',text:'París'},{id:'d',text:'Roma'}],correct_option_id:'c'},
+      {id:'q4',text:'¿Color del cielo de día?',time_seconds:10,xp_value:5,options:[{id:'a',text:'Verde'},{id:'b',text:'Azul'},{id:'c',text:'Rojo'}],correct_option_id:'b'},
+    ],
+  };
+  initLobby();
+}
+
+function showErr(msg){
+  $('screen-loading').innerHTML=`
+    <div style="text-align:center;position:relative;z-index:1;padding:24px;max-width:360px">
+      <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+      <p style="color:#fca5a5;font-weight:800;font-size:15px;margin-bottom:8px">${msg}</p>
+      <a href="index.html" style="display:inline-block;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-weight:800;font-size:14px;padding:12px 28px;border-radius:12px;text-decoration:none">← Volver al inicio</a>
+    </div>`;
+}
+function showSessionExpired(){
+  $('screen-loading').innerHTML=`
+    <div style="text-align:center;position:relative;z-index:1;padding:24px;max-width:360px">
+      <div style="font-size:48px;margin-bottom:16px">⏰</div>
+      <p style="color:#fcd34d;font-weight:800;font-size:16px;margin-bottom:8px">Sesión expirada</p>
+      <p style="color:#64748b;font-weight:600;font-size:14px;margin-bottom:20px">Tu sesión venció. Volvé al inicio e iniciá sesión de nuevo.</p>
+      <a href="index.html" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-weight:800;font-size:14px;padding:12px 28px;border-radius:12px;text-decoration:none">← Iniciar sesión</a>
+    </div>`;
+}
+
+// ── Lobby ─────────────────────────────────────────────────────────
+function initLobby(){
+  const q = STATE.quizData;
+  $('lobby-title').textContent = q.title||'Quiz';
+  $('lobby-desc').textContent  = q.description||'';
+  const nQ = q.questions?.length??0;
+  $('pill-q').textContent = `📋 ${nQ} pregunta${nQ!==1?'s':''}`;
+  const avg = Math.round((q.questions||[]).reduce((s,p)=>s+(p.time_seconds??20),0)/Math.max(nQ,1));
+  $('pill-time').textContent = `⏱ ~${avg}s por preg.`;
+  const m=$('pill-mode');
+  if(q.is_first_play){m.textContent='⭐ Nota oficial';m.className='pill pill-cyan';}
+  else{m.textContent='🔄 Práctica';m.className='pill pill-muted';}
+  if(STATE.instanceId && STATE.instanceId!=='demo'){
+    $('lobby-code-box').style.display='block';
+    $('lobby-code-val').textContent=STATE.instanceId;
+  }
+  $('btn-start').onclick=startCountdown;
+  showScreen('lobby');
+}
+
+// ── Countdown ─────────────────────────────────────────────────────
+function startCountdown(){
+  AUDIO.startMusic();
+  showScreen('countdown');
+  let n=3;
+  $('countdown-num').textContent=n;
+  AUDIO.beep(880);
+  const iv=setInterval(()=>{
+    n--;
+    if(n<=0){ clearInterval(iv); AUDIO.beep(1174); startQuiz(); return; }
+    const el=$('countdown-num');
+    el.style.animation='none'; void el.offsetWidth; el.style.animation='';
+    el.textContent=n;
+    AUDIO.beep(n===1?1047:880);
+  },900);
+}
+
+// ── Quiz ──────────────────────────────────────────────────────────
+function startQuiz(){
+  STATE.idx=0; STATE.score=0; STATE.answers=[];
+  STATE.startedAt=Date.now();
+  $('sb-best').textContent=getBest(STATE.quizData.id||'demo');
+  if(elapsedInterval) clearInterval(elapsedInterval);
+  elapsedInterval=setInterval(()=>{
+    const s=Math.floor((Date.now()-STATE.startedAt)/1000);
+    $('sb-elapsed').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  },500);
+  showScreen('quiz');
+  showQuestion();
+}
+
+function restartQuiz(){
+  if(timerInterval) clearInterval(timerInterval);
+  if(elapsedInterval) clearInterval(elapsedInterval);
+  dropTimers.forEach(clearTimeout); dropTimers=[];
+  hideBigFeedback();
+  startCountdown();
+}
+
+function skipQuestion(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  dropTimers.forEach(clearTimeout); dropTimers=[];
+  const d=STATE.quizData.questions[STATE.idx];
+  if(!d) return;
+  STATE.answers.push({question_id:d.id??d.question_id,selected_option_id:null,time_taken_ms:0});
+  STATE.idx++;
+  if(STATE.idx<STATE.quizData.questions.length) showQuestion();
+  else finishQuiz();
+}
+
+function showQuestion(){
+  const questions=STATE.quizData.questions;
+  const d=questions[STATE.idx];
+  if(!d){ finishQuiz(); return; }
+
+  STATE.qStartMs=Date.now();
+  const timeSec=d.time_seconds??Math.round((d.time_limit_ms||STATE.quizData.config?.default_time_ms||20000)/1000);
+  const total=questions.length;
+
+  $('nav-q-info').textContent=`${STATE.idx+1} / ${total}`;
+  $('sb-q-label').textContent=`Pregunta ${STATE.idx+1} de ${total}`;
+  $('q-progress').style.width=`${(STATE.idx/total)*100}%`;
+  $('sb-score').textContent=STATE.score;
+
+  // Question animates in via CSS
+  const qtEl=$('question-text');
+  qtEl.textContent=d.text;
+  const imgEl=$('question-img');
+  if(d.image_url){
+    imgEl.src=d.image_url;
+    imgEl.style.display='block';
+  } else {
+    imgEl.style.display='none';
+    imgEl.src='';
+  }
+  qtEl.parentElement.style.animation='none';
+  void qtEl.parentElement.offsetWidth;
+  qtEl.parentElement.style.animation='';
+
+  // Build options — initially hidden (opacity:0, translateY(-24px))
+  const grid=$('options-grid');
+  grid.innerHTML='';
+  grid.className=`options-grid${(d.options??[]).length<=2?' cols-1':''}`;
+  dropTimers.forEach(clearTimeout); dropTimers=[];
+
+  (d.options??[]).forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.style.background=OPT_COLORS[i%OPT_COLORS.length];
+    btn.disabled=true;
+    btn.innerHTML=`<span class="opt-icon">${OPT_ICONS[i%OPT_ICONS.length]}</span><span class="opt-text">${opt.text}</span>`;
+    btn.onclick=()=>handleAnswer(opt.id,btn,i);
+    grid.appendChild(btn);
+
+    // Cascade drop-in with stagger
+    const t=setTimeout(()=>{
+      btn.classList.add('dropped');
+      if(i===(d.options.length-1)){
+        setTimeout(()=>{
+          grid.querySelectorAll('.opt-btn').forEach(b=>b.disabled=false);
+        },180);
+      }
+    }, 350 + i*130);
+    dropTimers.push(t);
+  });
+
+  startTimer(timeSec);
+}
+
+let lastTickSec=-1;
+function startTimer(timeSec){
+  if(timerInterval) clearInterval(timerInterval);
+  const totalMs=timeSec*1000;
+  $('timer-bar').className='timer-strip';
+  $('timer-circle').className='sidebar-timer-circle';
+  lastTickSec=-1;
+
+  timerInterval=setInterval(()=>{
+    const elapsed=Date.now()-STATE.qStartMs;
+    const remaining=Math.max(0,totalMs-elapsed);
+    const ratio=remaining/totalMs;
+    const secs=Math.ceil(remaining/1000);
+
+    $('timer-bar').style.width=`${ratio*100}%`;
+    $('timer-num').textContent=secs;
+
+    if(secs<=5 && secs!==lastTickSec){ lastTickSec=secs; AUDIO.tick(); }
+
+    if(ratio<=.25){
+      $('timer-bar').className='timer-strip danger';
+      $('timer-circle').className='sidebar-timer-circle danger';
+    } else if(ratio<=.5){
+      $('timer-bar').className='timer-strip warn';
+      $('timer-circle').className='sidebar-timer-circle warn';
+    }
+    if(remaining<=0){ clearInterval(timerInterval); timerInterval=null; handleAnswer(null,null,-1); }
+  },50);
+}
+
+function handleAnswer(selectedId,btn,idx){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  dropTimers.forEach(clearTimeout); dropTimers=[];
+
+  const d=STATE.quizData.questions[STATE.idx];
+  const timeTaken=Date.now()-STATE.qStartMs;
+  const isCorrect=selectedId!==null && selectedId===d.correct_option_id;
+
+  STATE.answers.push({question_id:d.id??d.question_id,selected_option_id:selectedId,time_taken_ms:Math.round(timeTaken)});
+
+  const btns=$('options-grid').querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  // Highlight correct/wrong options
+  if(selectedId!==null){
+    if(isCorrect){
+      btn.classList.add('correct');
+    } else {
+      btn?.classList.add('wrong');
+      (d.options??[]).forEach((o,i)=>{
+        if(o.id===d.correct_option_id) btns[i]?.classList.add('correct');
+        else if(btns[i]!==btn) btns[i]?.classList.add('dim');
+      });
+    }
+  } else {
+    (d.options??[]).forEach((o,i)=>{
+      if(o.id===d.correct_option_id) btns[i]?.classList.add('correct');
+      else btns[i]?.classList.add('dim');
+    });
+  }
+
+  // Big feedback
+  if(selectedId===null){
+    AUDIO.timeout();
+    showBigFeedback('fb-timeout','⏰','¡TIEMPO!',`Correcta: ${(d.options??[]).find(o=>o.id===d.correct_option_id)?.text||''}`,null);
+  } else if(isCorrect){
+    const tr=Math.max(0,1-timeTaken/((d.time_seconds??20)*1000));
+    const pts=Math.round(100*(0.5+0.5*tr));
+    STATE.score+=pts;
+    $('sb-score').textContent=STATE.score;
+    AUDIO.correct();
+    showBigFeedback('fb-correct','✅','¡CORRECTO!',null,`+${pts} pts`);
+  } else {
+    AUDIO.wrong();
+    const correctText=(d.options??[]).find(o=>o.id===d.correct_option_id)?.text||'';
+    showBigFeedback('fb-wrong','❌','¡INCORRECTO!',`Correcta: ${correctText}`,null);
+  }
+
+  setTimeout(()=>{
+    hideBigFeedback();
+    STATE.idx++;
+    if(STATE.idx<STATE.quizData.questions.length) showQuestion();
+    else finishQuiz();
+  },2000);
+}
+
+function showBigFeedback(cls,icon,label,answer,pts){
+  const el=$('big-feedback');
+  el.className=`show ${cls}`;
+  $('bf-icon').textContent=icon;
+  $('bf-label').textContent=label;
+  $('bf-answer').textContent=answer||'';
+  $('bf-pts').textContent=pts||'';
+  $('bf-answer').style.display=answer?'block':'none';
+  $('bf-pts').style.display=pts?'block':'none';
+}
+function hideBigFeedback(){
+  $('big-feedback').className='';
+}
+
+// ── Finish ────────────────────────────────────────────────────────
+async function finishQuiz(){
+  if(elapsedInterval){ clearInterval(elapsedInterval); elapsedInterval=null; }
+  AUDIO.stopMusic();
+  showScreen('results');
+  const timeTaken=Math.round((Date.now()-STATE.startedAt)/1000);
+  let result=null;
+
+  if(!STATE.token){
+    const qs=STATE.quizData.questions;
+    let correct=0,score=0;
+    for(const ans of STATE.answers){
+      const q=qs.find(q=>(q.id??q.question_id)===ans.question_id);
+      if(q&&ans.selected_option_id===q.correct_option_id){
+        const tr=Math.max(0,1-ans.time_taken_ms/((q.time_seconds??20)*1000));
+        score+=Math.round(100*(0.5+0.5*tr)); correct++;
+      }
+    }
+    result={score,max_score:qs.length*100,correct_answers:correct,total_questions:qs.length,xp_earned:correct*10,is_first_play:true,time_taken_seconds:timeTaken};
+  } else {
+    try{
+      const res=await fetch(`${API_BASE}/minigame-instances/${STATE.instanceId}/submit`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:`Bearer ${STATE.token}`},
+        body:JSON.stringify({answers:STATE.answers,time_taken_seconds:timeTaken}),
+      });
+      if(res.ok){const b=await res.json();result=b.data??b;}
+    }catch(_){}
+  }
+
+  setBest(STATE.quizData.id||'demo',result?.score??STATE.score);
+  showResults(result,timeTaken);
+}
+
+function showResults(r,timeTaken){
+  const score=r?.score??STATE.score;
+  const maxScore=r?.max_score??(STATE.quizData.questions.length*100);
+  const correct=r?.correct_answers??0;
+  const total=r?.total_questions??STATE.quizData.questions.length;
+  const xp=r?.xp_earned??0;
+  const isFirst=r?.is_first_play??false;
+  const pct=maxScore>0?score/maxScore:0;
+  const stars=pct>=.9?3:pct>=.6?2:pct>=.3?1:0;
+  const cfgs={
+    3:{emoji:'🏆',title:'¡PERFECTO!',sub:'¡Sin errores!',bar:'#f59e0b'},
+    2:{emoji:'🌟',title:'¡MUY BIEN!',sub:'¡Casi lo tenés dominado!',bar:'#06b6d4'},
+    1:{emoji:'💪',title:'¡BUEN INTENTO!',sub:'¡La práctica hace al maestro!',bar:'#f59e0b'},
+    0:{emoji:'📚',title:'¡SEGUÍ PRACTICANDO!',sub:'¡Cada intento te hace mejor!',bar:'#ef4444'},
+  };
+  const cfg=cfgs[stars];
+  $('results-emoji').textContent=cfg.emoji;
+  $('results-title').textContent=cfg.title;
+  $('results-sub').textContent=cfg.sub;
+  $('results-score').textContent=score;
+  $('results-max').textContent=`de ${maxScore} puntos`;
+  $('stat-correct').textContent=`${correct}/${total}`;
+  $('stat-pct').textContent=`${Math.round(pct*100)}%`;
+  $('stat-time').textContent=`${timeTaken}s`;
+  $('results-stars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+  setTimeout(()=>{ $('results-bar').style.background=cfg.bar; $('results-bar').style.width=`${Math.round(pct*100)}%`; },200);
+  if(isFirst&&xp>0) $('results-xp').innerHTML=`<div class="xp-badge">⚡ +${xp} XP ganados</div>`;
+  else if(!isFirst) $('results-xp').innerHTML=`<div class="practice-badge">🔄 Práctica · sin XP</div>`;
+  else              $('results-xp').innerHTML='';
+  if(stars>=2) spawnConfetti();
+  $('btn-retry').onclick=restartQuiz;
+  $('btn-home').onclick=()=>location.href='index.html';
+}
+
+function setVolume(val){
+  const v=parseInt(val)/100;
+  AUDIO.setVolume(v);
+  $('vol-icon').textContent = v===0?'🔇':v<0.35?'🔈':'🔊';
+}
+
+function spawnConfetti(){
+  const colors=['#f59e0b','#06b6d4','#10b981','#ef4444','#8b5cf6','#7c3aed'];
+  for(let i=0;i<55;i++){
+    const el=document.createElement('div');el.className='confetti-piece';
+    const sz=6+Math.random()*8;
+    el.style.cssText=`left:${Math.random()*100}vw;background:${colors[i%colors.length]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'3px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${i*45}ms;`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend',()=>el.remove());
+  }
+}
+</script>
+</body>
+</html>

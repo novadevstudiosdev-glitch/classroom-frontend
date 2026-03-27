@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/* 🌌 VARIABLES GLOBALES */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #3054FF;
+  --color-secondary: #007D15;
+  --color-accent: #FFD000;
+  --color-purple: #8B67FF;
+
+  --color-bg-dark: #050816;
+  --color-bg-deep: #0a0f2c;
+
+  --font-main: 'Nunito', sans-serif;
+
+  --radius-main: 1rem;
+  --transition-main: all 0.3s ease;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 🌍 BASE GLOBAL */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-main);
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg-dark),
+    var(--color-bg-deep),
+    var(--color-bg-dark)
+  );
+  color: rgb(255, 255, 255);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 🧠 TIPOGRAFÍA */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+p {
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* 🔥 UTILIDADES */
+
+.text-gradient {
+  background: linear-gradient(90deg, #3054FF, #8B67FF);
+  -webkit-background-clip: text;
+  background-clip: text; /* 👈 FIX del warning */
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-primary {
+  box-shadow: 0 0 40px rgba(48, 84, 255, 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 40px rgba(255, 208, 0, 0.4);
+}
+
+/* 🟦 BOTONES */
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-main);
+  font-weight: 700;
+  transition: var(--transition-main);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(48, 84, 255, 0.4);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: rgb(0, 0, 0);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-main);
+  font-weight: 700;
+}
+
+/* ✨ SCROLL */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+@layer components {
+  .landing-module-shell {
+    @apply min-h-screen bg-[radial-gradient(circle_at_top,rgba(48,84,255,0.2),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(139,103,255,0.15),transparent_45%),linear-gradient(to_bottom,#050816,#0a0f2c,#050816)] text-white;
+  }
+
+  .landing-module-content {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .landing-module-card {
+    @apply rounded-2xl border border-white/15 bg-white/8 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-md;
+  }
+
+  .landing-module-title {
+    @apply text-2xl font-extrabold text-white;
+  }
+
+  .landing-module-subtitle {
+    @apply text-sm text-white/70;
+  }
+
+  .landing-module-link {
+    @apply inline-flex items-center gap-1 text-sm font-semibold text-red-300 transition-colors hover:text-red-200;
+  }
 }
