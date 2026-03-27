@@ -1103,6 +1103,7 @@ function renderQuizRow(q) {
     <div class="quiz-row-actions">
       <button class="btn btn-cyan btn-sm" onclick="openShareModal('${q.id}','${escHtml(q.title)}')">🎮 Iniciar</button>
       <button class="btn btn-ghost btn-sm" onclick="location.href='lobby.html?code=${q.id}'" title="Modo multijugador en vivo">🌐 Multi</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyQuizId('${q.id}')" title="Copiar ID del quiz">🔑 ID</button>
       <button class="btn btn-ghost btn-sm" onclick="previewQuiz('${q.id}')">▶ Probar</button>
       <button class="btn btn-ghost btn-sm" onclick="openEditor('${q.id}')">✏️ Editar</button>
       <button class="btn-icon" title="Eliminar" onclick="confirmDelete('${q.id}','${escHtml(q.title)}')">🗑️</button>
@@ -1163,6 +1164,12 @@ function showToast(msg, duration = 2500) {
 
 // ── Confirm delete ─────────────────────────────────────────────
 let pendingDeleteId = null;
+function copyQuizId(id) {
+  navigator.clipboard.writeText(id).then(function() {
+    showToast('ID copiado al portapapeles ✅');
+  });
+}
+
 function confirmDelete(id, title) {
   pendingDeleteId = id;
   document.getElementById('confirm-msg').textContent = `¿Eliminar "${title}"? Esta acción no se puede deshacer.`;
