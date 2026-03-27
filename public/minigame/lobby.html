@@ -141,7 +141,7 @@ html,body{height:100%;font-family:'Nunito',system-ui,sans-serif;background:var(-
 /* ══════════════════════════════════════════════════
    GAME SCREEN (3 columns)
 ══════════════════════════════════════════════════ */
-#s-game{display:grid!important;grid-template-rows:48px 1fr;overflow:hidden}
+#s-game{display:grid!important;grid-template-rows:48px 1fr;overflow:hidden;width:100%}
 
 .game-nav{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(6,8,15,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:10}
 .game-nav-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:900;color:#fff;text-decoration:none}
@@ -151,7 +151,7 @@ html,body{height:100%;font-family:'Nunito',system-ui,sans-serif;background:var(-
 .game-nav-exit{background:var(--glass);border:1.5px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;font-weight:800;padding:6px 12px;border-radius:8px;cursor:pointer;transition:background .15s}
 .game-nav-exit:hover{background:var(--glass2)}
 
-.game-body{display:grid;grid-template-columns:220px 1fr 200px;overflow:hidden;height:100%}
+.game-body{display:grid;grid-template-columns:220px 1fr 200px;overflow:hidden;height:100%;width:100%}
 
 /* Left panel */
 .game-left{display:flex;flex-direction:column;gap:8px;padding:14px;border-right:1px solid var(--border);background:rgba(0,0,0,.2);overflow:hidden}
