@@ -1,6 +1,7 @@
 import { DndContext, type DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useMemo, useState } from "react";
 import type { OrderElementsProps } from "@/features/lessons/types";
+import SolverOptionalMedia from "./SolverOptionalMedia";
 
 type OrderItemProps = {
   id: string;
@@ -80,6 +81,11 @@ const OrderElements = ({ block, onContinue }: OrderElementsProps) => {
 
   return (
     <div className="space-y-4">
+      <SolverOptionalMedia
+        imageSrc={block.imageSrc}
+        imageAlt={block.imageAlt}
+        imageCaption={block.imageCaption}
+      />
       <h2 className="text-xl font-bold text-white">{block.prompt}</h2>
 
       <DndContext onDragEnd={handleDragEnd}>

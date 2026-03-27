@@ -1,6 +1,7 @@
 import { DndContext, type DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useMemo, useState } from "react";
 import type { MatchColumnsProps, MatchPair } from "@/features/lessons/types";
+import SolverOptionalMedia from "./SolverOptionalMedia";
 
 type MatchRightOptionProps = {
   id: string;
@@ -97,6 +98,11 @@ const MatchColumns = ({ block, onContinue }: MatchColumnsProps) => {
 
   return (
     <div className="space-y-4">
+      <SolverOptionalMedia
+        imageSrc={block.imageSrc}
+        imageAlt={block.imageAlt}
+        imageCaption={block.imageCaption}
+      />
       <h2 className="text-xl font-bold text-white">{block.prompt}</h2>
 
       <DndContext onDragEnd={handleDragEnd}>

@@ -36,10 +36,17 @@ export interface LessonQuestionOption {
   text: string;
 }
 
-export interface LessonQuestionBlock {
+export interface LessonOptionalMedia {
+  imageSrc?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+}
+
+export interface LessonQuestionBlock extends LessonOptionalMedia {
   id: string;
   type: "question" | "multiple_choice";
   prompt: string;
+  rewardXp?: number;
   options: LessonQuestionOption[];
   correctOptionId: string;
   explanation?: string;
@@ -53,7 +60,7 @@ export interface FillBlankField {
   options?: string[];
 }
 
-export interface FillBlankBlock {
+export interface FillBlankBlock extends LessonOptionalMedia {
   id: string;
   type: "fill_blank";
   prompt: string;
@@ -61,7 +68,7 @@ export interface FillBlankBlock {
   fields: FillBlankField[];
 }
 
-export interface TrueFalseBlock {
+export interface TrueFalseBlock extends LessonOptionalMedia {
   id: string;
   type: "true_false";
   prompt: string;
@@ -79,7 +86,7 @@ export interface MatchPair {
   rightId: string;
 }
 
-export interface MatchColumnsBlock {
+export interface MatchColumnsBlock extends LessonOptionalMedia {
   id: string;
   type: "match_columns";
   prompt: string;
@@ -89,7 +96,7 @@ export interface MatchColumnsBlock {
   correctPairs: MatchPair[];
 }
 
-export interface OrderElementsBlock {
+export interface OrderElementsBlock extends LessonOptionalMedia {
   id: string;
   type: "order_elements";
   prompt: string;

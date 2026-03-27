@@ -14,16 +14,10 @@ export const LESSONS_MOCK: Lesson[] = [
           text: "Hola mundo",
         },
         {
-          id: "b1-1",
-          type: "image",
-          src: "https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?q=80&w=1200&auto=format&fit=crop",
-          alt: "Cuaderno con ejercicios de matemáticas",
-          caption: "Observa la imagen y luego responde el ejercicio.",
-        },
-        {
           id: "b2",
           type: "multiple_choice",
           prompt: "Si Juan tiene 8 manzanas y da 3 a María , cuantas le quedan?",
+          rewardXp: 10,
           options: [
             { id: "o1", letter: "A", text: "3 manzanas" },
             { id: "o2", letter: "B", text: "5 manzanas" },
