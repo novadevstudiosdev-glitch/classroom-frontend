@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ahorcado</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --bg:#f0f9ff;
+      --card:#fff;
+      --primary:#2bb5c8;
+      --dark:#1a3a4a;
+      --muted:#6b8fa3;
+      --radius:16px;
+      --shadow:0 4px 20px rgba(0,0,0,.10);
+    }
+
+    body{
+      font-family:'Nunito',system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--dark);
+      min-height:100vh;
+      display:flex;flex-direction:column;
+    }
+
+    /* Header */
+    .hm-header{
+      background:var(--card);
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      padding:10px 20px;
+      display:flex;align-items:center;gap:12px;
+      flex-shrink:0;
+    }
+    .back-btn{
+      background:var(--bg);border:2px solid #d0e8f0;
+      color:var(--dark);font-family:inherit;font-size:14px;font-weight:700;
+      padding:7px 16px;border-radius:999px;cursor:pointer;
+      transition:background .15s;white-space:nowrap;
+    }
+    .back-btn:hover{background:#d0e8f0}
+    .hm-title{font-size:18px;font-weight:900;color:var(--dark);flex:1;text-align:center}
+
+    /* Main */
+    main{
+      flex:1;
+      display:flex;align-items:flex-start;justify-content:center;
+      padding:20px;
+    }
+
+    .game-card{
+      background:var(--card);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:24px 28px;
+      width:100%;max-width:560px;
+      display:flex;flex-direction:column;gap:20px;
+    }
+
+    /* Top bar */
+    .top-bar{
+      display:flex;align-items:center;gap:10px;
+    }
+    .category-pill{
+      background:#e8f4f8;
+      color:var(--primary);
+      font-size:12px;font-weight:800;
+      padding:5px 12px;border-radius:999px;
+      text-transform:uppercase;letter-spacing:.5px;
+      flex-shrink:0;
+    }
+    .lives{
+      display:flex;gap:4px;flex:1;justify-content:center;
+    }
+    .heart{
+      font-size:20px;
+      transition:transform .2s;
+    }
+    .heart.lost{
+      filter:grayscale(1) opacity(.35);
+      transform:scale(.85);
+    }
+    .score-pill{
+      background:#e8f5e9;border:2px solid #43a047;
+      color:#2e7d32;font-weight:800;font-size:14px;
+      padding:5px 14px;border-radius:999px;flex-shrink:0;
+    }
+
+    /* Middle: gallows + word */
+    .mid-section{
+      display:flex;align-items:center;gap:20px;
+    }
+
+    /* SVG Gallows */
+    .gallows-wrap{
+      flex-shrink:0;
+    }
+    .gallows-wrap svg{
+      display:block;
+    }
+
+    /* Word section */
+    .word-section{
+      flex:1;
+      display:flex;flex-direction:column;gap:12px;
+      align-items:center;
+    }
+    .letters{
+      display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+    }
+    .letter-box{
+      width:36px;height:44px;
+      border-bottom:3px solid var(--dark);
+      display:flex;align-items:flex-end;justify-content:center;
+      padding-bottom:4px;
+      font-size:22px;font-weight:900;
+      color:var(--dark);
+      transition:all .2s;
+    }
+    .letter-box.space{
+      border-bottom-color:transparent;
+      width:16px;
+    }
+    .letter-box.revealed{
+      animation:popIn .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+    .hint-text{
+      font-size:13px;font-weight:700;color:var(--muted);
+      text-align:center;
+      background:#f8fafc;
+      border-radius:10px;padding:8px 14px;
+      line-height:1.4;
+    }
+
+    /* Result message */
+    .result-msg{
+      display:none;
+      text-align:center;padding:10px 16px;border-radius:12px;
+      font-size:15px;font-weight:800;
+    }
+    .result-msg.win-msg{background:#e8f5e9;color:#2e7d32}
+    .result-msg.lose-msg{background:#fde8e8;color:#c0392b}
+
+    /* Keyboard */
+    .keyboard{
+      display:flex;flex-direction:column;gap:6px;
+      align-items:center;
+    }
+    .kb-row{
+      display:flex;gap:5px;
+    }
+    .kb-btn{
+      width:42px;height:42px;
+      background:#f0f6fa;
+      border:2px solid #d0e8f0;
+      border-radius:10px;
+      font-family:inherit;font-size:15px;font-weight:800;
+      color:var(--dark);cursor:pointer;
+      transition:background .1s, transform .1s, border-color .1s;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .kb-btn:hover:not(:disabled){background:#bce4f0;border-color:var(--primary)}
+    .kb-btn:active:not(:disabled){transform:scale(.92)}
+    .kb-btn:disabled{
+      background:#f0f0f0;
+      border-color:#e0e0e0;
+      color:#bbb;
+      cursor:default;
+    }
+    .kb-btn.correct{background:#e8f5e9;border-color:#43a047;color:#2e7d32}
+    .kb-btn.wrong{background:#fde8e8;border-color:#e74c5e;color:#c0392b}
+
+    /* Win overlay */
+    .win-overlay{
+      display:none;
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.5);
+      backdrop-filter:blur(4px);
+      z-index:500;
+      align-items:center;justify-content:center;
+    }
+    .win-overlay.show{display:flex}
+    .win-card{
+      background:var(--card);
+      border-radius:28px;
+      padding:40px 48px;
+      text-align:center;
+      max-width:380px;width:90%;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes winPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    .win-emoji{font-size:72px;display:block;margin-bottom:16px;animation:float 2s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .win-title{font-size:28px;font-weight:900;color:var(--dark);margin-bottom:8px}
+    .win-sub{font-size:15px;color:var(--muted);margin-bottom:24px}
+    .win-stats{display:flex;gap:12px;margin-bottom:28px}
+    .win-stat{flex:1;background:#f8fafc;border-radius:14px;padding:14px}
+    .win-stat-num{font-size:26px;font-weight:900;color:var(--dark)}
+    .win-stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .win-btns{display:flex;gap:10px}
+    .btn-retry{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:#e8f4f8;color:var(--dark);cursor:pointer;
+      box-shadow:0 4px 0 #b0d0dc;transition:transform .1s;
+    }
+    .btn-home{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:var(--primary);color:#fff;cursor:pointer;
+      box-shadow:0 4px 0 #1a8fa0;transition:transform .1s;
+    }
+    .btn-retry:hover,.btn-home:hover{transform:translateY(-2px)}
+    .btn-retry:active,.btn-home:active{transform:translateY(2px);box-shadow:none}
+
+    /* Confetti */
+    .confetti-piece{
+      position:fixed;width:10px;height:10px;top:-20px;
+      border-radius:2px;pointer-events:none;z-index:600;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+    /* Shake on wrong */
+    .shake{animation:shake .4s ease}
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)}
+      80%{transform:translateX(4px)}
+    }
+  </style>
+</head>
+<body>
+
+<div class="hm-header">
+  <button class="back-btn" onclick="location.href='index.html'">← Volver</button>
+  <span class="hm-title">🪢 Ahorcado</span>
+</div>
+
+<main>
+  <div class="game-card">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="category-pill" id="category">Animales</div>
+      <div class="lives" id="lives"></div>
+      <div class="score-pill" id="score-pill">★ 0</div>
+    </div>
+
+    <!-- Gallows + Word -->
+    <div class="mid-section">
+      <div class="gallows-wrap">
+        <svg width="130" height="160" viewBox="0 0 130 160">
+          <!-- Gallows structure (always visible) -->
+          <line x1="10" y1="155" x2="120" y2="155" stroke="#b0c8d4" stroke-width="4" stroke-linecap="round"/>
+          <line x1="35" y1="155" x2="35" y2="10"  stroke="#b0c8d4" stroke-width="4" stroke-linecap="round"/>
+          <line x1="35" y1="10"  x2="85" y2="10"  stroke="#b0c8d4" stroke-width="4" stroke-linecap="round"/>
+          <line x1="85" y1="10"  x2="85" y2="32"  stroke="#b0c8d4" stroke-width="4" stroke-linecap="round"/>
+          <!-- Body parts (hidden by default) -->
+          <circle id="hm-head" cx="85" cy="46" r="14" fill="none" stroke="#1a3a4a" stroke-width="3.5" style="display:none"/>
+          <line   id="hm-body" x1="85" y1="60" x2="85" y2="105" stroke="#1a3a4a" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+          <line   id="hm-larm" x1="85" y1="75" x2="60" y2="95"  stroke="#1a3a4a" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+          <line   id="hm-rarm" x1="85" y1="75" x2="110" y2="95" stroke="#1a3a4a" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+          <line   id="hm-lleg" x1="85" y1="105" x2="60" y2="135" stroke="#1a3a4a" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+          <line   id="hm-rleg" x1="85" y1="105" x2="110" y2="135" stroke="#1a3a4a" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+        </svg>
+      </div>
+
+      <div class="word-section">
+        <div class="letters" id="letters"></div>
+        <div class="hint-text" id="hint"></div>
+        <div class="result-msg" id="result-msg"></div>
+      </div>
+    </div>
+
+    <!-- Keyboard -->
+    <div class="keyboard" id="keyboard"></div>
+
+  </div>
+</main>
+
+<!-- Final overlay -->
+<div class="win-overlay" id="win-overlay">
+  <div class="win-card">
+    <span class="win-emoji" id="final-emoji">🏆</span>
+    <div class="win-title" id="final-title">¡Muy bien!</div>
+    <div class="win-sub" id="final-sub"></div>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="win-stat-num" id="final-score">0</div>
+        <div class="win-stat-label">Puntos</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-num" id="final-won">0</div>
+        <div class="win-stat-label">Adivinadas</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-num" id="final-total">0</div>
+        <div class="win-stat-label">Total</div>
+      </div>
+    </div>
+    <div class="win-btns">
+      <button class="btn-retry" id="btn-retry">🔄 Jugar de nuevo</button>
+      <button class="btn-home" onclick="location.href='index.html'">🏠 Menú</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Words ──────────────────────────────────────────────────────
+const ALL_WORDS = [
+  { word:'ELEFANTE',     hint:'El animal terrestre más grande 🐘',         category:'Animales' },
+  { word:'MARIPOSA',     hint:'Vuela y tiene alas coloridas 🦋',            category:'Animales' },
+  { word:'COCODRILO',    hint:'Reptil con dientes enormes 🐊',              category:'Animales' },
+  { word:'AGUILA',       hint:'Ave rapaz que vuela muy alto 🦅',            category:'Animales' },
+  { word:'MURCIELAGO',   hint:'El único mamífero que vuela 🦇',             category:'Animales' },
+  { word:'TORTUGA',      hint:'Animal de caparazón muy lento 🐢',           category:'Animales' },
+  { word:'DELFIN',       hint:'Mamífero marino muy inteligente 🐬',         category:'Animales' },
+  { word:'CHOCOLATE',    hint:'Se hace con cacao y es muy dulce 🍫',        category:'Comida' },
+  { word:'HAMBURGUESA',  hint:'Pan redondo con carne y verduras 🍔',        category:'Comida' },
+  { word:'EMPANADA',     hint:'Masa rellena típica argentina 🥟',           category:'Comida' },
+  { word:'ENSALADA',     hint:'Plato frío con vegetales frescos 🥗',        category:'Comida' },
+  { word:'HELADO',       hint:'Postre frío y dulce 🍦',                     category:'Comida' },
+  { word:'ARGENTINA',    hint:'País del Río de la Plata 🇦🇷',               category:'Geografía' },
+  { word:'COLOMBIA',     hint:'País del café y las flores 🌺',              category:'Geografía' },
+  { word:'PATAGONIA',    hint:'Región fría en el sur de Sudamérica 🏔',     category:'Geografía' },
+  { word:'AMAZONAS',     hint:'El río más grande del mundo 🌊',             category:'Geografía' },
+  { word:'FOTOSINTESIS', hint:'Cómo las plantas producen energía 🌱',       category:'Ciencias' },
+  { word:'GRAVEDAD',     hint:'Fuerza que nos mantiene en la Tierra 🍎',    category:'Ciencias' },
+  { word:'ECOSISTEMA',   hint:'Comunidad de seres vivos en su ambiente 🌍', category:'Ciencias' },
+  { word:'DINOSAURIO',   hint:'Animal prehistórico extinto 🦕',             category:'Ciencias' },
+  { word:'VOLCÁN',       hint:'Montaña que escupe lava 🌋',                 category:'Ciencias' },
+];
+
+const BODY_PARTS = ['hm-head','hm-body','hm-larm','hm-rarm','hm-lleg','hm-rleg'];
+const MAX_ERRORS = 6;
+const ROUNDS     = 6;
+
+// Keyboard rows (QWERTY + Ñ)
+const KB_ROWS = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L','Ñ'],
+  ['Z','X','C','V','B','N','M'],
+];
+
+// ── State ─────────────────────────────────────────────────────
+let words = [], wordIdx = 0;
+let currentWord = '', guessed = new Set(), errors = 0;
+let score = 0, wordsWon = 0;
+let roundOver = false;
+
+// ── Shuffle helper ────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ── Init game ─────────────────────────────────────────────────
+function initGame() {
+  words   = shuffle(ALL_WORDS).slice(0, ROUNDS);
+  wordIdx = 0;
+  score   = 0;
+  wordsWon = 0;
+  document.getElementById('win-overlay').classList.remove('show');
+  loadWord();
+}
+
+// ── Load word ─────────────────────────────────────────────────
+function loadWord() {
+  const entry  = words[wordIdx];
+  currentWord  = entry.word.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  guessed      = new Set();
+  errors       = 0;
+  roundOver    = false;
+
+  document.getElementById('category').textContent = entry.category;
+  document.getElementById('hint').textContent     = entry.hint;
+
+  // Reset body parts
+  BODY_PARTS.forEach(id => document.getElementById(id).style.display = 'none');
+
+  renderLives();
+  renderLetters();
+  renderKeyboard();
+  hideResultMsg();
+  updateScorePill();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderLives() {
+  const livesEl = document.getElementById('lives');
+  livesEl.innerHTML = '';
+  for (let i = 0; i < MAX_ERRORS; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart' + (i < errors ? ' lost' : '');
+    h.textContent = '❤️';
+    livesEl.appendChild(h);
+  }
+}
+
+function renderLetters() {
+  const el = document.getElementById('letters');
+  el.innerHTML = '';
+  for (const ch of currentWord) {
+    const box = document.createElement('div');
+    if (ch === ' ') {
+      box.className = 'letter-box space';
+    } else {
+      box.className = 'letter-box' + (guessed.has(ch) ? ' revealed' : '');
+      box.textContent = guessed.has(ch) ? ch : '';
+    }
+    el.appendChild(box);
+  }
+}
+
+function renderKeyboard() {
+  const kbEl = document.getElementById('keyboard');
+  kbEl.innerHTML = '';
+  KB_ROWS.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'kb-row';
+    row.forEach(letter => {
+      const btn = document.createElement('button');
+      btn.className = 'kb-btn';
+      btn.textContent = letter;
+      btn.dataset.letter = letter;
+
+      // Normalize Ñ → N for word matching (words don't have Ñ after normalize)
+      const normalized = letter.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if (guessed.has(normalized)) {
+        btn.disabled = true;
+        btn.classList.add(currentWord.includes(normalized) ? 'correct' : 'wrong');
+      }
+
+      btn.addEventListener('click', () => handleGuess(letter));
+      rowEl.appendChild(btn);
+    });
+    kbEl.appendChild(rowEl);
+  });
+}
+
+function updateScorePill() {
+  document.getElementById('score-pill').textContent = `★ ${score}`;
+}
+
+// ── Guess ─────────────────────────────────────────────────────
+function handleGuess(rawLetter) {
+  if (roundOver) return;
+
+  // Normalize: remove accents
+  const letter = rawLetter.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if (guessed.has(letter)) return;
+
+  guessed.add(letter);
+
+  const btn = document.querySelector(`.kb-btn[data-letter="${rawLetter}"]`);
+
+  if (currentWord.includes(letter)) {
+    if (btn) { btn.disabled = true; btn.classList.add('correct'); }
+    renderLetters();
+
+    // Check win
+    const allRevealed = [...currentWord].every(ch => ch === ' ' || guessed.has(ch));
+    if (allRevealed) {
+      const bonus = Math.max(0, (MAX_ERRORS - errors)) * 15;
+      score += 100 + bonus;
+      wordsWon++;
+      updateScorePill();
+      showResultMsg(true, `+${100 + bonus} pts 🎉`);
+      roundOver = true;
+      setTimeout(nextRound, 1800);
+    }
+  } else {
+    errors++;
+    if (btn) { btn.disabled = true; btn.classList.add('wrong'); }
+    document.getElementById(BODY_PARTS[errors - 1]).style.display = '';
+    renderLives();
+
+    // Shake gallows
+    const svg = document.querySelector('.gallows-wrap svg');
+    svg.classList.remove('shake');
+    void svg.offsetWidth;
+    svg.classList.add('shake');
+    svg.addEventListener('animationend', () => svg.classList.remove('shake'), { once: true });
+
+    // Check lose
+    if (errors >= MAX_ERRORS) {
+      // Reveal word
+      guessed = new Set([...currentWord]);
+      renderLetters();
+      showResultMsg(false, `Era: ${words[wordIdx].word}`);
+      roundOver = true;
+      setTimeout(nextRound, 2200);
+    }
+  }
+}
+
+function showResultMsg(win, text) {
+  const el = document.getElementById('result-msg');
+  el.className = 'result-msg ' + (win ? 'win-msg' : 'lose-msg');
+  el.textContent = text;
+  el.style.display = 'block';
+}
+
+function hideResultMsg() {
+  const el = document.getElementById('result-msg');
+  el.style.display = 'none';
+}
+
+// ── Next round / End ──────────────────────────────────────────
+function nextRound() {
+  wordIdx++;
+  if (wordIdx >= words.length) {
+    showFinal();
+  } else {
+    loadWord();
+  }
+}
+
+function showFinal() {
+  const pct = wordsWon / words.length;
+  const emoji = pct === 1 ? '🏆' : pct >= 0.5 ? '🌟' : '💪';
+  const title = pct === 1 ? '¡Perfecto!' : pct >= 0.5 ? '¡Muy bien!' : '¡Buen intento!';
+  const sub   = `Adivinaste ${wordsWon} de ${words.length} palabras`;
+
+  document.getElementById('final-emoji').textContent = emoji;
+  document.getElementById('final-title').textContent = title;
+  document.getElementById('final-sub').textContent   = sub;
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-won').textContent   = wordsWon;
+  document.getElementById('final-total').textContent = words.length;
+
+  document.getElementById('win-overlay').classList.add('show');
+  document.getElementById('btn-retry').onclick = initGame;
+
+  if (pct >= 0.5) spawnConfetti();
+}
+
+// ── Physical keyboard ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const key = e.key.toUpperCase();
+  if (/^[A-ZÁÉÍÓÚÑÜ]$/.test(key) || key === 'Ñ') {
+    handleGuess(key);
+  }
+});
+
+// ── Confetti ──────────────────────────────────────────────────
+function spawnConfetti() {
+  const colors = ['#f9c74f','#2bb5c8','#2ecc71','#e74c5e','#8e44ad','#ff9f43'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const sz = 6 + Math.random() * 8;
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[i % colors.length]};
+      width:${sz}px;height:${sz}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${i*60}ms;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ── Start ─────────────────────────────────────────────────────
+initGame();
+</script>
+</body>
+</html>

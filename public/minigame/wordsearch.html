@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sopa de Letras</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --bg:#f0f9ff;
+      --card:#fff;
+      --primary:#2bb5c8;
+      --dark:#1a3a4a;
+      --muted:#6b8fa3;
+      --radius:16px;
+      --shadow:0 4px 20px rgba(0,0,0,.10);
+    }
+
+    body{
+      font-family:'Nunito',system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--dark);
+      min-height:100vh;
+      display:flex;flex-direction:column;
+      overflow:hidden;
+    }
+
+    /* Header */
+    .ws-header{
+      background:var(--card);
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      padding:10px 20px;
+      display:flex;align-items:center;gap:12px;
+      flex-shrink:0;
+    }
+    .back-btn{
+      background:var(--bg);border:2px solid #d0e8f0;
+      color:var(--dark);font-family:inherit;font-size:14px;font-weight:700;
+      padding:7px 16px;border-radius:999px;cursor:pointer;
+      transition:background .15s;white-space:nowrap;
+    }
+    .back-btn:hover{background:#d0e8f0}
+    .ws-title{font-size:18px;font-weight:900;color:var(--dark);flex:1;text-align:center}
+
+    /* Stats inside sidebar */
+    .ws-stats{
+      display:flex;gap:8px;margin-bottom:16px;
+    }
+    .ws-timer{
+      flex:1;
+      background:#fff8e1;border:2px solid #f9c74f;
+      color:#b8860b;font-weight:800;font-size:14px;
+      padding:8px 10px;border-radius:12px;text-align:center;white-space:nowrap;
+    }
+    .ws-score{
+      flex:1;
+      background:#e8f5e9;border:2px solid #43a047;
+      color:#2e7d32;font-weight:800;font-size:14px;
+      padding:8px 10px;border-radius:12px;text-align:center;white-space:nowrap;
+    }
+
+    /* Main layout */
+    .ws-body{
+      flex:1;
+      display:flex;
+      align-items:flex-start;justify-content:center;
+      gap:20px;
+      padding:16px 20px;
+      overflow:hidden;
+    }
+
+    /* Grid */
+    .grid-wrap{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      flex-shrink:0;
+      user-select:none;
+    }
+
+    .grid{
+      display:grid;
+      gap:2px;
+      cursor:crosshair;
+    }
+
+    .cell{
+      width:38px;height:38px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:17px;font-weight:800;
+      border-radius:8px;
+      background:#f8fafc;
+      border:2px solid transparent;
+      transition:background .1s, transform .1s;
+      position:relative;
+    }
+    .cell:hover{ background:#e8f4f8; }
+    .cell.selecting{
+      background:#bce4f0!important;
+      border-color:#2bb5c8!important;
+      transform:scale(1.08);
+      z-index:2;
+    }
+    .cell.found{
+      color:#fff!important;
+      border-color:transparent!important;
+      transform:none;
+    }
+    .cell.found-flash{ animation:foundFlash .4s ease; }
+    @keyframes foundFlash{
+      0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)}
+    }
+
+    /* Word list */
+    .word-list-wrap{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+      min-width:180px;
+      max-width:220px;
+    }
+    .word-list-title{
+      font-size:13px;font-weight:800;
+      text-transform:uppercase;letter-spacing:1px;
+      color:var(--muted);margin-bottom:14px;
+    }
+    .word-list{display:flex;flex-direction:column;gap:8px}
+    .word-item{
+      display:flex;align-items:center;gap:10px;
+      font-size:16px;font-weight:700;color:var(--dark);
+      padding:8px 12px;
+      border-radius:10px;
+      background:#f8fafc;
+      border:2px solid transparent;
+      transition:all .3s;
+    }
+    .word-item.found-word{
+      color:#fff;
+      text-decoration:line-through;
+      text-decoration-color:rgba(255,255,255,0.7);
+    }
+    .word-dot{
+      width:12px;height:12px;border-radius:50%;
+      background:#d0e0ea;flex-shrink:0;
+      transition:background .3s;
+    }
+    .word-item.found-word .word-dot{ background:rgba(255,255,255,0.6); }
+
+    /* Progress */
+    .progress-section{margin-top:20px}
+    .progress-label{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .progress-track{
+      height:10px;background:#e8f4f8;border-radius:999px;overflow:hidden;
+    }
+    .progress-fill{
+      height:100%;background:var(--primary);border-radius:999px;
+      transition:width .5s ease;
+    }
+    .progress-count{
+      font-size:13px;font-weight:700;color:var(--muted);margin-top:6px;text-align:right;
+    }
+
+    /* Win screen overlay */
+    .win-overlay{
+      display:none;
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.5);
+      backdrop-filter:blur(4px);
+      z-index:500;
+      align-items:center;justify-content:center;
+    }
+    .win-overlay.show{display:flex}
+    .win-card{
+      background:var(--card);
+      border-radius:28px;
+      padding:40px 48px;
+      text-align:center;
+      max-width:380px;width:90%;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes winPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    .win-emoji{font-size:72px;display:block;margin-bottom:16px;animation:float 2s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .win-title{font-size:32px;font-weight:900;color:var(--dark);margin-bottom:8px}
+    .win-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+    .win-stats{
+      display:flex;gap:12px;margin-bottom:28px;
+    }
+    .win-stat{
+      flex:1;background:#f8fafc;border-radius:14px;padding:14px;
+    }
+    .win-stat-num{font-size:28px;font-weight:900;color:var(--dark)}
+    .win-stat-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .win-btns{display:flex;gap:10px}
+    .btn-win-retry{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:#e8f4f8;color:var(--dark);cursor:pointer;
+      box-shadow:0 4px 0 #b0d0dc;transition:transform .1s;
+    }
+    .btn-win-home{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:var(--primary);color:#fff;cursor:pointer;
+      box-shadow:0 4px 0 #1a8fa0;transition:transform .1s;
+    }
+    .btn-win-retry:hover,.btn-win-home:hover{transform:translateY(-2px)}
+    .btn-win-retry:active,.btn-win-home:active{transform:translateY(2px);box-shadow:none}
+
+    /* Confetti */
+    .confetti-piece{
+      position:fixed;width:10px;height:10px;top:-20px;
+      border-radius:2px;pointer-events:none;z-index:600;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+  </style>
+</head>
+<body>
+
+<div class="ws-header">
+  <button class="back-btn" onclick="location.href='index.html'">← Volver</button>
+  <span class="ws-title">🔤 Sopa de Letras</span>
+</div>
+
+<div class="ws-body">
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="word-list-wrap">
+    <div class="ws-stats">
+      <div class="ws-timer" id="ws-timer">⏱ 00:00</div>
+      <div class="ws-score" id="ws-score">★ 0</div>
+    </div>
+    <div class="word-list-title">Encontrá las palabras</div>
+    <div class="word-list" id="word-list"></div>
+    <div class="progress-section">
+      <div class="progress-label">Progreso</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-count" id="progress-count">0 / 8</div>
+    </div>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div class="win-overlay" id="win-overlay">
+  <div class="win-card">
+    <span class="win-emoji">🏆</span>
+    <div class="win-title">¡Encontraste todas!</div>
+    <div class="win-sub" id="win-sub">¡Excelente trabajo!</div>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="win-stat-num" id="win-score">0</div>
+        <div class="win-stat-label">Puntos</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-num" id="win-time">0s</div>
+        <div class="win-stat-label">Tiempo</div>
+      </div>
+    </div>
+    <div class="win-btns">
+      <button class="btn-win-retry" id="btn-retry">🔄 Jugar de nuevo</button>
+      <button class="btn-win-home"  onclick="location.href='index.html'">🏠 Menú</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Words & Colors ─────────────────────────────────────────────
+const WORDS = ['GATO','PERRO','PATO','LEON','TIGRE','OSO','RANA','LOBO'];
+const WORD_COLORS = ['#e74c5e','#2980d4','#f0a500','#27ae60','#8e44ad','#16a085','#e67e22','#c0392b'];
+const GRID_SIZE   = 12;
+const LETTERS     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// All 8 directions
+const DIRS = [
+  [0,1],[1,0],[1,1],[1,-1],
+  [0,-1],[-1,0],[-1,-1],[-1,1],
+];
+
+// ── State ─────────────────────────────────────────────────────
+let grid = [], wordPlacements = [];
+let selecting = false, selStart = null, selCells = [];
+let foundWords = new Set();
+let score = 0, timerSecs = 0, timerInterval = null;
+
+// ── Init ──────────────────────────────────────────────────────
+function init() {
+  foundWords = new Set();
+  score = 0;
+  timerSecs = 0;
+  clearInterval(timerInterval);
+
+  buildGrid();
+  renderGrid();
+  renderWordList();
+  updateProgress();
+  updateScore();
+
+  timerInterval = setInterval(() => {
+    timerSecs++;
+    const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+    const s = String(timerSecs % 60).padStart(2,'0');
+    document.getElementById('ws-timer').textContent = `⏱ ${m}:${s}`;
+  }, 1000);
+
+  document.getElementById('win-overlay').classList.remove('show');
+}
+
+// ── Grid Generation ───────────────────────────────────────────
+function buildGrid() {
+  // Empty grid
+  grid = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+  wordPlacements = [];
+
+  // Place each word
+  for (const word of WORDS) {
+    let placed = false;
+    const shuffledDirs = [...DIRS].sort(() => Math.random() - 0.5);
+
+    for (let attempt = 0; attempt < 200 && !placed; attempt++) {
+      const dir = shuffledDirs[attempt % shuffledDirs.length];
+      const r   = Math.floor(Math.random() * GRID_SIZE);
+      const c   = Math.floor(Math.random() * GRID_SIZE);
+
+      if (canPlace(word, r, c, dir)) {
+        placeWord(word, r, c, dir);
+        placed = true;
+      }
+    }
+  }
+
+  // Fill remaining with random letters
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (!grid[r][c]) {
+        grid[r][c] = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+      }
+    }
+  }
+}
+
+function canPlace(word, r, c, [dr, dc]) {
+  for (let i = 0; i < word.length; i++) {
+    const nr = r + i*dr, nc = c + i*dc;
+    if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+    if (grid[nr][nc] && grid[nr][nc] !== word[i]) return false;
+  }
+  return true;
+}
+
+function placeWord(word, r, c, [dr, dc]) {
+  const cells = [];
+  for (let i = 0; i < word.length; i++) {
+    const nr = r + i*dr, nc = c + i*dc;
+    grid[nr][nc] = word[i];
+    cells.push([nr, nc]);
+  }
+  wordPlacements.push({ word, cells });
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderGrid() {
+  const gridEl = document.getElementById('grid');
+  gridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 38px)`;
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className  = 'cell';
+      cell.textContent = grid[r][c];
+      cell.dataset.r  = r;
+      cell.dataset.c  = c;
+
+      cell.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        selecting  = true;
+        selStart   = [r, c];
+        selCells   = [[r, c]];
+        cell.setPointerCapture(e.pointerId);
+        updateHighlight();
+      });
+      cell.addEventListener('pointermove', e => {
+        if (!selecting) return;
+        e.preventDefault();
+        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+        if (!target) return;
+        const er = +target.dataset.r, ec = +target.dataset.c;
+        selCells = getCellsBetween(selStart[0], selStart[1], er, ec);
+        updateHighlight();
+      });
+      cell.addEventListener('pointerup', e => {
+        if (!selecting) return;
+        selecting = false;
+        checkSelection();
+        selCells = [];
+        updateHighlight();
+      });
+
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function getCellsBetween(r1, c1, r2, c2) {
+  const dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1);
+  const rowD = Math.abs(r2-r1), colD = Math.abs(c2-c1);
+  // Must be straight line: horizontal, vertical, or diagonal (rowD===colD)
+  if (rowD !== 0 && colD !== 0 && rowD !== colD) {
+    // Not a valid direction — snap to best axis
+    if (rowD > colD) { // more vertical
+      return getCellsBetween(r1, c1, r2, c1);
+    } else {
+      return getCellsBetween(r1, c1, r1, c2);
+    }
+  }
+  const steps = Math.max(rowD, colD);
+  const cells = [];
+  for (let i = 0; i <= steps; i++) cells.push([r1 + i*dr, c1 + i*dc]);
+  return cells;
+}
+
+function updateHighlight() {
+  // Clear all selecting
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  // Add to current selection (only if not already found)
+  for (const [r, c] of selCells) {
+    const el = getCell(r, c);
+    if (el && !el.classList.contains('found')) el.classList.add('selecting');
+  }
+}
+
+// ── Check Selection ───────────────────────────────────────────
+function checkSelection() {
+  if (selCells.length < 2) return;
+  const letters = selCells.map(([r,c]) => grid[r][c]).join('');
+  const reversed = letters.split('').reverse().join('');
+
+  for (const { word, cells } of wordPlacements) {
+    if (foundWords.has(word)) continue;
+
+    const match = (letters === word) || (reversed === word);
+    if (match) {
+      foundWords.add(word);
+      score += 100;
+      markFound(word, cells);
+      updateScore();
+      updateProgress();
+      if (foundWords.size === WORDS.length) {
+        setTimeout(showWin, 600);
+      }
+      return;
+    }
+  }
+}
+
+function markFound(word, cells) {
+  const colorIdx = WORDS.indexOf(word);
+  const color    = WORD_COLORS[colorIdx];
+
+  for (const [r, c] of cells) {
+    const el = getCell(r, c);
+    if (!el) continue;
+    el.classList.remove('selecting');
+    el.classList.add('found', 'found-flash');
+    el.style.background = color;
+    el.addEventListener('animationend', () => el.classList.remove('found-flash'), { once: true });
+  }
+
+  // Update word list
+  const wordItems = document.querySelectorAll('.word-item');
+  wordItems.forEach(item => {
+    if (item.dataset.word === word) {
+      item.classList.add('found-word');
+      item.style.background = color;
+      item.style.borderColor = color;
+      item.querySelector('.word-dot').style.background = 'rgba(255,255,255,0.5)';
+    }
+  });
+}
+
+function renderWordList() {
+  const list = document.getElementById('word-list');
+  list.innerHTML = '';
+  WORDS.forEach((word, i) => {
+    const item = document.createElement('div');
+    item.className = 'word-item';
+    item.dataset.word = word;
+    item.innerHTML = `<span class="word-dot"></span>${word}`;
+    list.appendChild(item);
+  });
+}
+
+function updateProgress() {
+  const pct = (foundWords.size / WORDS.length) * 100;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('progress-count').textContent = `${foundWords.size} / ${WORDS.length}`;
+}
+
+function updateScore() {
+  document.getElementById('ws-score').textContent = `★ ${score}`;
+}
+
+// ── Win ───────────────────────────────────────────────────────
+function showWin() {
+  clearInterval(timerInterval);
+  const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+  const s = String(timerSecs % 60).padStart(2,'0');
+
+  document.getElementById('win-score').textContent = score;
+  document.getElementById('win-time').textContent  = `${m}:${s}`;
+  document.getElementById('win-sub').textContent   =
+    timerSecs < 60 ? '¡Velocidad increíble! 🚀' :
+    timerSecs < 120 ? '¡Excelente trabajo! 🌟' : '¡Bien hecho! 💪';
+
+  document.getElementById('win-overlay').classList.add('show');
+  document.getElementById('btn-retry').onclick = init;
+
+  spawnConfetti();
+}
+
+function spawnConfetti() {
+  const colors = ['#f9c74f','#2bb5c8','#2ecc71','#e74c5e','#8e44ad','#ff9f43'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const sz = 6 + Math.random() * 8;
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[i % colors.length]};
+      width:${sz}px;height:${sz}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${i*60}ms;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ── Start ─────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
