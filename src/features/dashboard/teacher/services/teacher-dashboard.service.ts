@@ -44,7 +44,7 @@ const toTeacherClass = (raw: Record<string, unknown>): TeacherClass => {
 export const getTeacherClassrooms = async (): Promise<TeacherClass[]> => {
   const { data } = await axiosClient.get("/classrooms");
 
-  const rows = Array.isArray(data)
+  const rows: unknown[] = Array.isArray(data)
     ? data
     : Array.isArray(data?.items)
       ? data.items
@@ -52,5 +52,7 @@ export const getTeacherClassrooms = async (): Promise<TeacherClass[]> => {
         ? data.data
         : [];
 
-  return rows.map((row) => toTeacherClass(row as Record<string, unknown>));
+  return rows.map((row: unknown) =>
+    toTeacherClass((row ?? {}) as Record<string, unknown>)
+  );
 };
