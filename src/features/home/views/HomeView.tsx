@@ -27,9 +27,9 @@ export default function Home() {
             Misiones, recompensas y aventuras para aprender jugando
           </p>
 
-          <button className="mt-8 px-6 py-3 rounded-full bg-yellow-400 text-black font-semibold shadow-[0_0_25px_rgba(255,208,0,0.5)] hover:scale-105 transition">
+          <a href="/minigame/index.html" className="mt-8 inline-block px-6 py-3 rounded-full bg-yellow-400 text-black font-semibold shadow-[0_0_25px_rgba(255,208,0,0.5)] hover:scale-105 transition">
             Empezar aventura 🚀
-          </button>
+          </a>
 
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-sm text-white/60 justify-center md:justify-start">
             <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export default function Home() {
 
         <div className="relative z-10 w-full max-w-5xl grid md:grid-cols-2 gap-2">
           {/* DOCENTE */}
-          <div className="group relative rounded-2xl p-10 text-center overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02]">
+          <a href="/minigame/index.html" className="group relative rounded-2xl p-10 text-center overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] no-underline text-white">
             <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition duration-500 rounded-2xl" />
 
             <div className="relative z-10 flex flex-col items-center">
@@ -80,14 +80,14 @@ export default function Home() {
                 />
               </div>
 
-              <button className="mt-5 px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
+              <span className="mt-5 px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
                 Empezar ✨
-              </button>
+              </span>
             </div>
-          </div>
+          </a>
 
           {/* ALUMNO */}
-          <div className="group relative rounded-2xl p-10 text-center overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02]">
+          <a href="/minigame/lobby.html" className="group relative rounded-2xl p-10 text-center overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] no-underline text-white">
             <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition duration-500 rounded-2xl" />
 
             <div className="relative z-10 flex flex-col items-center">
@@ -106,11 +106,11 @@ export default function Home() {
                 />
               </div>
 
-              <button className="mt-5 px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
+              <span className="mt-5 px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
                 Jugar 🚀
-              </button>
+              </span>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 

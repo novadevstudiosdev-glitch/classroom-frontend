@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NOVI · Multijugador</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  :root{
+    --bg:#0f0f1a;--card:#1a1a2e;--purple:#7c3aed;--cyan:#06b6d4;
+    --gold:#f59e0b;--green:#22c55e;--red:#ef4444;--muted:#64748b;
+    --border:rgba(255,255,255,.08);--glass:rgba(255,255,255,.06);
+    --glass2:rgba(255,255,255,.1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#fff;min-height:100vh;overflow-x:hidden}
+
+  /* ── Screens ── */
+  .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .screen.active{display:flex}
+
+  /* ── Join screen ── */
+  .join-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px}
+  .join-logo{text-align:center;font-size:32px;font-weight:900;letter-spacing:-1px}
+  .join-logo span{color:var(--cyan)}
+  .join-title{text-align:center;font-size:15px;color:var(--muted);font-weight:600}
+  .field label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+  .field input{width:100%;background:var(--glass);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;color:#fff;font-family:inherit;font-size:15px;font-weight:700;outline:none;transition:border-color .2s}
+  .field input:focus{border-color:var(--purple)}
+  .btn-join{background:linear-gradient(135deg,var(--purple),#5b21b6);border:none;color:#fff;font-family:inherit;font-size:16px;font-weight:800;padding:14px;border-radius:12px;cursor:pointer;width:100%;transition:opacity .2s}
+  .btn-join:hover{opacity:.9}
+  .btn-join:disabled{opacity:.4;cursor:not-allowed}
+  .join-err{color:#fca5a5;font-size:13px;font-weight:700;text-align:center;display:none}
+
+  /* ── Lobby screen ── */
+  .lobby-wrap{width:100%;max-width:680px;display:flex;flex-direction:column;gap:24px}
+  .lobby-header{text-align:center}
+  .lobby-quiz-title{font-size:26px;font-weight:900;margin-bottom:6px}
+  .lobby-code-box{background:var(--glass);border:1.5px solid var(--border);border-radius:14px;padding:16px 20px;text-align:center}
+  .lobby-code-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
+  .lobby-code{font-size:18px;font-weight:900;color:var(--cyan);word-break:break-all;cursor:pointer;transition:color .2s}
+  .lobby-code:hover{color:#fff}
+  .lobby-code-hint{font-size:11px;color:var(--muted);margin-top:4px}
+  .players-section{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px}
+  .players-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px}
+  .players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .player-chip{background:var(--glass);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+  .player-chip.host{border-color:var(--gold);color:var(--gold)}
+  @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+  .lobby-waiting{text-align:center;color:var(--muted);font-size:14px;font-weight:600;padding:10px 0}
+  .btn-start{background:linear-gradient(135deg,var(--green),#15803d);border:none;color:#fff;font-family:inherit;font-size:18px;font-weight:900;padding:16px 40px;border-radius:14px;cursor:pointer;width:100%;transition:opacity .2s;box-shadow:0 6px 0 #14532d}
+  .btn-start:hover{opacity:.9}
+  .btn-start:active{transform:translateY(3px);box-shadow:0 3px 0 #14532d}
+  .btn-start:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ── Countdown screen ── */
+  .countdown-num{font-size:120px;font-weight:900;color:var(--cyan);line-height:1;animation:pulse 1s ease-in-out}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .countdown-label{font-size:22px;font-weight:700;color:var(--muted);margin-top:12px}
+
+  /* ── Question screen ── */
+  .q-screen-wrap{width:100%;max-width:760px;display:flex;flex-direction:column;gap:20px}
+  .q-top-bar{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 20px}
+  .q-progress{font-size:13px;font-weight:800;color:var(--muted)}
+  .q-timer-pill{background:var(--glass2);border-radius:999px;padding:6px 18px;font-size:22px;font-weight:900;color:var(--cyan);min-width:60px;text-align:center}
+  .q-timer-pill.warn{color:var(--gold)}
+  .q-timer-pill.danger{color:var(--red)}
+  .q-timer-bar-wrap{height:5px;background:var(--glass2);border-radius:999px;overflow:hidden}
+  .q-timer-bar{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:999px;transition:width .5s linear}
+  .q-card{background:#fff;border-radius:18px;padding:28px 32px;text-align:center}
+  .q-img{max-width:100%;max-height:200px;border-radius:10px;object-fit:contain;margin-bottom:16px;display:none}
+  .q-text{font-size:26px;font-weight:900;color:#1a1a2e;line-height:1.4}
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opt-btn{background:var(--glass);border:2px solid var(--border);border-radius:14px;padding:18px 16px;font-family:inherit;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:all .15s;text-align:left;min-height:64px}
+  .opt-btn:hover:not(:disabled){background:var(--glass2);transform:translateY(-2px)}
+  .opt-btn:disabled{cursor:default}
+  .opt-btn.selected{border-color:var(--cyan);background:rgba(6,182,212,.15)}
+  .opt-btn.correct{border-color:var(--green)!important;background:rgba(34,197,94,.2)!important}
+  .opt-btn.wrong{border-color:var(--red)!important;background:rgba(239,68,68,.15)!important;opacity:.6}
+  .answered-msg{text-align:center;font-size:16px;font-weight:800;padding:8px;border-radius:10px}
+  .answered-msg.ok{color:var(--green)}
+  .answered-msg.nope{color:var(--red)}
+  .answered-msg.waiting{color:var(--muted)}
+
+  /* ── Round end / scoreboard ── */
+  .round-end-wrap{width:100%;max-width:540px;display:flex;flex-direction:column;gap:16px}
+  .round-end-title{text-align:center;font-size:22px;font-weight:900}
+  .scoreboard-list{display:flex;flex-direction:column;gap:8px}
+  .sb-row{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+  .sb-rank{font-size:20px;font-weight:900;min-width:36px;text-align:center}
+  .sb-alias{flex:1;font-size:16px;font-weight:800}
+  .sb-score{font-size:18px;font-weight:900;color:var(--gold)}
+  .sb-row.me{border-color:var(--cyan)}
+
+  /* ── Game over ── */
+  .gameover-wrap{width:100%;max-width:540px;display:flex;flex-direction:column;align-items:center;gap:20px}
+  .gameover-podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;height:160px}
+  .podium-place{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+  .podium-alias{font-size:13px;font-weight:800;text-align:center;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podium-score{font-size:11px;color:var(--muted);font-weight:700}
+  .podium-bar{border-radius:8px 8px 0 0;width:72px}
+  .podium-bar.p1{background:linear-gradient(180deg,var(--gold),#b45309);height:120px}
+  .podium-bar.p2{background:linear-gradient(180deg,#94a3b8,#475569);height:80px}
+  .podium-bar.p3{background:linear-gradient(180deg,#a16207,#78350f);height:56px}
+  .podium-medal{font-size:28px;margin-bottom:4px}
+  .btn-play-again{background:linear-gradient(135deg,var(--purple),#5b21b6);border:none;color:#fff;font-family:inherit;font-size:16px;font-weight:800;padding:14px 36px;border-radius:12px;cursor:pointer;transition:opacity .2s}
+  .btn-play-again:hover{opacity:.9}
+
+  /* ── Loading ── */
+  .spinner{width:48px;height:48px;border:4px solid var(--glass2);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:16px;font-weight:700;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ── JOIN ──────────────────────────────────────────── -->
+<div id="screen-join" class="screen active">
+  <div class="join-card">
+    <div class="join-logo">NO<span>VI</span></div>
+    <div class="join-title">Modo Multijugador</div>
+
+    <div class="field">
+      <label>Código del quiz</label>
+      <input id="inp-code" placeholder="Pegá el ID del quiz..." autocomplete="off"
+        onkeydown="if(event.key==='Enter')$('inp-alias').focus()"/>
+    </div>
+    <div class="field">
+      <label>Tu alias</label>
+      <input id="inp-alias" placeholder="Ej: sofia123" maxlength="20" autocomplete="off"
+        onkeydown="if(event.key==='Enter')joinRoom()"/>
+    </div>
+
+    <div id="join-err" class="join-err"></div>
+    <button class="btn-join" id="btn-join" onclick="joinRoom()">Unirse →</button>
+
+    <div style="text-align:center;font-size:12px;color:var(--muted)">
+      ¿Sos el profe? <a href="index.html" style="color:var(--cyan)">Ir al dashboard</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOBBY ─────────────────────────────────────────── -->
+<div id="screen-lobby" class="screen">
+  <div class="lobby-wrap">
+    <div class="lobby-header">
+      <div class="lobby-quiz-title" id="lobby-quiz-title">Cargando...</div>
+    </div>
+
+    <div class="lobby-code-box" onclick="copyCode()">
+      <div class="lobby-code-label">Código de sala · compartí con tus amigos</div>
+      <div class="lobby-code" id="lobby-code">—</div>
+      <div class="lobby-code-hint">📋 Clic para copiar</div>
+    </div>
+
+    <div class="players-section">
+      <div class="players-title" id="players-title">Jugadores conectados (0)</div>
+      <div class="players-grid" id="players-grid">
+        <div class="lobby-waiting">Esperando jugadores...</div>
+      </div>
+    </div>
+
+    <div id="host-controls" style="display:none">
+      <button class="btn-start" id="btn-start" onclick="startGame()">▶ Empezar partida</button>
+    </div>
+    <div id="guest-waiting" style="display:none;text-align:center;color:var(--muted);font-size:14px;font-weight:700">
+      ⏳ Esperando que el host inicie la partida...
+    </div>
+  </div>
+</div>
+
+<!-- ── COUNTDOWN ─────────────────────────────────────── -->
+<div id="screen-countdown" class="screen">
+  <div class="countdown-num" id="countdown-num">3</div>
+  <div class="countdown-label">¡Preparate!</div>
+</div>
+
+<!-- ── QUESTION ──────────────────────────────────────── -->
+<div id="screen-question" class="screen">
+  <div class="q-screen-wrap">
+    <div class="q-top-bar">
+      <div class="q-progress" id="q-progress">Pregunta 1 de 1</div>
+      <div class="q-timer-pill" id="q-timer">20</div>
+    </div>
+    <div class="q-timer-bar-wrap">
+      <div class="q-timer-bar" id="q-timer-bar" style="width:100%"></div>
+    </div>
+    <div class="q-card">
+      <img id="q-img" class="q-img" alt=""/>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="options-grid" id="options-grid"></div>
+    <div class="answered-msg" id="answered-msg" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ── ROUND END ─────────────────────────────────────── -->
+<div id="screen-round-end" class="screen">
+  <div class="round-end-wrap">
+    <div class="round-end-title" id="round-end-title">Ranking parcial</div>
+    <div class="scoreboard-list" id="round-scoreboard"></div>
+  </div>
+</div>
+
+<!-- ── GAME OVER ─────────────────────────────────────── -->
+<div id="screen-gameover" class="screen">
+  <div class="gameover-wrap">
+    <div style="font-size:36px;font-weight:900">🏆 Resultados finales</div>
+    <div class="gameover-podium" id="gameover-podium"></div>
+    <div class="scoreboard-list" id="gameover-scoreboard" style="width:100%"></div>
+    <button class="btn-play-again" onclick="location.reload()">Jugar de nuevo</button>
+    <a href="index.html" style="color:var(--muted);font-size:13px;font-weight:700;text-decoration:none">← Volver al inicio</a>
+  </div>
+</div>
+
+<!-- ── LOADING ───────────────────────────────────────── -->
+<div id="screen-loading" class="screen">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Conectando...</div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const WS_URL = 'https://classroom-backend.up.railway.app';
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(name).classList.add('active');
+}
+
+function showErr(msg) {
+  const el = $('join-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideErr() { $('join-err').style.display = 'none'; }
+
+// ── State ──────────────────────────────────────────────────────────────────
+let socket = null;
+let myAlias = '';
+let roomCode = '';
+let isHost = false;
+let timerInterval = null;
+let timerSecondsLeft = 20;
+let timerTotal = 20;
+let selectedOption = null;
+let answered = false;
+let totalQuestions = 0;
+let currentQIndex = 0;
+let myScore = 0;
+
+// Pre-fill code from URL param ?code=...
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('code')) $('inp-code').value = urlParams.get('code');
+
+// ── Join ───────────────────────────────────────────────────────────────────
+function joinRoom() {
+  const code  = $('inp-code').value.trim();
+  const alias = $('inp-alias').value.trim();
+
+  if (!code)  { showErr('Ingresá el código del quiz.'); return; }
+  if (!alias) { showErr('Ingresá un alias.'); return; }
+  if (alias.length > 20) { showErr('El alias no puede tener más de 20 caracteres.'); return; }
+
+  hideErr();
+  $('btn-join').disabled = true;
+  $('btn-join').textContent = 'Conectando...';
+
+  myAlias   = alias;
+  roomCode  = code;
+
+  socket = io(WS_URL, {
+    path: '/socket.io',
+    namespace: '/game',
+    transports: ['websocket', 'polling'],
+    reconnectionAttempts: 3,
+  });
+
+  socket.on('connect', () => {
+    socket.emit('join-room', { instanceId: code, alias });
+  });
+
+  socket.on('connect_error', () => {
+    showErr('No se pudo conectar al servidor. Intentá de nuevo.');
+    $('btn-join').disabled = false;
+    $('btn-join').textContent = 'Unirse →';
+    socket.disconnect();
+  });
+
+  bindSocketEvents();
+}
+
+// ── Socket events ──────────────────────────────────────────────────────────
+function bindSocketEvents() {
+
+  socket.on('error', data => {
+    showErr(data.message || 'Error desconocido.');
+    $('btn-join').disabled = false;
+    $('btn-join').textContent = 'Unirse →';
+    showScreen('screen-join');
+  });
+
+  socket.on('joined', data => {
+    roomCode  = data.roomCode;
+    isHost    = data.isHost;
+    totalQuestions = data.totalQuestions;
+    showLobby();
+  });
+
+  socket.on('room-update', data => {
+    updateLobby(data);
+  });
+
+  socket.on('game-started', data => {
+    totalQuestions = data.totalQuestions;
+    startCountdown();
+  });
+
+  socket.on('question', data => {
+    currentQIndex = data.index;
+    totalQuestions = data.total;
+    showQuestion(data.question, data.timeLimitMs);
+  });
+
+  socket.on('answer-result', data => {
+    myScore = data.score;
+    onAnswerResult(data.correct, data.correctOptionId);
+  });
+
+  socket.on('round-end', data => {
+    // Revelar respuesta correcta si no respondimos
+    if (!answered) {
+      const q = data;
+      revealCorrect(data.correctOptionId);
+    }
+    setTimeout(() => showRoundEnd(data.scoreboard), 800);
+  });
+
+  socket.on('game-over', data => {
+    showGameOver(data.scoreboard);
+  });
+
+  socket.on('disconnect', () => {
+    // Solo mostrar error si estabamos en medio del juego
+    if ($('screen-question').classList.contains('active') ||
+        $('screen-lobby').classList.contains('active')) {
+      alert('Te desconectaste del servidor.');
+    }
+  });
+}
+
+// ── Lobby ──────────────────────────────────────────────────────────────────
+function showLobby() {
+  $('lobby-code').textContent = roomCode;
+
+  if (isHost) {
+    $('host-controls').style.display = 'block';
+    $('guest-waiting').style.display = 'none';
+  } else {
+    $('host-controls').style.display = 'none';
+    $('guest-waiting').style.display = 'block';
+  }
+
+  showScreen('screen-lobby');
+}
+
+function updateLobby(data) {
+  const grid = $('players-grid');
+  const count = data.players.length;
+
+  $('players-title').textContent = `Jugadores conectados (${count})`;
+
+  if (count === 0) {
+    grid.innerHTML = '<div class="lobby-waiting">Esperando jugadores...</div>';
+    return;
+  }
+
+  grid.innerHTML = data.players.map(p => {
+    const isMe = p.alias === myAlias;
+    const isHostPlayer = p.alias === data.hostAlias;
+    return `<div class="player-chip${isHostPlayer ? ' host' : ''}">
+      ${isHostPlayer ? '👑 ' : ''}${escHtml(p.alias)}${isMe ? ' (vos)' : ''}
+    </div>`;
+  }).join('');
+
+  // Actualizar botón start
+  const startBtn = $('btn-start');
+  if (startBtn) startBtn.disabled = count < 1;
+}
+
+function startGame() {
+  if (!socket) return;
+  $('btn-start').disabled = true;
+  $('btn-start').textContent = '⏳ Iniciando...';
+  socket.emit('start-game');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(roomCode).then(() => {
+    const el = $('lobby-code');
+    el.textContent = '¡Copiado!';
+    setTimeout(() => el.textContent = roomCode, 1500);
+  });
+}
+
+// ── Countdown ──────────────────────────────────────────────────────────────
+function startCountdown() {
+  let n = 3;
+  $('countdown-num').textContent = n;
+  showScreen('screen-countdown');
+
+  const iv = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(iv);
+      // La pregunta llega por socket 'question', aquí solo mostramos loading
+      $('countdown-num').textContent = '¡Ya!';
+    } else {
+      $('countdown-num').textContent = n;
+    }
+  }, 1000);
+}
+
+// ── Question ───────────────────────────────────────────────────────────────
+function showQuestion(q, timeLimitMs) {
+  answered = false;
+  selectedOption = null;
+
+  $('q-progress').textContent = `Pregunta ${currentQIndex + 1} de ${totalQuestions}`;
+  $('q-text').textContent = q.text;
+
+  const img = $('q-img');
+  if (q.image_url) {
+    img.src = q.image_url;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+    img.src = '';
+  }
+
+  const grid = $('options-grid');
+  grid.innerHTML = (q.options || []).map(opt => `
+    <button class="opt-btn" id="opt-${opt.id}" onclick="submitAnswer('${opt.id}')">
+      ${escHtml(opt.text)}
+    </button>
+  `).join('');
+
+  $('answered-msg').style.display = 'none';
+
+  // Timer
+  timerTotal = Math.round(timeLimitMs / 1000);
+  timerSecondsLeft = timerTotal;
+  updateTimerUI(timerTotal, timerTotal);
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSecondsLeft--;
+    updateTimerUI(timerSecondsLeft, timerTotal);
+    if (timerSecondsLeft <= 0) {
+      clearInterval(timerInterval);
+      lockOptions();
+    }
+  }, 1000);
+
+  showScreen('screen-question');
+}
+
+function updateTimerUI(left, total) {
+  const el = $('q-timer');
+  el.textContent = Math.max(0, left);
+  el.className = 'q-timer-pill' + (left <= 5 ? ' danger' : left <= 10 ? ' warn' : '');
+  $('q-timer-bar').style.width = `${Math.max(0, (left / total) * 100)}%`;
+}
+
+function submitAnswer(optId) {
+  if (answered) return;
+  answered = true;
+  selectedOption = optId;
+
+  lockOptions();
+  document.getElementById(`opt-${optId}`)?.classList.add('selected');
+
+  const msg = $('answered-msg');
+  msg.textContent = '⏳ Esperando a los demás...';
+  msg.className = 'answered-msg waiting';
+  msg.style.display = 'block';
+
+  socket.emit('submit-answer', { optionId: optId });
+}
+
+function onAnswerResult(correct, correctOptionId) {
+  revealCorrect(correctOptionId);
+
+  const msg = $('answered-msg');
+  if (correct) {
+    msg.textContent = '✅ ¡Correcto! +puntos';
+    msg.className = 'answered-msg ok';
+  } else {
+    msg.textContent = '❌ Incorrecto';
+    msg.className = 'answered-msg nope';
+  }
+  msg.style.display = 'block';
+
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+function revealCorrect(correctOptionId) {
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.disabled = true;
+    const id = btn.id.replace('opt-', '');
+    if (id === correctOptionId) {
+      btn.classList.add('correct');
+    } else if (btn.classList.contains('selected')) {
+      btn.classList.add('wrong');
+    }
+  });
+}
+
+function lockOptions() {
+  document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
+  if (!answered) {
+    const msg = $('answered-msg');
+    msg.textContent = '⏰ Tiempo agotado';
+    msg.className = 'answered-msg nope';
+    msg.style.display = 'block';
+  }
+}
+
+// ── Round end ──────────────────────────────────────────────────────────────
+function showRoundEnd(scoreboard) {
+  if (timerInterval) clearInterval(timerInterval);
+
+  const list = $('round-scoreboard');
+  list.innerHTML = scoreboard.map(p => `
+    <div class="sb-row${p.alias === myAlias ? ' me' : ''}">
+      <div class="sb-rank">${rankEmoji(p.rank)}</div>
+      <div class="sb-alias">${escHtml(p.alias)}${p.alias === myAlias ? ' 👈' : ''}</div>
+      <div class="sb-score">${p.score}</div>
+    </div>
+  `).join('');
+
+  showScreen('screen-round-end');
+}
+
+// ── Game over ──────────────────────────────────────────────────────────────
+function showGameOver(scoreboard) {
+  if (timerInterval) clearInterval(timerInterval);
+
+  // Podio top 3
+  const podium = $('gameover-podium');
+  const top = scoreboard.slice(0, 3);
+  const order = [top[1], top[0], top[2]].filter(Boolean); // 2º, 1º, 3º visual
+  const classes = top[1] ? ['p2','p1','p3'] : ['p1'];
+  podium.innerHTML = order.map((p, i) => `
+    <div class="podium-place">
+      <div class="podium-medal">${['🥈','🥇','🥉'][i]}</div>
+      <div class="podium-alias">${escHtml(p.alias)}</div>
+      <div class="podium-score">${p.score} pts</div>
+      <div class="podium-bar ${classes[i]}"></div>
+    </div>
+  `).join('');
+
+  // Tabla completa
+  $('gameover-scoreboard').innerHTML = scoreboard.map(p => `
+    <div class="sb-row${p.alias === myAlias ? ' me' : ''}">
+      <div class="sb-rank">${rankEmoji(p.rank)}</div>
+      <div class="sb-alias">${escHtml(p.alias)}${p.alias === myAlias ? ' 👈' : ''}</div>
+      <div class="sb-score">${p.score}</div>
+    </div>
+  `).join('');
+
+  showScreen('screen-gameover');
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function rankEmoji(rank) {
+  return rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+}
+
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
