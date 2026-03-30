@@ -27,7 +27,7 @@ export default function Home() {
             Misiones, recompensas y aventuras para aprender jugando
           </p>
 
-          <a href="/minigame/index.html" className="mt-8 inline-block px-6 py-3 rounded-full bg-yellow-400 text-black font-semibold shadow-[0_0_25px_rgba(255,208,0,0.5)] hover:scale-105 transition">
+          <a href="/minigame/home" className="mt-8 inline-block px-6 py-3 rounded-full bg-yellow-400 text-black font-semibold shadow-[0_0_25px_rgba(255,208,0,0.5)] hover:scale-105 transition">
             Empezar aventura 🚀
           </a>
 
