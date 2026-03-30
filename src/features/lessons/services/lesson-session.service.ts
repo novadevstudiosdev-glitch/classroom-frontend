@@ -11,6 +11,44 @@ const SESSION_RESULT_STORAGE_KEY = "lessons_session_result_cache_v1";
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isSessionResultData = (value: unknown): value is SessionResultData => {
+  if (!isRecord(value)) return false;
+
+  const stars = value.stars;
+  return (
+    typeof value.lessonId === "string" &&
+    typeof value.lessonTitle === "string" &&
+    isFiniteNumber(value.earnedXp) &&
+    (stars === 1 || stars === 2 || stars === 3) &&
+    isFiniteNumber(value.correctAnswers) &&
+    isFiniteNumber(value.totalExercises) &&
+    isFiniteNumber(value.levelBefore) &&
+    isFiniteNumber(value.levelAfter) &&
+    typeof value.didLevelUp === "boolean"
+  );
+};
+
+const isCompleteLessonSessionResponse = (
+  value: unknown,
+): value is CompleteLessonSessionResponse => {
+  if (!isRecord(value)) return false;
+
+  const stars = value.stars;
+  return (
+    typeof value.lesson_id === "string" &&
+    (typeof value.lesson_title === "string" || value.lesson_title === undefined) &&
+    isFiniteNumber(value.earned_xp) &&
+    (stars === 1 || stars === 2 || stars === 3) &&
+    isFiniteNumber(value.correct_answers) &&
+    isFiniteNumber(value.total_exercises) &&
+    isFiniteNumber(value.level_before) &&
+    isFiniteNumber(value.level_after)
+  );
+};
+
 const normalizeStars = (value: number): 1 | 2 | 3 => {
   if (value >= 3) return 3;
   if (value <= 1) return 1;
@@ -73,8 +111,7 @@ export const getSessionResultCacheByLessonId = (
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) return null;
-    return parsed as unknown as SessionResultData;
+    return isSessionResultData(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -94,12 +131,12 @@ export const completeLessonSession = async (
     const { data } = await axiosClient.post(`/lessons/${input.lessonId}/complete`, body);
     const payload: unknown = data;
 
-    let normalized: CompleteLessonSessionResponse | null = null;
-    if (isRecord(payload) && isRecord(payload.data)) {
-      normalized = payload.data as unknown as CompleteLessonSessionResponse;
-    } else if (isRecord(payload)) {
-      normalized = payload as unknown as CompleteLessonSessionResponse;
-    }
+    const normalized =
+      isRecord(payload) && isCompleteLessonSessionResponse(payload.data)
+        ? payload.data
+        : isCompleteLessonSessionResponse(payload)
+          ? payload
+          : null;
 
     if (normalized) {
       const result = toSessionResultData(input, normalized);

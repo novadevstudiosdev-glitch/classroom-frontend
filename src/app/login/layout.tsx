@@ -1,6 +1,9 @@
-import { NavbarLayout } from "@/shared/layouts";
-import type { NavbarLayoutProps } from "@/shared/types";
+import type { ReactNode } from "react";
 
-export default function LoginLayout({ children }: NavbarLayoutProps) {
-  return <NavbarLayout>{children}</NavbarLayout>;
+type LoginLayoutProps = {
+  children: ReactNode;
+};
+
+export default function LoginLayout({ children }: LoginLayoutProps) {
+  return <>{children}</>;
 }
