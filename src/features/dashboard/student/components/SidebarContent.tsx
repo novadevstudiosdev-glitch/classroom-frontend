@@ -33,7 +33,7 @@ export default function SidebarContent({
         <EducationMascot character="bounce" expression="happy" size={100} />
       </div>
 
-      <h3 className="text-2xl font-bold text-[#8B67FF]">
+      <h3 className="text-2xl font-bold text-white">
         Sofía García
       </h3>
 
@@ -49,8 +49,8 @@ export default function SidebarContent({
               className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all w-full
                 ${
                   isActive
-                    ? "border-linear-to-r from-[#050816] to-[#3054FF] border text-gray-800 shadow-[0_4px_12px_rgba(124,77,255,0.3)]"
-                    : "text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF]"
+                    ? "border-linear-to-r from-[#090f2a] to-[#3054FF] justify-center text-white shadow-[0_4px_12px_rgba(124,255,255,0.3)]"
+                    : "text-white justify-center hover:bg-[#F3F0FF] hover:text-[#ffffff]"
                 }
               `}
             >
