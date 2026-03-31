@@ -23,3 +23,9 @@ export type RefreshResponse = {
   accessToken: string;
   refreshToken?: string;
 };
+
+export type LoginParams = {
+  email: string;
+  password: string;
+  recaptchaToken?: string;
+};
