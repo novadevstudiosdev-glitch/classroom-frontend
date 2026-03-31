@@ -1,5 +1,7 @@
-// app/dashboard/student/layout.tsx
 
+
+
+import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
 import SidebarNav from "@/features/dashboard/student/components/Sidebar";
 
 export default function StudentLayout({
@@ -8,15 +10,15 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex bg-[#FDFAF4]">
+    <div className="flex ">
       
       {/* SIDEBAR */}
-      <aside className="w-65 h-screen sticky top-0 bg-white p-6 shadow-[4px_0_20px_rgba(124,77,255,0.08)]">
-        <SidebarNav />
-      </aside>
+       <SidebarNav />
+      
+      <AuthBackgroundCanvas />
 
       {/* CONTENIDO */}
-      <main className="flex-1 h-screen overflow-y-auto p-6">
+      <main className="relative z-10 w-full md:p-8">
         {children}
       </main>
 
