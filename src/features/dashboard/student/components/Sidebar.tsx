@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { EducationMascot } from "@/shared/components/mascots";
+import SidebarContent from "./SidebarContent";
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   const links = [
     { href: "/dashboard/student", label: "Inicio", icon: "🏠" },
@@ -16,40 +17,46 @@ export default function SidebarNav() {
   ];
 
   return (
-    <div className="flex flex-col gap-8 items-center text-center">
-      <div className="mt-4">
-        <EducationMascot character="bounce" expression="happy" size={100} />
-      </div>
+    <>
+      {/* 🔹 BOTÓN HAMBURGUESA (mobile) */}
+      <button
+        onClick={() => setOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-md"
+      >
+        ☰
+      </button>
 
-      <h3 className="text-2xl font-bold text-[#8B67FF]">Sofía García</h3>
+      {/* 🔹 OVERLAY */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+        />
+      )}
 
-      <nav className="flex flex-col gap-2 w-full">
-        {links.map((link) => {
-          const isActive = (() => {
-            if (link.href === "/dashboard/student") {
-              return pathname === link.href;
-            }
-            return pathname.startsWith(link.href);
-          })();
+      {/* 🔹 SIDEBAR */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-full w-65 bg-white z-50 p-4
+          transition-transform duration-300
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:static md:flex
+        `}
+      >
+        {/* cerrar en mobile */}
+        <button
+          onClick={() => setOpen(false)}
+          className="md:hidden self-end mb-4 text-xl"
+        >
+          ✕
+        </button>
 
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all w-full
-                ${
-                  isActive
-                    ? "border-linear-to-r from-[#050816] to-[#3054FF] border text-gray-800 shadow-[0_4px_12px_rgba(124,77,255,0.3)]"
-                    : "text-gray-600 hover:bg-[#F3F0FF] hover:text-[#7C4DFF]"
-                }
-              `}
-            >
-              <span className="text-xl">{link.icon}</span>
-              <span>{link.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+        <SidebarContent
+          links={links}
+          pathname={pathname}
+          onNavigate={() => setOpen(false)}
+        />
+      </aside>
+    </>
   );
 }

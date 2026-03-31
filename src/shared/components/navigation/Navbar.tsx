@@ -25,7 +25,7 @@ export default function Navbar() {
         {/* LOGO */}
         <div className="flex items-center">
           <Image
-            src="/NOVI1.svg"
+            src="/NOVI.png"
             alt="Logo Novi - classroom"
             width={150}
             height={150}
