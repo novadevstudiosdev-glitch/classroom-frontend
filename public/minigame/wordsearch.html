@@ -9,73 +9,79 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
     :root{
-      --bg:#f0f9ff;
-      --card:#fff;
-      --primary:#2bb5c8;
-      --dark:#1a3a4a;
-      --muted:#6b8fa3;
+      --space:#06080f;
+      --card:#0d1117;
+      --card2:#111827;
+      --purple:#7c3aed;
+      --cyan:#06b6d4;
+      --border:rgba(255,255,255,.08);
+      --muted:rgba(255,255,255,.45);
       --radius:16px;
-      --shadow:0 4px 20px rgba(0,0,0,.10);
     }
 
     body{
       font-family:'Nunito',system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--dark);
+      background:var(--space);
+      color:#fff;
       min-height:100vh;
       display:flex;flex-direction:column;
       overflow:hidden;
     }
 
+    /* Stars */
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--delay,0s)}
+    @keyframes twinkle{0%,100%{opacity:.08}50%{opacity:.55}}
+
     /* Header */
     .ws-header{
-      background:var(--card);
-      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      position:relative;z-index:10;
+      background:rgba(13,17,23,.85);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(12px);
       padding:10px 20px;
       display:flex;align-items:center;gap:12px;
       flex-shrink:0;
     }
     .back-btn{
-      background:var(--bg);border:2px solid #d0e8f0;
-      color:var(--dark);font-family:inherit;font-size:14px;font-weight:700;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:rgba(255,255,255,.8);
+      font-family:inherit;font-size:14px;font-weight:700;
       padding:7px 16px;border-radius:999px;cursor:pointer;
       transition:background .15s;white-space:nowrap;
     }
-    .back-btn:hover{background:#d0e8f0}
-    .ws-title{font-size:18px;font-weight:900;color:var(--dark);flex:1;text-align:center}
+    .back-btn:hover{background:rgba(255,255,255,.12)}
+    .ws-title{font-size:18px;font-weight:900;color:#fff;flex:1;text-align:center}
 
-    /* Stats inside sidebar */
-    .ws-stats{
-      display:flex;gap:8px;margin-bottom:16px;
-    }
+    /* Stats */
     .ws-timer{
-      flex:1;
-      background:#fff8e1;border:2px solid #f9c74f;
-      color:#b8860b;font-weight:800;font-size:14px;
-      padding:8px 10px;border-radius:12px;text-align:center;white-space:nowrap;
+      font-weight:800;font-size:14px;
+      padding:7px 16px;border-radius:999px;white-space:nowrap;
+      background:rgba(249,200,79,.12);border:1px solid rgba(249,200,79,.3);color:#f9c84f;
     }
     .ws-score{
-      flex:1;
-      background:#e8f5e9;border:2px solid #43a047;
-      color:#2e7d32;font-weight:800;font-size:14px;
-      padding:8px 10px;border-radius:12px;text-align:center;white-space:nowrap;
+      font-weight:800;font-size:14px;
+      padding:7px 16px;border-radius:999px;white-space:nowrap;
+      background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);color:var(--cyan);
     }
 
     /* Main layout */
     .ws-body{
+      position:relative;z-index:10;
       flex:1;
       display:flex;
       align-items:flex-start;justify-content:center;
       gap:20px;
-      padding:16px 20px;
+      padding:20px;
       overflow:hidden;
     }
 
     /* Grid */
     .grid-wrap{
       background:var(--card);
+      border:1px solid var(--border);
       border-radius:var(--radius);
-      box-shadow:var(--shadow);
       padding:16px;
       flex-shrink:0;
       user-select:none;
@@ -83,24 +89,25 @@
 
     .grid{
       display:grid;
-      gap:2px;
+      gap:3px;
       cursor:crosshair;
     }
 
     .cell{
       width:38px;height:38px;
       display:flex;align-items:center;justify-content:center;
-      font-size:17px;font-weight:800;
+      font-size:15px;font-weight:800;
       border-radius:8px;
-      background:#f8fafc;
-      border:2px solid transparent;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      color:rgba(255,255,255,.85);
       transition:background .1s, transform .1s;
-      position:relative;
     }
-    .cell:hover{ background:#e8f4f8; }
+    .cell:hover{background:rgba(6,182,212,.12);}
     .cell.selecting{
-      background:#bce4f0!important;
-      border-color:#2bb5c8!important;
+      background:rgba(6,182,212,.25)!important;
+      border-color:var(--cyan)!important;
+      color:#fff!important;
       transform:scale(1.08);
       z-index:2;
     }
@@ -109,108 +116,91 @@
       border-color:transparent!important;
       transform:none;
     }
-    .cell.found-flash{ animation:foundFlash .4s ease; }
-    @keyframes foundFlash{
-      0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)}
-    }
+    .cell.found-flash{animation:foundFlash .4s ease}
+    @keyframes foundFlash{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 
     /* Word list */
     .word-list-wrap{
       background:var(--card);
+      border:1px solid var(--border);
       border-radius:var(--radius);
-      box-shadow:var(--shadow);
       padding:20px;
-      min-width:180px;
-      max-width:220px;
+      min-width:180px;max-width:220px;
     }
+    .ws-stats{display:flex;gap:8px;margin-bottom:16px}
     .word-list-title{
-      font-size:13px;font-weight:800;
+      font-size:11px;font-weight:800;
       text-transform:uppercase;letter-spacing:1px;
       color:var(--muted);margin-bottom:14px;
     }
     .word-list{display:flex;flex-direction:column;gap:8px}
     .word-item{
       display:flex;align-items:center;gap:10px;
-      font-size:16px;font-weight:700;color:var(--dark);
+      font-size:15px;font-weight:700;color:rgba(255,255,255,.8);
       padding:8px 12px;
       border-radius:10px;
-      background:#f8fafc;
-      border:2px solid transparent;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
       transition:all .3s;
     }
     .word-item.found-word{
       color:#fff;
       text-decoration:line-through;
-      text-decoration-color:rgba(255,255,255,0.7);
+      text-decoration-color:rgba(255,255,255,.5);
     }
     .word-dot{
-      width:12px;height:12px;border-radius:50%;
-      background:#d0e0ea;flex-shrink:0;
+      width:10px;height:10px;border-radius:50%;
+      background:rgba(255,255,255,.15);flex-shrink:0;
       transition:background .3s;
     }
-    .word-item.found-word .word-dot{ background:rgba(255,255,255,0.6); }
+    .word-item.found-word .word-dot{background:rgba(255,255,255,.4)}
 
     /* Progress */
     .progress-section{margin-top:20px}
-    .progress-label{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
-    .progress-track{
-      height:10px;background:#e8f4f8;border-radius:999px;overflow:hidden;
-    }
-    .progress-fill{
-      height:100%;background:var(--primary);border-radius:999px;
-      transition:width .5s ease;
-    }
-    .progress-count{
-      font-size:13px;font-weight:700;color:var(--muted);margin-top:6px;text-align:right;
-    }
+    .progress-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .progress-track{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--cyan);border-radius:999px;transition:width .5s ease}
+    .progress-count{font-size:12px;font-weight:700;color:var(--muted);margin-top:6px;text-align:right}
 
-    /* Win screen overlay */
+    /* Win overlay */
     .win-overlay{
-      display:none;
-      position:fixed;inset:0;
-      background:rgba(0,0,0,.5);
-      backdrop-filter:blur(4px);
-      z-index:500;
-      align-items:center;justify-content:center;
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+      z-index:500;align-items:center;justify-content:center;
     }
     .win-overlay.show{display:flex}
     .win-card{
-      background:var(--card);
-      border-radius:28px;
-      padding:40px 48px;
-      text-align:center;
-      max-width:380px;width:90%;
-      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      background:var(--card2);
+      border:1px solid rgba(124,58,237,.4);
+      border-radius:28px;padding:40px 48px;
+      text-align:center;max-width:380px;width:90%;
+      box-shadow:0 0 60px rgba(124,58,237,.2),0 20px 60px rgba(0,0,0,.4);
       animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
     }
     @keyframes winPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
     .win-emoji{font-size:72px;display:block;margin-bottom:16px;animation:float 2s ease-in-out infinite}
     @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-    .win-title{font-size:32px;font-weight:900;color:var(--dark);margin-bottom:8px}
+    .win-title{font-size:32px;font-weight:900;color:#fff;margin-bottom:8px}
     .win-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
-    .win-stats{
-      display:flex;gap:12px;margin-bottom:28px;
-    }
-    .win-stat{
-      flex:1;background:#f8fafc;border-radius:14px;padding:14px;
-    }
-    .win-stat-num{font-size:28px;font-weight:900;color:var(--dark)}
-    .win-stat-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .win-stats{display:flex;gap:12px;margin-bottom:28px}
+    .win-stat{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .win-stat-num{font-size:28px;font-weight:900;color:var(--cyan)}
+    .win-stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
     .win-btns{display:flex;gap:10px}
     .btn-win-retry{
-      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      flex:1;padding:14px;border:1px solid var(--border);border-radius:var(--radius);
       font-family:inherit;font-size:15px;font-weight:800;
-      background:#e8f4f8;color:var(--dark);cursor:pointer;
-      box-shadow:0 4px 0 #b0d0dc;transition:transform .1s;
+      background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:background .15s;
     }
     .btn-win-home{
       flex:1;padding:14px;border:none;border-radius:var(--radius);
       font-family:inherit;font-size:15px;font-weight:800;
-      background:var(--primary);color:#fff;cursor:pointer;
-      box-shadow:0 4px 0 #1a8fa0;transition:transform .1s;
+      background:var(--cyan);color:#000;cursor:pointer;
+      box-shadow:0 0 20px rgba(6,182,212,.4);transition:transform .1s;
     }
-    .btn-win-retry:hover,.btn-win-home:hover{transform:translateY(-2px)}
-    .btn-win-retry:active,.btn-win-home:active{transform:translateY(2px);box-shadow:none}
+    .btn-win-retry:hover{background:rgba(255,255,255,.12)}
+    .btn-win-home:hover{transform:translateY(-2px)}
+    .btn-win-home:active{transform:translateY(2px)}
 
     /* Confetti */
     .confetti-piece{
@@ -223,9 +213,14 @@
 </head>
 <body>
 
+<!-- Stars -->
+<div id="stars"></div>
+
 <div class="ws-header">
   <button class="back-btn" onclick="location.href='index.html'">← Volver</button>
   <span class="ws-title">🔤 Sopa de Letras</span>
+  <div class="ws-timer" id="ws-timer">⏱ 00:00</div>
+  <div class="ws-score" id="ws-score">★ 0</div>
 </div>
 
 <div class="ws-body">
@@ -234,10 +229,6 @@
   </div>
 
   <div class="word-list-wrap">
-    <div class="ws-stats">
-      <div class="ws-timer" id="ws-timer">⏱ 00:00</div>
-      <div class="ws-score" id="ws-score">★ 0</div>
-    </div>
     <div class="word-list-title">Encontrá las palabras</div>
     <div class="word-list" id="word-list"></div>
     <div class="progress-section">
@@ -266,19 +257,30 @@
     </div>
     <div class="win-btns">
       <button class="btn-win-retry" id="btn-retry">🔄 Jugar de nuevo</button>
-      <button class="btn-win-home"  onclick="location.href='index.html'">🏠 Menú</button>
+      <button class="btn-win-home" onclick="location.href='index.html'">🏠 Menú</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── Stars ─────────────────────────────────────────────────────
+(function(){
+  const container = document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const sz = Math.random()*2+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:${Math.random()*.4+.05};--d:${(Math.random()*3+2).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s`;
+    container.appendChild(s);
+  }
+})();
+
 // ── Words & Colors ─────────────────────────────────────────────
 const WORDS = ['GATO','PERRO','PATO','LEON','TIGRE','OSO','RANA','LOBO'];
-const WORD_COLORS = ['#e74c5e','#2980d4','#f0a500','#27ae60','#8e44ad','#16a085','#e67e22','#c0392b'];
+const WORD_COLORS = ['#e74c5e','#3b82f6','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899'];
 const GRID_SIZE   = 12;
 const LETTERS     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-// All 8 directions
 const DIRS = [
   [0,1],[1,0],[1,1],[1,-1],
   [0,-1],[-1,0],[-1,-1],[-1,1],
@@ -315,11 +317,9 @@ function init() {
 
 // ── Grid Generation ───────────────────────────────────────────
 function buildGrid() {
-  // Empty grid
   grid = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
   wordPlacements = [];
 
-  // Place each word
   for (const word of WORDS) {
     let placed = false;
     const shuffledDirs = [...DIRS].sort(() => Math.random() - 0.5);
@@ -336,7 +336,6 @@ function buildGrid() {
     }
   }
 
-  // Fill remaining with random letters
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
       if (!grid[r][c]) {
@@ -416,14 +415,9 @@ function getCell(r, c) {
 function getCellsBetween(r1, c1, r2, c2) {
   const dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1);
   const rowD = Math.abs(r2-r1), colD = Math.abs(c2-c1);
-  // Must be straight line: horizontal, vertical, or diagonal (rowD===colD)
   if (rowD !== 0 && colD !== 0 && rowD !== colD) {
-    // Not a valid direction — snap to best axis
-    if (rowD > colD) { // more vertical
-      return getCellsBetween(r1, c1, r2, c1);
-    } else {
-      return getCellsBetween(r1, c1, r1, c2);
-    }
+    if (rowD > colD) return getCellsBetween(r1, c1, r2, c1);
+    else return getCellsBetween(r1, c1, r1, c2);
   }
   const steps = Math.max(rowD, colD);
   const cells = [];
@@ -432,9 +426,7 @@ function getCellsBetween(r1, c1, r2, c2) {
 }
 
 function updateHighlight() {
-  // Clear all selecting
   document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
-  // Add to current selection (only if not already found)
   for (const [r, c] of selCells) {
     const el = getCell(r, c);
     if (el && !el.classList.contains('found')) el.classList.add('selecting');
@@ -449,7 +441,6 @@ function checkSelection() {
 
   for (const { word, cells } of wordPlacements) {
     if (foundWords.has(word)) continue;
-
     const match = (letters === word) || (reversed === word);
     if (match) {
       foundWords.add(word);
@@ -457,9 +448,7 @@ function checkSelection() {
       markFound(word, cells);
       updateScore();
       updateProgress();
-      if (foundWords.size === WORDS.length) {
-        setTimeout(showWin, 600);
-      }
+      if (foundWords.size === WORDS.length) setTimeout(showWin, 600);
       return;
     }
   }
@@ -475,17 +464,16 @@ function markFound(word, cells) {
     el.classList.remove('selecting');
     el.classList.add('found', 'found-flash');
     el.style.background = color;
+    el.style.color = '#fff';
     el.addEventListener('animationend', () => el.classList.remove('found-flash'), { once: true });
   }
 
-  // Update word list
-  const wordItems = document.querySelectorAll('.word-item');
-  wordItems.forEach(item => {
+  document.querySelectorAll('.word-item').forEach(item => {
     if (item.dataset.word === word) {
       item.classList.add('found-word');
-      item.style.background = color;
-      item.style.borderColor = color;
-      item.querySelector('.word-dot').style.background = 'rgba(255,255,255,0.5)';
+      item.style.background = color + '22';
+      item.style.borderColor = color + '66';
+      item.querySelector('.word-dot').style.background = color;
     }
   });
 }
@@ -493,7 +481,7 @@ function markFound(word, cells) {
 function renderWordList() {
   const list = document.getElementById('word-list');
   list.innerHTML = '';
-  WORDS.forEach((word, i) => {
+  WORDS.forEach((word) => {
     const item = document.createElement('div');
     item.className = 'word-item';
     item.dataset.word = word;
@@ -531,8 +519,8 @@ function showWin() {
 }
 
 function spawnConfetti() {
-  const colors = ['#f9c74f','#2bb5c8','#2ecc71','#e74c5e','#8e44ad','#ff9f43'];
-  for (let i = 0; i < 50; i++) {
+  const colors = ['#f9c74f','#06b6d4','#10b981','#e74c5e','#8b5cf6','#f97316'];
+  for (let i = 0; i < 60; i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
     const sz = 6 + Math.random() * 8;
@@ -542,14 +530,13 @@ function spawnConfetti() {
       width:${sz}px;height:${sz}px;
       border-radius:${Math.random()>.5?'50%':'2px'};
       animation-duration:${1.5+Math.random()*2}s;
-      animation-delay:${i*60}ms;
+      animation-delay:${i*50}ms;
     `;
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
   }
 }
 
-// ── Start ─────────────────────────────────────────────────────
 init();
 </script>
 </body>
