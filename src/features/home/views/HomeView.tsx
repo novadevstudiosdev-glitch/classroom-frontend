@@ -1,8 +1,9 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 
 type Star = {
   x: number;
@@ -14,7 +15,36 @@ type Star = {
   color: string;
 };
 
+type HeroParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  a: number;
+  da: number;
+  color: string;
+  pulse: number;
+  burst?: boolean;
+};
+
 export default function HomeView() {
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const lastMouseYRef = useRef(0);
+  const [xpText, setXpText] = useState("0 XP");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState<1 | 2 | 3>(1);
+  const [fromKidFlow, setFromKidFlow] = useState(false);
+  const [guardianChecked, setGuardianChecked] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
+  const [formData, setFormData] = useState({
+    adultName: "",
+    kidName: "",
+    email: "",
+    password: "",
+  });
+
   useEffect(() => {
     const canvas = document.getElementById("starfield") as HTMLCanvasElement | null;
     if (!canvas) return;
@@ -75,6 +105,237 @@ export default function HomeView() {
   }, []);
 
   useEffect(() => {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+
+    const revealOffset = 80;
+    let heroBottom = 0;
+
+    const updateHeroBottom = () => {
+      heroBottom = hero.getBoundingClientRect().top + window.scrollY + hero.offsetHeight;
+    };
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isBelowHero = currentScrollY > heroBottom - revealOffset;
+
+      if (!isBelowHero) {
+        setIsNavVisible(true);
+      } else {
+        const scrollingUp = currentScrollY < lastScrollYRef.current - 4;
+        const scrollingDown = currentScrollY > lastScrollYRef.current + 4;
+
+        if (scrollingUp) setIsNavVisible(true);
+        if (scrollingDown) setIsNavVisible(false);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const currentScrollY = window.scrollY;
+      const isBelowHero = currentScrollY > heroBottom - revealOffset;
+
+      if (!isBelowHero) {
+        lastMouseYRef.current = event.clientY;
+        return;
+      }
+
+      const movedMouseUp = event.clientY < lastMouseYRef.current - 10;
+      const nearTopEdge = event.clientY <= 120;
+
+      if (movedMouseUp || nearTopEdge) {
+        setIsNavVisible(true);
+      }
+
+      lastMouseYRef.current = event.clientY;
+    };
+
+    updateHeroBottom();
+    lastScrollYRef.current = window.scrollY;
+    lastMouseYRef.current = window.innerHeight / 2;
+
+    window.addEventListener("resize", updateHeroBottom);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("resize", updateHeroBottom);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = document.getElementById("hero-canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let raf = 0;
+    const mouse = { x: -999, y: -999 };
+    let particles: HeroParticle[] = Array.from({ length: 120 }, () => ({
+      x: Math.random() * 2000,
+      y: Math.random() * 1000,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.2,
+      r: Math.random() * 2.5 + 0.5,
+      a: Math.random() * 0.8 + 0.1,
+      da: (Math.random() - 0.5) * 0.012,
+      color: ["#6C63FF", "#FF6B9D", "#FFD700", "#2DD4BF", "#ffffff"][
+        Math.floor(Math.random() * 5)
+      ],
+      pulse: Math.random() * Math.PI * 2,
+    }));
+
+    const resize = () => {
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+    };
+
+    const burst = (bx: number, by: number) => {
+      const colors = ["#FFD700", "#FF6B9D", "#6C63FF", "#4ADE80", "#2DD4BF", "#ffffff"];
+      const burstParticles: HeroParticle[] = Array.from({ length: 28 }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 2;
+        return {
+          x: bx,
+          y: by,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: Math.random() * 3 + 1,
+          a: 1,
+          da: -0.025,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          burst: true,
+          pulse: 0,
+        };
+      });
+      particles = [...particles, ...burstParticles];
+    };
+
+    const onClick = (event: globalThis.MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      burst(event.clientX - rect.left, event.clientY - rect.top);
+    };
+
+    const onMove = (event: globalThis.MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = event.clientX - rect.left;
+      mouse.y = event.clientY - rect.top;
+    };
+
+    const onLeave = () => {
+      mouse.x = -999;
+      mouse.y = -999;
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      particles = particles.filter((p) => p.a > 0);
+
+      particles.forEach((p) => {
+        p.pulse += 0.04;
+        p.a += p.da;
+
+        if (!p.burst && (p.a <= 0.1 || p.a >= 0.9)) p.da *= -1;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (!p.burst) {
+          if (p.x < 0) p.x = width;
+          if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height;
+          if (p.y > height) p.y = 0;
+        }
+
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 120 && distance > 0 && !p.burst) {
+          p.vx += (dx / distance) * 0.08;
+          p.vy += (dy / distance) * 0.08;
+        }
+
+        if (!p.burst) {
+          p.vx *= 0.99;
+          p.vy *= 0.99;
+        }
+
+        const radius = p.r * (p.burst ? 1 : 0.9 + 0.2 * Math.sin(p.pulse));
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.a);
+        ctx.fillStyle = p.color;
+
+        if (p.r > 1.5) {
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = p.burst ? 16 : 8;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+
+    window.addEventListener("resize", resize);
+    canvas.addEventListener("click", onClick);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      canvas.removeEventListener("click", onClick);
+      canvas.removeEventListener("mousemove", onMove);
+      canvas.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      let frame = 0;
+      const target = 2450;
+      const duration = 2000;
+      const start = performance.now();
+
+      const tick = (time: number) => {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.floor(eased * target);
+        setXpText(`${value.toLocaleString()} XP`);
+
+        if (progress < 1) {
+          frame = requestAnimationFrame(tick);
+        }
+      };
+
+      frame = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(frame);
+    }, 2200);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
+
+  useEffect(() => {
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -112,19 +373,91 @@ export default function HomeView() {
     };
   }, []);
 
+  const isRegisterReady =
+    formData.adultName.trim() &&
+    formData.kidName.trim() &&
+    formData.email.trim() &&
+    formData.password.trim() &&
+    guardianChecked;
+
+  const openModal = () => {
+    setSubmitDone(false);
+    setFromKidFlow(false);
+    setModalStep(1);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalStep(1);
+    setFromKidFlow(false);
+    setSubmitDone(false);
+    setGuardianChecked(false);
+    setFormData({
+      adultName: "",
+      kidName: "",
+      email: "",
+      password: "",
+    });
+  };
+
+  const goStep3 = (fromKid: boolean) => {
+    setFromKidFlow(fromKid);
+    setModalStep(3);
+  };
+
+  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      closeModal();
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!isRegisterReady) return;
+    setSubmitDone(true);
+    window.setTimeout(() => {
+      closeModal();
+    }, 2500);
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeModal();
+    };
+
+    if (modalOpen) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [modalOpen]);
+
   return (
     <div className="landing-root">
       <canvas id="starfield" />
 
-      <nav>
-        <Link href="/" className="logo" aria-label="Novi">Novi</Link>
+      <nav className={`landing-nav ${isNavVisible ? "is-visible" : "is-hidden"}`}>
+        <Link href="/" className="logo" aria-label="Novi">
+          <Image
+            src="/NOVI.png"
+            alt="Novi"
+            width={140}
+            height={44}
+            className="logo-img"
+            priority
+          />
+        </Link>
         <Link href="/login" className="btn-nav">Empezar gratis</Link>
       </nav>
 
       <section id="hero">
+        <canvas id="hero-canvas" />
         <div className="blob b1" />
         <div className="blob b2" />
         <div className="blob b3" />
+        <div className="hero-grid-floor" />
         <div className="hero-planet" />
         <div className="hero-planet-ring" />
 
@@ -134,6 +467,10 @@ export default function HomeView() {
         <span className="flt" style={{ left: "34%", top: "18%", fontSize: "14px", "--d": "3.5s", "--dl": "2s" } as CSSProperties}>.</span>
 
         <div className="hero-headline">
+          <div className="hero-badge">
+            <span className="badge-dot" />
+            50.000 aventureros activos ahora mismo
+          </div>
           <div className="overline">Aprende jugando</div>
           <h1>
             <span className="h1-line1">Subí</span>
@@ -154,8 +491,20 @@ export default function HomeView() {
             <span className="trust-dot" />
             <span className="trust-item">50.000 estudiantes</span>
           </div>
+
+          <div className="xp-bar-wrap">
+            <span className="xp-label">TU XP</span>
+            <div className="hero-xp-track">
+              <div className="xp-fill-bar" />
+            </div>
+            <span className="xp-val">{xpText}</span>
+          </div>
         </div>
 
+        <div className="scroll-hint">
+          <span>Explorar</span>
+          <div className="scroll-arrow" />
+        </div>
       </section>
 
       <section id="roles">
@@ -165,13 +514,19 @@ export default function HomeView() {
 
         <div className="role-row rv">
           <div className="role-visual"><div className="role-glow-circle role-alumno" style={{ "--rf": "5s" } as CSSProperties}><div className="role-emoji-wrap"><img src="/astronautaNiño.png" alt="Astronauta niño" className="role-emoji-img" /></div><span className="orbit-chip" style={{ top: "-10px", right: "-30px", "--oc": "5s", "--od": "0s" } as CSSProperties}>Misiones</span><span className="orbit-chip" style={{ bottom: "10px", left: "-40px", "--oc": "6s", "--od": ".8s" } as CSSProperties}>Logros</span><span className="orbit-chip" style={{ bottom: "-14px", right: "0px", "--oc": "4.5s", "--od": "1.5s" } as CSSProperties}>XP</span></div></div>
-          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><Link href="/login" className="role-btn rb-alumno">Empezar aventura <span>→</span></Link></div>
+          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><button className="role-btn rb-alumno" onClick={openModal}>Empezar aventura <span>→</span></button></div>
         </div>
         <div className="role-divider" />
 
         <div className="role-row reverse rv">
           <div className="role-visual"><div className="role-glow-circle role-docente" style={{ "--rf": "6s" } as CSSProperties}><div className="role-emoji-wrap role-emoji-wrap-docente"><img src="/maestra.png" alt="Maestra" className="role-emoji-img role-emoji-img-docente" /></div><span className="orbit-chip" style={{ top: "-8px", left: "-20px", "--oc": "5.5s", "--od": ".4s" } as CSSProperties}>Reportes</span><span className="orbit-chip" style={{ bottom: "0", right: "-30px", "--oc": "4s", "--od": "1.2s" } as CSSProperties}>Alumnos</span></div></div>
           <div className="role-text"><div className="role-num">02</div><span className="role-tag docente-tag">Para docentes</span><h3 className="role-h">Soy docente</h3><p className="role-desc">Creá clases, asigná misiones y seguí el progreso de cada alumno con reportes detallados en tiempo real.</p><Link href="/login" className="role-btn rb-docente">Crear mi clase <span>→</span></Link></div>
+        </div>
+        <div className="role-divider" />
+
+        <div className="role-row rv">
+          <div className="role-visual"><div className="role-glow-circle role-familia" style={{ "--rf": "4.5s" } as CSSProperties}>👨‍👩‍👧<span className="orbit-chip" style={{ top: "-10px", right: "-20px", "--oc": "6s", "--od": ".6s" } as CSSProperties}>Progreso</span><span className="orbit-chip" style={{ bottom: "-8px", left: "-10px", "--oc": "5s", "--od": "1.8s" } as CSSProperties}>Logros</span></div></div>
+          <div className="role-text"><div className="role-num">03</div><span className="role-tag familia-tag">Para familias</span><h3 className="role-h">Soy familia</h3><p className="role-desc">Seguí el avance de tus hijos, celebrá sus logros y acompañalos en su camino de aprendizaje desde la app.</p><button className="role-btn rb-familia" onClick={() => goStep3(false)}>Ver progreso <span>→</span></button></div>
         </div>
       </section>
       <section id="como">
@@ -243,22 +598,154 @@ export default function HomeView() {
         <span className="fl-copy">© 2026 Novi</span>
       </footer>
 
+      <div
+        className={`pg-overlay ${modalOpen ? "open" : ""}`}
+        onClick={handleOverlayClick}
+      >
+        <div className="pg-modal">
+          <button className="pg-close" onClick={closeModal}>✕</button>
+
+          <div className="pg-dots">
+            <div className={`pg-dot ${modalStep === 1 ? "active" : ""} ${modalStep > 1 ? "done" : ""}`} />
+            <div className={`pg-dot ${modalStep === 2 ? "active" : ""} ${modalStep > 2 ? "done" : ""}`} />
+            <div className={`pg-dot ${modalStep === 3 ? "active" : ""}`} />
+          </div>
+
+          {modalStep === 1 ? (
+            <div className="pg-step active">
+              <span className="pg-emoji">🚀</span>
+              <div className="pg-title">¡Bienvenido a Novi!</div>
+              <p className="pg-sub">Para empezar tu aventura, contanos quién quiere unirse.</p>
+              <div className="pg-who-grid">
+                <button className="pg-who kid" onClick={() => setModalStep(2)}>
+                  <span className="we">🧒</span>
+                  <span className="wl">Soy un niño</span>
+                  <span className="wa">6 - 12 años</span>
+                </button>
+                <button className="pg-who adult" onClick={() => goStep3(false)}>
+                  <span className="we">👨‍👩‍👧</span>
+                  <span className="wl">Soy padre/madre</span>
+                  <span className="wa">Cuenta familiar</span>
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {modalStep === 2 ? (
+            <div className="pg-step active">
+              <span className="pg-ship">🛸</span>
+              <div className="pg-title">¡Necesitás a mamá o papá para despegar!</div>
+              <p className="pg-sub">En Novi tu seguridad es lo más importante. Un adulto de tu familia tiene que crear la cuenta.</p>
+              <div className="pg-bubbles">
+                <div className="pg-bubble">
+                  <span>🔒</span>
+                  <p><strong>Tu cuenta es segura</strong> — Solo tu familia puede ver tu información.</p>
+                </div>
+                <div className="pg-bubble">
+                  <span>👨‍👩‍👧</span>
+                  <p><strong>Papá o mamá crean la cuenta</strong> — Vos elegís tu nombre de explorador.</p>
+                </div>
+                <div className="pg-bubble">
+                  <span>🎮</span>
+                  <p><strong>¡Y después a jugar!</strong> — Misiones, XP y premios te esperan.</p>
+                </div>
+              </div>
+              <button className="pg-btn-call" onClick={() => goStep3(true)}>📲 ¡Llamar a mamá o papá!</button>
+              <button className="pg-back" onClick={() => setModalStep(1)}>← Volver</button>
+            </div>
+          ) : null}
+
+          {modalStep === 3 ? (
+            <div className="pg-step active">
+              <span className="pg-emoji">{fromKidFlow ? "📲" : "👋"}</span>
+              <div className="pg-title">{fromKidFlow ? "¡Tu hijo/a te necesita!" : "Hola, adulto responsable"}</div>
+              <p className="pg-sub">
+                {fromKidFlow
+                  ? "El/la peque quiere unirse a Novi. Completá el registro para que pueda empezar su aventura espacial."
+                  : "Creá la cuenta familiar y tu hijo/a podrá explorar Novi de forma segura."}
+              </p>
+
+              <div className="pg-form">
+                <div className="pg-row">
+                  <input
+                    className="pg-input"
+                    type="text"
+                    placeholder="Tu nombre"
+                    value={formData.adultName}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, adultName: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="pg-input"
+                    type="text"
+                    placeholder="Nombre del niño/a"
+                    value={formData.kidName}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, kidName: event.target.value }))
+                    }
+                  />
+                </div>
+                <input
+                  className="pg-input"
+                  type="email"
+                  placeholder="Tu correo electrónico"
+                  value={formData.email}
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, email: event.target.value }))
+                  }
+                />
+                <input
+                  className="pg-input"
+                  type="password"
+                  placeholder="Contraseña (solo vos la sabés)"
+                  value={formData.password}
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, password: event.target.value }))
+                  }
+                />
+                <button className="pg-check" onClick={() => setGuardianChecked((prev) => !prev)}>
+                  <div className={`pg-chk-box ${guardianChecked ? "on" : ""}`} />
+                  <p>Confirmo que soy el <strong>padre, madre o tutor legal</strong> y acepto los términos y la política de privacidad para menores.</p>
+                </button>
+              </div>
+
+              <button
+                className={`pg-btn-reg ${isRegisterReady ? "rdy" : ""}`}
+                onClick={handleSubmit}
+              >
+                {submitDone ? "✅ ¡Cuenta creada! Bienvenidos a Novi" : "🚀 Crear cuenta familiar"}
+              </button>
+              <button className="pg-back" onClick={() => setModalStep(1)}>← Volver</button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
       <style jsx global>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         html{scroll-behavior:smooth}
         body{font-family:'Nunito',sans-serif;background:#07061a;color:#fff;overflow-x:hidden}
         #starfield{position:fixed;inset:0;z-index:0;pointer-events:none}
-        nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.9rem 5%;background:rgba(7,6,26,.5);backdrop-filter:blur(24px)}
-        .logo{font-size:28px;font-weight:900;letter-spacing:-.5px;color:#fff;text-decoration:none}
+        #hero-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+        .landing-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.9rem 5%;background:rgba(7,6,26,.5);backdrop-filter:blur(24px);transition:transform .35s ease,opacity .3s ease}
+        .landing-nav.is-visible{transform:translateY(0);opacity:1}
+        .landing-nav.is-hidden{transform:translateY(-120%);opacity:0;pointer-events:none}
+        .logo{display:inline-flex;align-items:center;text-decoration:none}
+        .logo-img{height:64px;width:auto;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(11,10,34,.35))}
         .btn-nav{background:linear-gradient(135deg,#6C63FF,#9B5DE5);color:#fff;border:none;border-radius:50px;padding:10px 26px;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 4px 20px rgba(108,99,255,.5);transition:transform .15s,box-shadow .15s}
         .btn-nav:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(108,99,255,.65)}
 
         #hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;padding:8rem 5% 4rem;z-index:10}
         .blob{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none}
+        .hero-grid-floor{position:absolute;bottom:0;left:0;right:0;height:45%;background:repeating-linear-gradient(90deg,rgba(108,99,255,.05) 0px,rgba(108,99,255,.05) 1px,transparent 1px,transparent 80px),repeating-linear-gradient(0deg,rgba(108,99,255,.05) 0px,rgba(108,99,255,.05) 1px,transparent 1px,transparent 80px);transform:perspective(400px) rotateX(60deg);transform-origin:bottom center;z-index:2;pointer-events:none;mask-image:linear-gradient(to top,rgba(0,0,0,.5),transparent);-webkit-mask-image:linear-gradient(to top,rgba(0,0,0,.5),transparent)}
         .b1{width:700px;height:700px;background:radial-gradient(circle,rgba(108,99,255,.22),transparent 70%);top:-10%;left:-5%}
         .b2{width:500px;height:500px;background:radial-gradient(circle,rgba(255,107,157,.14),transparent 70%);bottom:0;right:-10%}
         .b3{width:350px;height:350px;background:radial-gradient(circle,rgba(45,212,191,.1),transparent 70%);top:40%;right:30%}
         .hero-headline{position:relative;z-index:2;max-width:900px}
+        .hero-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:8px 20px;font-size:13px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:2rem}
+        .badge-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 8px #4ADE80;animation:dotPulse 2s ease-in-out infinite}
+        @keyframes dotPulse{0%,100%{box-shadow:0 0 4px #4ADE80}50%{box-shadow:0 0 16px #4ADE80,0 0 32px rgba(74,222,128,.4)}}
         .overline{font-size:12px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px}
         .overline::before{content:'';width:30px;height:1px;background:rgba(255,255,255,.25)}
         h1{font-size:clamp(54px,9vw,120px);font-weight:900;line-height:.95;letter-spacing:-3px;margin-bottom:2rem}
@@ -281,6 +768,16 @@ export default function HomeView() {
         .trust-strip{display:flex;gap:2rem;align-items:center;margin-top:3rem;flex-wrap:wrap}
         .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:rgba(255,255,255,.5)}
         .trust-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2)}
+        .xp-bar-wrap{display:inline-flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:50px;padding:10px 24px;margin-top:2.2rem}
+        .xp-label{font-size:13px;font-weight:900;color:rgba(255,255,255,.35);letter-spacing:.1em}
+        .hero-xp-track{width:140px;height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+        .xp-fill-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,#6C63FF,#FF6B9D,#FFD700);background-size:200%;animation:xpLoad 2s ease-out 2s forwards,xpGrad 3s linear infinite;width:0}
+        @keyframes xpLoad{to{width:68%}}
+        .xp-val{font-size:14px;font-weight:900;color:#FFD700;min-width:74px}
+        .scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px}
+        .scroll-hint span{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+        .scroll-arrow{width:20px;height:20px;border-right:2px solid rgba(255,255,255,.18);border-bottom:2px solid rgba(255,255,255,.18);transform:rotate(45deg);animation:arrowBounce 1.5s ease-in-out infinite}
+        @keyframes arrowBounce{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(3px,3px)}}
 
         #roles{position:relative;z-index:10;padding:4rem 5% 8rem;overflow:hidden}
         .roles-blob{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}.rb1{width:500px;height:500px;background:rgba(108,99,255,.1);left:-10%;top:0}.rb2{width:400px;height:400px;background:rgba(45,212,191,.08);right:-5%;bottom:0}
@@ -365,6 +862,51 @@ export default function HomeView() {
 
         footer{position:relative;z-index:10;padding:2rem 5%;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
         .fl{font-size:22px;font-weight:900;color:rgba(255,255,255,.6)}.fl-links{display:flex;gap:1.5rem;list-style:none}.fl-links a{font-size:12px;color:rgba(255,255,255,.25);text-decoration:none;font-weight:700}.fl-links a:hover{color:rgba(255,255,255,.6)}.fl-copy{font-size:11px;color:rgba(255,255,255,.18)}
+        .pg-overlay{position:fixed;inset:0;z-index:1000;background:rgba(4,3,14,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .3s ease}
+        .pg-overlay.open{opacity:1;pointer-events:all}
+        .pg-modal{background:radial-gradient(ellipse at 30% 20%,rgba(108,99,255,.18),transparent 60%),linear-gradient(145deg,#0f0d2e,#0a0820);border:1px solid rgba(108,99,255,.25);border-radius:32px;padding:2.5rem 2rem;max-width:480px;width:100%;position:relative;transform:scale(.88) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 60px rgba(108,99,255,.12);text-align:center;overflow:hidden}
+        .pg-overlay.open .pg-modal{transform:scale(1) translateY(0)}
+        .pg-close{position:absolute;top:1.2rem;right:1.2rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:rgba(255,255,255,.5);transition:all .2s}
+        .pg-close:hover{background:rgba(255,255,255,.12);color:#fff}
+        .pg-dots{display:flex;gap:8px;justify-content:center;margin-bottom:2rem}
+        .pg-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .35s}
+        .pg-dot.active{width:24px;border-radius:4px;background:#6C63FF}
+        .pg-dot.done{background:rgba(108,99,255,.4)}
+        .pg-step{display:flex;flex-direction:column;align-items:center}
+        .pg-emoji{font-size:64px;margin-bottom:1rem;display:block}
+        .pg-ship{font-size:72px;margin-bottom:1rem}
+        .pg-title{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:.6rem;line-height:1.2}
+        .pg-sub{font-size:14px;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:1.5rem;max-width:360px}
+        .pg-who-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+        .pg-who{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:1.5rem 1rem;cursor:pointer;color:#fff;transition:all .22s;display:flex;flex-direction:column;align-items:center;gap:10px}
+        .pg-who .we{font-size:40px}
+        .pg-who .wl{font-size:16px;font-weight:900}
+        .pg-who .wa{font-size:11px;color:rgba(255,255,255,.35);font-weight:700}
+        .pg-who.kid:hover{border-color:rgba(108,99,255,.5);background:rgba(108,99,255,.1);transform:translateY(-4px)}
+        .pg-who.adult:hover{border-color:rgba(45,212,191,.5);background:rgba(45,212,191,.08);transform:translateY(-4px)}
+        .pg-bubbles{display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:1.5rem;text-align:left}
+        .pg-bubble{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px}
+        .pg-bubble span{font-size:24px;flex-shrink:0}
+        .pg-bubble p{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
+        .pg-bubble p strong{color:#fff;font-weight:800}
+        .pg-btn-call{width:100%;border:none;border-radius:16px;padding:17px;font-size:17px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#9B5DE5);color:#fff;box-shadow:0 8px 28px rgba(108,99,255,.45);transition:transform .15s;margin-bottom:10px}
+        .pg-btn-call:hover{transform:translateY(-3px)}
+        .pg-form{display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:1.2rem;text-align:left}
+        .pg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .pg-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 16px;font-size:14px;font-weight:700;color:#fff;outline:none;transition:border-color .2s,background .2s;width:100%}
+        .pg-input::placeholder{color:rgba(255,255,255,.25)}
+        .pg-input:focus{border-color:rgba(108,99,255,.5);background:rgba(108,99,255,.05)}
+        .pg-check{display:flex;align-items:flex-start;gap:10px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.15);border-radius:12px;padding:12px;cursor:pointer;text-align:left}
+        .pg-chk-box{width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,215,0,.4);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .pg-chk-box.on{background:#FFD700;border-color:#FFD700}
+        .pg-chk-box.on::after{content:'✓';font-size:12px;font-weight:900;color:#1a0f00}
+        .pg-check p{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5}
+        .pg-check p strong{color:#FFD700}
+        .pg-btn-reg{width:100%;border:none;border-radius:16px;padding:17px;font-size:16px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#FFD700,#FF9500);color:#1a0f00;transition:transform .15s,opacity .2s;opacity:.45}
+        .pg-btn-reg.rdy{opacity:1}
+        .pg-btn-reg.rdy:hover{transform:translateY(-3px)}
+        .pg-back{background:transparent;border:none;color:rgba(255,255,255,.3);font-size:13px;font-weight:700;cursor:pointer;padding:8px;margin-top:4px;transition:color .2s}
+        .pg-back:hover{color:rgba(255,255,255,.6)}
 
         .rv{opacity:0;transform:translateY(36px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}.rv.in{opacity:1;transform:none}
         .rv1{transition-delay:.1s}.rv2{transition-delay:.2s}.rv3{transition-delay:.3s}.rv4{transition-delay:.4s}
@@ -372,6 +914,11 @@ export default function HomeView() {
 
         @media(max-width:768px){
           .hero-planet,.hero-planet-ring{display:none}
+          .hero-grid-floor{display:none}
+          .hero-badge{font-size:11px;padding:7px 14px}
+          .xp-bar-wrap{width:100%;justify-content:space-between}
+          .scroll-hint{display:none}
+          .logo-img{height:50px}
           .role-row,.role-row.reverse{flex-direction:column}
           .tl-item,.tl-item.reverse{flex-direction:column;text-align:center}
           .tl-item .tl-side{text-align:center!important}
@@ -379,6 +926,8 @@ export default function HomeView() {
           .testi-scatter{grid-template-columns:1fr}
           .testi:nth-child(2),.testi:nth-child(3){margin-top:0}
           .preview-layout{flex-direction:column}
+          .pg-row,.pg-who-grid{grid-template-columns:1fr}
+          .pg-modal{padding:2.2rem 1.1rem}
         }
       `}</style>
     </div>
