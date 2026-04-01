@@ -1,0 +1,132 @@
+import type { ParentDashboardData } from "@/features/dashboard/parent/types";
+
+export const PARENT_DASHBOARD_MOCK: ParentDashboardData = {
+  profile: {
+    initials: "AP",
+    greeting: "Hola,",
+    name: "Ana Paula",
+  },
+  children: [
+    {
+      id: "child-martina",
+      name: "Martina",
+      levelLabel: "Nivel 4",
+      mascotEmoji: "🦊",
+    },
+    {
+      id: "child-joaquin",
+      name: "Joaquín",
+      levelLabel: "Nivel 2",
+      mascotEmoji: "🐼",
+    },
+  ],
+  streak: {
+    days: 7,
+    label: "Racha actual",
+  },
+  lastSessionReport: {
+    dateLabel: "Hoy 14:30",
+    durationLabel: "24 min",
+    xpGained: 80,
+    solvedExercises: 16,
+  },
+  classProgress: [
+    {
+      id: "class-mat",
+      className: "Matemática",
+      completionPercent: 78,
+      completedLessons: 14,
+      totalLessons: 18,
+    },
+    {
+      id: "class-len",
+      className: "Lengua",
+      completionPercent: 62,
+      completedLessons: 8,
+      totalLessons: 13,
+    },
+    {
+      id: "class-cien",
+      className: "Ciencias",
+      completionPercent: 41,
+      completedLessons: 5,
+      totalLessons: 12,
+    },
+  ],
+  completedLessons: [
+    {
+      id: "completed-1",
+      title: "Resta y comparación",
+      subject: "Matemática",
+      completedAtLabel: "2026-03-26 14:30",
+      score: 95,
+    },
+    {
+      id: "completed-2",
+      title: "Comprensión lectora",
+      subject: "Lengua",
+      completedAtLabel: "2026-03-26 13:15",
+      score: 82,
+    },
+    {
+      id: "completed-3",
+      title: "El sistema solar",
+      subject: "Ciencias",
+      completedAtLabel: "2026-03-25 15:00",
+      score: 98,
+    },
+  ],
+  weeklyXp: [
+    { dayLabel: "L", xp: 40 },
+    { dayLabel: "M", xp: 85 },
+    { dayLabel: "X", xp: 130 },
+    { dayLabel: "J", xp: 190 },
+    { dayLabel: "V", xp: 260 },
+    { dayLabel: "S", xp: 310 },
+    { dayLabel: "D", xp: 390 },
+  ],
+  recentLessons: [
+    {
+      id: "lesson-1",
+      icon: "🔢",
+      title: "Resta y comparación",
+      subject: "Matemática",
+      dateLabel: "Hoy 14:30",
+      stars: 3,
+      xp: 80,
+    },
+    {
+      id: "lesson-2",
+      icon: "📖",
+      title: "Comprensión lectora",
+      subject: "Lengua",
+      dateLabel: "Hoy 13:15",
+      stars: 2,
+      xp: 60,
+    },
+    {
+      id: "lesson-3",
+      icon: "🔬",
+      title: "El sistema solar",
+      subject: "Ciencias",
+      dateLabel: "Ayer 15:00",
+      stars: 3,
+      xp: 100,
+    },
+  ],
+  weeklyActivity: [
+    { dayLabel: "L", value: 20 },
+    { dayLabel: "M", value: 35 },
+    { dayLabel: "X", value: 25 },
+    { dayLabel: "J", value: 40 },
+    { dayLabel: "V", value: 30 },
+    { dayLabel: "S", value: 15 },
+    { dayLabel: "D", value: 45 },
+  ],
+  bottomNavigation: [
+    { id: "home", icon: "🏠", label: "Inicio", isActive: true, href: "/dashboard/parent" },
+    { id: "progress", icon: "📊", label: "Progreso", href: "/dashboard/parent/progress" },
+    { id: "alerts", icon: "🔔", label: "Alertas", href: "/dashboard/parent/alerts" },
+    { id: "settings", icon: "⚙️", label: "Ajustes", href: "/dashboard/parent/settings" },
+  ],
+};
