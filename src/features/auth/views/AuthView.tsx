@@ -18,17 +18,17 @@ export function AuthView({ defaultMode = "login" }: AuthViewProps) {
         <AuthBackgroundCanvas />
 
         <motion.div
-          className="absolute -top-24 -left-20 w-[32rem] h-[32rem] bg-cyan-400/22 rounded-full blur-3xl"
+          className="absolute -top-24 -left-20 w-lg h-lg bg-cyan-400/22 rounded-full blur-3xl"
           animate={{ y: [0, 24, 0], scale: [1, 1.08, 1] }}
           transition={{ duration: 9, repeat: Infinity }}
         />
         <motion.div
-          className="absolute -bottom-24 -right-16 w-[36rem] h-[36rem] bg-violet-500/22 rounded-full blur-3xl"
+          className="absolute -bottom-24 -right-16 w-xl h-xl bg-violet-500/22 rounded-full blur-3xl"
           animate={{ y: [0, -30, 0], scale: [1, 1.12, 1] }}
           transition={{ duration: 11, repeat: Infinity }}
         />
         <motion.div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] bg-indigo-500/18 rounded-full blur-3xl"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[24rem] h-96 bg-indigo-500/18 rounded-full blur-3xl"
           animate={{ x: [0, 18, 0], y: [0, -16, 0] }}
           transition={{ duration: 12, repeat: Infinity }}
         />
@@ -49,11 +49,11 @@ export function AuthView({ defaultMode = "login" }: AuthViewProps) {
           transition={{ duration: 6.5, repeat: Infinity, ease: "easeOut", delay: 4 }}
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-slate-950/55" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-950/20 to-slate-950/55" />
       </div>
       <AuthRocketOverlay anchorId="auth-logo-anchor" />
 
-      <div className="w-full max-w-[1100px] grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] gap-8 xl:gap-10 items-center relative z-10">
+      <div className="w-full max-w-275 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] gap-8 xl:gap-10 items-center relative z-10">
         <AuthHero />
         <AuthFormCard defaultMode={defaultMode} />
       </div>

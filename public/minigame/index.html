@@ -553,6 +553,12 @@
       <div class="path-sub">Creá y gestioná tus quizzes desde la nave</div>
     </button>
   </div>
+
+  <div style="display:flex;justify-content:center;padding-bottom:40px">
+    <a href="lobby.html" style="display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:16px;background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;font-family:inherit;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 4px 20px rgba(6,182,212,.35);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 28px rgba(6,182,212,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(6,182,212,.35)'">
+      🎮 Ir al Lobby multijugador
+    </a>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -1103,6 +1109,7 @@ function renderQuizRow(q) {
     <div class="quiz-row-actions">
       <button class="btn btn-cyan btn-sm" onclick="openShareModal('${q.id}','${escHtml(q.title)}')">🎮 Iniciar</button>
       <button class="btn btn-ghost btn-sm" onclick="location.href='lobby.html?code=${q.id}'" title="Modo multijugador en vivo">🌐 Multi</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyQuizId('${q.id}')" title="Copiar ID del quiz">🔑 ID</button>
       <button class="btn btn-ghost btn-sm" onclick="previewQuiz('${q.id}')">▶ Probar</button>
       <button class="btn btn-ghost btn-sm" onclick="openEditor('${q.id}')">✏️ Editar</button>
       <button class="btn-icon" title="Eliminar" onclick="confirmDelete('${q.id}','${escHtml(q.title)}')">🗑️</button>
@@ -1163,6 +1170,12 @@ function showToast(msg, duration = 2500) {
 
 // ── Confirm delete ─────────────────────────────────────────────
 let pendingDeleteId = null;
+function copyQuizId(id) {
+  navigator.clipboard.writeText(id).then(function() {
+    showToast('ID copiado al portapapeles ✅');
+  });
+}
+
 function confirmDelete(id, title) {
   pendingDeleteId = id;
   document.getElementById('confirm-msg').textContent = `¿Eliminar "${title}"? Esta acción no se puede deshacer.`;

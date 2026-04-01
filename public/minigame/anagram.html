@@ -9,93 +9,112 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
     :root{
-      --bg:#f0f9ff; --card:#fff;
-      --primary:#f0a500; --dark:#1a3a4a; --muted:#6b8fa3;
-      --radius:16px; --shadow:0 4px 20px rgba(0,0,0,.10);
+      --space:#06080f;
+      --card:#0d1117;
+      --card2:#111827;
+      --purple:#7c3aed;
+      --cyan:#06b6d4;
+      --border:rgba(255,255,255,.08);
+      --muted:rgba(255,255,255,.45);
+      --radius:16px;
     }
 
     body{
       font-family:'Nunito',system-ui,sans-serif;
-      background:var(--bg); color:var(--dark);
-      min-height:100vh; display:flex; flex-direction:column;
+      background:var(--space);
+      color:#fff;
+      min-height:100vh;
+      display:flex;flex-direction:column;
       overflow:hidden;
     }
 
+    /* Stars */
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--delay,0s)}
+    @keyframes twinkle{0%,100%{opacity:.08}50%{opacity:.55}}
+
     /* Header */
     .header{
-      background:var(--card);
-      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      position:relative;z-index:10;
+      background:rgba(13,17,23,.85);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(12px);
       padding:10px 20px;
-      display:flex; align-items:center; gap:12px;
+      display:flex;align-items:center;gap:12px;
       flex-shrink:0;
     }
     .back-btn{
-      background:var(--bg); border:2px solid #d0e8f0;
-      color:var(--dark); font-family:inherit; font-size:14px; font-weight:700;
-      padding:7px 16px; border-radius:999px; cursor:pointer;
-      transition:background .15s; white-space:nowrap;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:rgba(255,255,255,.8);
+      font-family:inherit;font-size:14px;font-weight:700;
+      padding:7px 16px;border-radius:999px;cursor:pointer;
+      transition:background .15s;white-space:nowrap;
     }
-    .back-btn:hover{ background:#d0e8f0 }
-    .hdr-title{ font-size:18px; font-weight:900; color:var(--dark); flex:1; text-align:center }
+    .back-btn:hover{background:rgba(255,255,255,.12)}
+    .hdr-title{font-size:18px;font-weight:900;color:#fff;flex:1;text-align:center}
     .hdr-pill{
-      font-weight:800; font-size:14px;
-      padding:7px 16px; border-radius:999px; white-space:nowrap; border:2px solid;
+      font-weight:800;font-size:14px;
+      padding:7px 16px;border-radius:999px;white-space:nowrap;border:1px solid;
     }
-    .pill-gold  { background:#fff8e1; border-color:#f9c74f; color:#b8860b }
-    .pill-green { background:#e8f5e9; border-color:#43a047; color:#2e7d32 }
+    .pill-gold {background:rgba(249,200,79,.12);border-color:rgba(249,200,79,.3);color:#f9c84f}
+    .pill-cyan {background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:var(--cyan)}
 
     /* Body */
     .body{
-      flex:1; display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:20px; gap:20px; overflow:hidden;
+      position:relative;z-index:10;
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:20px;gap:20px;overflow:hidden;
     }
 
     /* Progress */
     .progress-row{
-      display:flex; align-items:center; gap:14px;
-      width:100%; max-width:540px;
+      display:flex;align-items:center;gap:14px;
+      width:100%;max-width:540px;
     }
     .progress-track{
-      flex:1; height:10px; background:#d0e8f0; border-radius:999px; overflow:hidden;
+      flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;
     }
     .progress-fill{
-      height:100%; background:var(--primary); border-radius:999px; transition:width .5s ease;
+      height:100%;background:var(--cyan);border-radius:999px;transition:width .5s ease;
     }
-    .progress-label{ font-size:13px; font-weight:700; color:var(--muted); white-space:nowrap }
+    .progress-label{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
 
     /* Hint card */
     .hint-card{
-      background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
-      padding:20px 28px; text-align:center;
-      width:100%; max-width:540px;
-      border-left:6px solid var(--primary);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-left:4px solid var(--purple);
+      border-radius:var(--radius);
+      padding:20px 28px;text-align:center;
+      width:100%;max-width:540px;
     }
-    .hint-label{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:6px }
-    .hint-text{ font-size:18px; font-weight:700; color:var(--dark) }
+    .hint-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+    .hint-text{font-size:18px;font-weight:700;color:#fff}
 
     /* Answer slots */
     .answer-area{
-      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
-      min-height:70px; align-items:center;
+      display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+      min-height:70px;align-items:center;
     }
     .slot{
-      width:56px; height:60px;
-      border:3px dashed #b0d0dc;
+      width:56px;height:60px;
+      border:2px dashed rgba(255,255,255,.2);
       border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:26px; font-weight:900; color:var(--dark);
-      background:#f8fafc;
-      transition:all .2s;
-      cursor:default;
+      display:flex;align-items:center;justify-content:center;
+      font-size:26px;font-weight:900;color:#fff;
+      background:rgba(255,255,255,.04);
+      transition:all .2s;cursor:default;
     }
     .slot.filled{
-      border-style:solid; background:var(--card);
-      cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.12);
+      border-style:solid;border-color:rgba(255,255,255,.15);
+      background:rgba(255,255,255,.08);
+      cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.3);
     }
-    .slot.filled:hover{ transform:translateY(-3px) }
-    .slot.correct-slot{ border-color:#27ae60; background:#e8f5e9 }
-    .slot.wrong-slot  { border-color:#e74c5e; background:#fdecea; animation:shake .4s ease }
+    .slot.filled:hover{transform:translateY(-3px)}
+    .slot.correct-slot{border-color:#10b981;background:rgba(16,185,129,.15)}
+    .slot.wrong-slot{border-color:#ef4444;background:rgba(239,68,68,.15);animation:shake .4s ease}
 
     @keyframes shake{
       0%,100%{transform:translateX(0)}
@@ -107,98 +126,112 @@
 
     /* Letter tiles */
     .tiles-area{
-      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
-      min-height:70px; align-items:center;
+      display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+      min-height:70px;align-items:center;
     }
     .tile{
-      width:56px; height:60px;
+      width:56px;height:60px;
       border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:26px; font-weight:900; color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:26px;font-weight:900;color:#fff;
       cursor:pointer;
-      box-shadow:0 5px 0 rgba(0,0,0,.18), 0 6px 16px rgba(0,0,0,.10);
-      transition:transform .1s, box-shadow .1s, opacity .2s;
-      position:relative; overflow:hidden; user-select:none;
+      box-shadow:0 5px 0 rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.2);
+      transition:transform .1s,box-shadow .1s,opacity .2s;
+      position:relative;overflow:hidden;user-select:none;
     }
     .tile::before{
-      content:''; position:absolute;
-      top:0; left:0; right:0; height:45%;
+      content:'';position:absolute;
+      top:0;left:0;right:0;height:45%;
       background:rgba(255,255,255,.2);
       border-radius:14px 14px 50% 50%;
       pointer-events:none;
     }
-    .tile:hover:not(.used){ transform:translateY(-4px); box-shadow:0 9px 0 rgba(0,0,0,.18) }
-    .tile:active:not(.used){ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.18) }
-    .tile.used{ opacity:0; pointer-events:none; transform:translateY(-10px) }
+    .tile:hover:not(.used){transform:translateY(-4px);box-shadow:0 9px 0 rgba(0,0,0,.4)}
+    .tile:active:not(.used){transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+    .tile.used{opacity:0;pointer-events:none;transform:translateY(-10px)}
 
     /* Feedback banner */
     .feedback{
-      position:fixed; bottom:-80px; left:50%; transform:translateX(-50%);
-      padding:14px 44px; border-radius:999px;
-      font-size:18px; font-weight:800; color:#fff;
-      box-shadow:0 6px 24px rgba(0,0,0,.2);
+      position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);
+      padding:14px 44px;border-radius:999px;
+      font-size:18px;font-weight:800;color:#fff;
+      box-shadow:0 6px 30px rgba(0,0,0,.4);
       transition:bottom .35s cubic-bezier(.34,1.56,.64,1);
-      z-index:100; white-space:nowrap;
+      z-index:100;white-space:nowrap;
     }
-    .feedback.show{ bottom:24px }
-    .fb-correct{ background:#27ae60 }
-    .fb-wrong  { background:#e74c5e }
-    .fb-skip   { background:#8e44ad }
+    .feedback.show{bottom:24px}
+    .fb-correct{background:#10b981}
+    .fb-wrong{background:#ef4444}
+    .fb-skip{background:#8b5cf6}
 
     /* Win overlay */
     .win-overlay{
-      display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,.45); backdrop-filter:blur(4px);
-      z-index:500; align-items:center; justify-content:center;
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+      z-index:500;align-items:center;justify-content:center;
     }
-    .win-overlay.show{ display:flex }
+    .win-overlay.show{display:flex}
     .win-card{
-      background:var(--card); border-radius:28px;
-      padding:40px 48px; text-align:center;
-      max-width:400px; width:90%;
-      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      background:var(--card2);
+      border:1px solid rgba(124,58,237,.4);
+      border-radius:28px;padding:40px 48px;
+      text-align:center;max-width:400px;width:90%;
+      box-shadow:0 0 60px rgba(124,58,237,.2),0 20px 60px rgba(0,0,0,.4);
       animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
     }
-    @keyframes winPop{ from{transform:scale(.6);opacity:0} to{transform:scale(1);opacity:1} }
-    .win-emoji{ font-size:72px; display:block; margin-bottom:16px; animation:float 2s ease-in-out infinite }
-    @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    .win-title{ font-size:32px; font-weight:900; color:var(--dark); margin-bottom:8px }
-    .win-sub  { font-size:16px; color:var(--muted); margin-bottom:24px }
-    .win-stats{ display:flex; gap:12px; margin-bottom:28px }
-    .win-stat { flex:1; background:#f8fafc; border-radius:14px; padding:14px }
-    .win-stat-num  { font-size:28px; font-weight:900; color:var(--dark) }
-    .win-stat-label{ font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-top:2px }
-    .win-btns{ display:flex; gap:10px }
-    .btn-retry{ flex:1; padding:14px; border:none; border-radius:var(--radius); font-family:inherit; font-size:15px; font-weight:800; background:#e8f4f8; color:var(--dark); cursor:pointer; box-shadow:0 4px 0 #b0d0dc; transition:transform .1s }
-    .btn-home { flex:1; padding:14px; border:none; border-radius:var(--radius); font-family:inherit; font-size:15px; font-weight:800; background:var(--primary); color:#fff; cursor:pointer; box-shadow:0 4px 0 #b87800; transition:transform .1s }
-    .btn-retry:hover,.btn-home:hover{ transform:translateY(-2px) }
-    .btn-retry:active,.btn-home:active{ transform:translateY(2px); box-shadow:none }
+    @keyframes winPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    .win-emoji{font-size:72px;display:block;margin-bottom:16px;animation:float 2s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .win-title{font-size:32px;font-weight:900;color:#fff;margin-bottom:8px}
+    .win-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+    .win-stats{display:flex;gap:12px;margin-bottom:28px}
+    .win-stat{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .win-stat-num{font-size:28px;font-weight:900;color:var(--cyan)}
+    .win-stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .win-btns{display:flex;gap:10px}
+    .btn-retry{
+      flex:1;padding:14px;border:1px solid var(--border);border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:background .15s;
+    }
+    .btn-home{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:var(--cyan);color:#000;cursor:pointer;
+      box-shadow:0 0 20px rgba(6,182,212,.4);transition:transform .1s;
+    }
+    .btn-retry:hover{background:rgba(255,255,255,.12)}
+    .btn-home:hover{transform:translateY(-2px)}
+    .btn-home:active{transform:translateY(2px)}
 
     /* Confetti */
     .confetti-piece{
-      position:fixed; top:-20px; border-radius:2px;
-      pointer-events:none; z-index:600;
+      position:fixed;top:-20px;border-radius:2px;
+      pointer-events:none;z-index:600;
       animation:confettiFall linear forwards;
     }
-    @keyframes confettiFall{ to{transform:translateY(110vh) rotate(720deg); opacity:0} }
+    @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 
     /* Skip button */
     .skip-btn{
-      background:transparent; border:2px solid #d0e0ea;
-      color:var(--muted); font-family:inherit; font-size:14px; font-weight:700;
-      padding:8px 20px; border-radius:999px; cursor:pointer;
+      background:transparent;border:1px solid var(--border);
+      color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;
+      padding:8px 20px;border-radius:999px;cursor:pointer;
       transition:all .15s;
     }
-    .skip-btn:hover{ background:#f0e8ff; border-color:#9b4dca; color:#9b4dca }
+    .skip-btn:hover{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.5);color:#a78bfa}
   </style>
 </head>
 <body>
+
+<!-- Stars -->
+<div id="stars"></div>
 
 <div class="header">
   <button class="back-btn" onclick="location.href='index.html'">← Volver</button>
   <span class="hdr-title">🔀 Anagrama</span>
   <span class="hdr-pill pill-gold" id="hdr-timer">⏱ 00:00</span>
-  <span class="hdr-pill pill-green" id="hdr-score">★ 0</span>
+  <span class="hdr-pill pill-cyan" id="hdr-score">★ 0</span>
 </div>
 
 <div class="body">
@@ -239,6 +272,18 @@
 </div>
 
 <script>
+// ── Stars ─────────────────────────────────────────────────────
+(function(){
+  const container = document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const sz = Math.random()*2+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:${Math.random()*.4+.05};--d:${(Math.random()*3+2).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s`;
+    container.appendChild(s);
+  }
+})();
+
 // ── Word list ─────────────────────────────────────────────────
 const WORDS = [
   { word:'GATO',     hint:'Un animal doméstico que maúlla 🐱' },
@@ -251,7 +296,7 @@ const WORDS = [
   { word:'DELFIN',   hint:'Mamífero marino muy inteligente 🐬' },
 ];
 
-const TILE_COLORS = ['#e74c5e','#2980d4','#f0a500','#27ae60','#8e44ad','#16a085','#e67e22','#2bb5c8'];
+const TILE_COLORS = ['#e74c5e','#3b82f6','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899'];
 
 // ── State ─────────────────────────────────────────────────────
 let wordIdx = 0, score = 0, timerSecs = 0, timerInterval = null;
@@ -314,7 +359,7 @@ function renderAnswer() {
     if (answerSlots[i]) {
       slot.textContent   = answerSlots[i].letter;
       slot.style.color   = answerSlots[i].color;
-      slot.style.borderColor = answerSlots[i].color + '88';
+      slot.style.borderColor = answerSlots[i].color + '66';
       slot.onclick = () => removeFromSlot(i);
     }
     area.appendChild(slot);
@@ -329,7 +374,7 @@ function renderTiles() {
     tile.className   = 'tile';
     tile.textContent = letter;
     tile.style.background = TILE_COLORS[i % TILE_COLORS.length];
-    tile.style.boxShadow  = `0 5px 0 ${darken(TILE_COLORS[i % TILE_COLORS.length])}, 0 6px 16px rgba(0,0,0,.10)`;
+    tile.style.boxShadow  = `0 5px 0 ${darken(TILE_COLORS[i % TILE_COLORS.length])}, 0 6px 20px rgba(0,0,0,.3)`;
     tile.dataset.tileIdx  = i;
     tile.onclick = () => placeInSlot(i, letter, TILE_COLORS[i % TILE_COLORS.length]);
     area.appendChild(tile);
@@ -346,19 +391,16 @@ function darken(hex) {
 
 // ── Interaction ───────────────────────────────────────────────
 function placeInSlot(tileIdx, letter, color) {
-  // Find first empty slot
   const emptyIdx = answerSlots.findIndex(s => s === null);
   if (emptyIdx === -1) return;
 
   answerSlots[emptyIdx] = { letter, color, tileIdx };
 
-  // Hide tile
   const tileEl = document.querySelector(`.tile[data-tile-idx="${tileIdx}"]`);
   if (tileEl) tileEl.classList.add('used');
 
   renderAnswer();
 
-  // Auto-check when all slots filled
   if (answerSlots.every(s => s !== null)) {
     setTimeout(checkAnswer, 200);
   }
@@ -369,7 +411,6 @@ function removeFromSlot(slotIdx) {
   if (!entry) return;
   answerSlots[slotIdx] = null;
 
-  // Restore tile
   const tileEl = document.querySelector(`.tile[data-tile-idx="${entry.tileIdx}"]`);
   if (tileEl) tileEl.classList.remove('used');
 
@@ -381,7 +422,6 @@ function checkAnswer() {
   const slots  = document.querySelectorAll('.slot.filled');
 
   if (answer === currentWord) {
-    // Correct!
     slots.forEach(s => { s.classList.add('correct-slot'); });
     const bonus = wrongAttempts === 0 ? 50 : 0;
     score += 100 + bonus;
@@ -389,12 +429,10 @@ function checkAnswer() {
     showFeedback(wrongAttempts === 0 ? '✅  ¡Correcto! +50 bonus 🎉' : '✅  ¡Correcto!', 'fb-correct');
     setTimeout(nextWord, 1400);
   } else {
-    // Wrong
     wrongAttempts++;
     slots.forEach(s => { s.classList.add('wrong-slot'); });
     showFeedback('❌  ¡Casi! Intentá de nuevo', 'fb-wrong');
     setTimeout(() => {
-      // Clear all slots
       answerSlots = Array(currentWord.length).fill(null);
       document.querySelectorAll('.tile').forEach(t => t.classList.remove('used'));
       renderAnswer();
@@ -404,11 +442,8 @@ function checkAnswer() {
 
 function nextWord() {
   wordIdx++;
-  if (wordIdx >= wordQueue.length) {
-    finishGame();
-  } else {
-    loadWord();
-  }
+  if (wordIdx >= wordQueue.length) finishGame();
+  else loadWord();
 }
 
 function showFeedback(msg, cls) {
@@ -420,12 +455,11 @@ function showFeedback(msg, cls) {
 
 // ── Skip ──────────────────────────────────────────────────────
 document.getElementById('skip-btn').onclick = () => {
-  // Reveal the word briefly
   answerSlots = currentWord.split('').map((letter,i) => ({
-    letter, color: '#8e44ad', tileIdx: i,
+    letter, color: '#8b5cf6', tileIdx: i,
   }));
   renderAnswer();
-  document.querySelectorAll('.slot.filled').forEach(s => { s.style.borderColor='#8e44ad88'; });
+  document.querySelectorAll('.slot.filled').forEach(s => { s.style.borderColor='#8b5cf666'; });
   showFeedback(`💡  Era: ${currentWord}`, 'fb-skip');
   setTimeout(nextWord, 1400);
 };
@@ -447,12 +481,12 @@ function finishGame() {
 }
 
 function spawnConfetti() {
-  const colors = ['#f9c74f','#2bb5c8','#2ecc71','#e74c5e','#8e44ad','#ff9f43'];
-  for (let i = 0; i < 50; i++) {
+  const colors = ['#f9c74f','#06b6d4','#10b981','#e74c5e','#8b5cf6','#f97316'];
+  for (let i = 0; i < 60; i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
     const sz = 6 + Math.random()*8;
-    el.style.cssText = `left:${Math.random()*100}vw;background:${colors[i%colors.length]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${i*60}ms`;
+    el.style.cssText = `left:${Math.random()*100}vw;background:${colors[i%colors.length]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${i*50}ms`;
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
   }

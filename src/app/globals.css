@@ -112,7 +112,7 @@ p {
 
 @layer components {
   .landing-module-shell {
-    @apply min-h-screen bg-[radial-gradient(circle_at_top,rgba(48,84,255,0.2),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(139,103,255,0.15),transparent_45%),linear-gradient(to_bottom,#050816,#0a0f2c,#050816)] text-white;
+    @apply min-h-screen text-white;
   }
 
   .landing-module-content {
@@ -120,7 +120,7 @@ p {
   }
 
   .landing-module-card {
-    @apply rounded-2xl border border-white/15 bg-white/8 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-md;
+    @apply rounded-2xl border border-white/15 bg-white/8 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)];
   }
 
   .landing-module-title {
