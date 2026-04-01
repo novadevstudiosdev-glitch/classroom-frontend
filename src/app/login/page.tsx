@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { loginWithEmail } from "@/services/auth/auth.service";
 import { useAuthStore } from "@/store/auth/auth.store";
 
+export const dynamic = "force-dynamic";
+
 const LoginPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
