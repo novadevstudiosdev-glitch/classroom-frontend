@@ -1,7 +1,5 @@
-import React from 'react'
+import StudentWorldsMapView from "@/features/dashboard/student/views/StudentWorldsMapView";
 
 export default function LessonsPage() {
-  return (
-    <div>age</div>
-  )
+  return <StudentWorldsMapView />;
 }
