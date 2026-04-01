@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirigiendo…</title>
+</head>
+<body>
+  <script>
+    const roleParam = new URLSearchParams(window.location.search).get("role");
+    const role = roleParam === "teacher" ? "teacher" : "parent";
+    window.location.replace(`/register?role=${encodeURIComponent(role)}`);
+  </script>
+  <noscript>
+    <a href="/register?role=parent">Continuar al registro</a>
+  </noscript>
+</body>
+</html>

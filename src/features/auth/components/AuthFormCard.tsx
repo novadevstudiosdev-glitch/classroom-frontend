@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import type { AuthFormData, AuthMode } from "@/features/auth/types/auth-view.types";
@@ -10,12 +10,15 @@ import { useAuthStore } from "@/store/auth/auth.store";
 import {
   getGoogleAuthUrl,
   loginWithEmailPassword,
+  registerParent,
   registerTeacher,
 } from "@/services/auth/auth.service";
 
 type AuthFormCardProps = {
   defaultMode?: AuthMode;
 };
+
+type RegisterRole = "parent" | "teacher";
 
 const getNameParts = (name: string) => {
   const normalized = name.trim().replace(/\s+/g, " ");
@@ -33,13 +36,16 @@ const getNameParts = (name: string) => {
 
 const getRedirectByRole = (role?: string) => {
   if (role === "teacher") return "/dashboard/teacher";
+  if (role === "parent") return "/dashboard/parent";
   if (role === "student") return "/dashboard/student";
   return "/";
 };
 
 export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setSession = useAuthStore((state) => state.setSession);
+  const registerRole: RegisterRole = searchParams.get("role") === "teacher" ? "teacher" : "parent";
 
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -52,12 +58,15 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
   const [formData, setFormData] = useState<AuthFormData>({
     name: "",
+    childName: "",
+    schoolName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const isRegister = mode === "register";
+  const canSubmitRegister = registerRole !== "parent" || acceptTerms;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,27 +76,47 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
     try {
       if (isRegister) {
+        if (registerRole === "parent" && !acceptTerms) {
+          throw new Error("Confirmá que sos padre, madre o tutor legal.");
+        }
+
         if (formData.password !== formData.confirmPassword) {
           throw new Error("Las contraseñas no coinciden.");
         }
 
         const { firstName, lastName } = getNameParts(formData.name);
 
-        await registerTeacher({
-          first_name: firstName,
-          last_name: lastName,
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password,
-          country: "Argentina",
-          recaptcha_token: "dev",
-        });
+        if (registerRole === "teacher") {
+          await registerTeacher({
+            first_name: firstName,
+            last_name: lastName,
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password,
+            country: "Argentina",
+            recaptcha_token: "dev",
+          });
+        } else {
+          await registerParent({
+            first_name: firstName,
+            last_name: lastName,
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password,
+            student_email: formData.childName.trim().toLowerCase(),
+            recaptcha_token: "dev",
+          });
+        }
 
         setSuccessMessage(
-          "Cuenta creada. Revisá tu email para verificarla y luego iniciá sesión."
+          registerRole === "teacher"
+            ? "Cuenta docente creada. Revisá tu email para verificarla y luego iniciá sesión."
+            : "Cuenta familiar creada. Revisá tu email para verificarla y luego iniciá sesión."
         );
+
         setMode("login");
         setFormData((current) => ({
           ...current,
+          childName: "",
+          schoolName: "",
           password: "",
           confirmPassword: "",
         }));
@@ -114,7 +143,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("No se pudo completar la operación. Intentalo de nuevo.");
+        setErrorMessage("No se pudo completar la operación. Inténtalo de nuevo.");
       }
     } finally {
       setIsSubmitting(false);
@@ -181,6 +210,8 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
             transition={{ duration: 0.3 }}
           >
             <form onSubmit={handleSubmit} className="space-y-4">
+              <input type="hidden" name="role" id="role-input" value={registerRole} readOnly />
+
               {errorMessage ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {errorMessage}
@@ -190,6 +221,19 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {successMessage ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                   {successMessage}
+                </div>
+              ) : null}
+
+              {isRegister ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {registerRole === "teacher" ? "Cuenta docente" : "Cuenta familiar"}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    {registerRole === "teacher"
+                      ? "Completá los datos para crear tu cuenta docente."
+                      : "Completá los datos del adulto responsable para crear la cuenta."}
+                  </p>
                 </div>
               ) : null}
 
@@ -211,6 +255,54 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
                       placeholder="Ej: María González"
+                      required
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {isRegister && registerRole === "parent" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Email del niño/a
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="email"
+                      value={formData.childName}
+                      onChange={(event) =>
+                        setFormData({ ...formData, childName: event.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
+                      placeholder="alumno@email.com"
+                      required
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {isRegister && registerRole === "teacher" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Nombre de la escuela
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      value={formData.schoolName}
+                      onChange={(event) =>
+                        setFormData({ ...formData, schoolName: event.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
+                      placeholder="Ej: Escuela Primaria N° 12"
                       required
                     />
                   </div>
@@ -255,7 +347,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       setFormData({ ...formData, password: event.target.value })
                     }
                     className="w-full pl-10 pr-10 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     required
                   />
                   <button
@@ -288,7 +380,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         })
                       }
                       className="w-full pl-10 pr-10 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="••••••••"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       required
                     />
                     <button
@@ -324,24 +416,16 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                 </div>
               )}
 
-              {isRegister ? (
+              {isRegister && registerRole === "parent" ? (
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(event) => setAcceptTerms(event.target.checked)}
                     className="w-5 h-5 mt-0.5 rounded border-2 border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer"
-                    required
                   />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                    Acepto los{" "}
-                    <a href="#" className="text-blue-600 font-semibold hover:underline">
-                      términos y condiciones
-                    </a>{" "}
-                    y la{" "}
-                    <a href="#" className="text-blue-600 font-semibold hover:underline">
-                      política de privacidad
-                    </a>
+                  <span className="text-sm text-slate-600 group-hover:text-slate-800 font-medium">
+                    Confirmo que soy padre, madre o tutor legal
                   </span>
                 </label>
               ) : null}
@@ -350,7 +434,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isSubmitting}
+                disabled={isSubmitting || (isRegister && !canSubmitRegister)}
                 className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-blue-300/40 hover:shadow-xl hover:shadow-blue-400/50 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting
@@ -431,3 +515,4 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
     </motion.div>
   );
 }
+

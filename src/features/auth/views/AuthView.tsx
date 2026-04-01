@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { Suspense } from "react";
 import type { AuthMode } from "@/features/auth/types/auth-view.types";
 import { AuthFormCard } from "@/features/auth/components/AuthFormCard";
 import { AuthHero } from "@/features/auth/components/AuthHero";
@@ -55,7 +56,9 @@ export function AuthView({ defaultMode = "login" }: AuthViewProps) {
 
       <div className="w-full max-w-275 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] gap-8 xl:gap-10 items-center relative z-10">
         <AuthHero />
-        <AuthFormCard defaultMode={defaultMode} />
+        <Suspense fallback={null}>
+          <AuthFormCard defaultMode={defaultMode} />
+        </Suspense>
       </div>
     </div>
   );

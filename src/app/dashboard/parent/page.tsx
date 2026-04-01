@@ -1,7 +1,5 @@
-import { ParentDashboardView } from "@/features/dashboard/parent/views";
+import ParentDashboardView from "@/features/dashboard/parent/views/ParentDashboardView";
 
-const DashboardParentPage = () => {
+export default function ParentDashboardPage() {
   return <ParentDashboardView />;
-};
-
-export default DashboardParentPage;
+}

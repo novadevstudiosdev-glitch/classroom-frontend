@@ -1,7 +1,8 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 type Star = {
@@ -14,7 +15,25 @@ type Star = {
   color: string;
 };
 
+type HeroParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  a: number;
+  da: number;
+  color: string;
+  pulse: number;
+  burst?: boolean;
+};
+
 export default function HomeView() {
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const lastMouseYRef = useRef(0);
+  const [xpText, setXpText] = useState("0 XP");
+
   useEffect(() => {
     const canvas = document.getElementById("starfield") as HTMLCanvasElement | null;
     if (!canvas) return;
@@ -75,6 +94,230 @@ export default function HomeView() {
   }, []);
 
   useEffect(() => {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+
+    const revealOffset = 80;
+    let heroBottom = 0;
+
+    const updateHeroBottom = () => {
+      heroBottom = hero.getBoundingClientRect().top + window.scrollY + hero.offsetHeight;
+    };
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isBelowHero = currentScrollY > heroBottom - revealOffset;
+
+      if (!isBelowHero) {
+        setIsNavVisible(true);
+      } else {
+        const scrollingUp = currentScrollY < lastScrollYRef.current - 4;
+        const scrollingDown = currentScrollY > lastScrollYRef.current + 4;
+
+        if (scrollingUp) setIsNavVisible(true);
+        if (scrollingDown) setIsNavVisible(false);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    const handleMouseMove = (event: globalThis.MouseEvent) => {
+      const currentScrollY = window.scrollY;
+      const isBelowHero = currentScrollY > heroBottom - revealOffset;
+
+      if (!isBelowHero) {
+        lastMouseYRef.current = event.clientY;
+        return;
+      }
+
+      const movedMouseUp = event.clientY < lastMouseYRef.current - 10;
+      const nearTopEdge = event.clientY <= 120;
+
+      if (movedMouseUp || nearTopEdge) {
+        setIsNavVisible(true);
+      }
+
+      lastMouseYRef.current = event.clientY;
+    };
+
+    updateHeroBottom();
+    lastScrollYRef.current = window.scrollY;
+    lastMouseYRef.current = window.innerHeight / 2;
+
+    window.addEventListener("resize", updateHeroBottom);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("resize", updateHeroBottom);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = document.getElementById("hero-canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let raf = 0;
+    const mouse = { x: -999, y: -999 };
+    let particles: HeroParticle[] = Array.from({ length: 120 }, () => ({
+      x: Math.random() * 2000,
+      y: Math.random() * 1000,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.2,
+      r: Math.random() * 2.5 + 0.5,
+      a: Math.random() * 0.8 + 0.1,
+      da: (Math.random() - 0.5) * 0.012,
+      color: ["#6C63FF", "#FF6B9D", "#FFD700", "#2DD4BF", "#ffffff"][
+        Math.floor(Math.random() * 5)
+      ],
+      pulse: Math.random() * Math.PI * 2,
+    }));
+
+    const resize = () => {
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+    };
+
+    const burst = (bx: number, by: number) => {
+      const colors = ["#FFD700", "#FF6B9D", "#6C63FF", "#4ADE80", "#2DD4BF", "#ffffff"];
+      const burstParticles: HeroParticle[] = Array.from({ length: 28 }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 2;
+        return {
+          x: bx,
+          y: by,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: Math.random() * 3 + 1,
+          a: 1,
+          da: -0.025,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          burst: true,
+          pulse: 0,
+        };
+      });
+      particles = [...particles, ...burstParticles];
+    };
+
+    const onClick = (event: globalThis.MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      burst(event.clientX - rect.left, event.clientY - rect.top);
+    };
+
+    const onMove = (event: globalThis.MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = event.clientX - rect.left;
+      mouse.y = event.clientY - rect.top;
+    };
+
+    const onLeave = () => {
+      mouse.x = -999;
+      mouse.y = -999;
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      particles = particles.filter((p) => p.a > 0);
+
+      particles.forEach((p) => {
+        p.pulse += 0.04;
+        p.a += p.da;
+
+        if (!p.burst && (p.a <= 0.1 || p.a >= 0.9)) p.da *= -1;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (!p.burst) {
+          if (p.x < 0) p.x = width;
+          if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height;
+          if (p.y > height) p.y = 0;
+        }
+
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 120 && distance > 0 && !p.burst) {
+          p.vx += (dx / distance) * 0.08;
+          p.vy += (dy / distance) * 0.08;
+        }
+
+        if (!p.burst) {
+          p.vx *= 0.99;
+          p.vy *= 0.99;
+        }
+
+        const radius = p.r * (p.burst ? 1 : 0.9 + 0.2 * Math.sin(p.pulse));
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.a);
+        ctx.fillStyle = p.color;
+
+        if (p.r > 1.5) {
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = p.burst ? 16 : 8;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+
+    window.addEventListener("resize", resize);
+    canvas.addEventListener("click", onClick);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      canvas.removeEventListener("click", onClick);
+      canvas.removeEventListener("mousemove", onMove);
+      canvas.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      let frame = 0;
+      const target = 2450;
+      const duration = 2000;
+      const start = performance.now();
+
+      const tick = (time: number) => {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.floor(eased * target);
+        setXpText(`${value.toLocaleString()} XP`);
+
+        if (progress < 1) {
+          frame = requestAnimationFrame(tick);
+        }
+      };
+
+      frame = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(frame);
+    }, 2200);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -112,19 +355,34 @@ export default function HomeView() {
     };
   }, []);
 
+  const goStep3 = () => {
+    window.location.href = "/parental-gate.html";
+  };
+
   return (
     <div className="landing-root">
       <canvas id="starfield" />
 
-      <nav>
-        <Link href="/" className="logo" aria-label="Novi">Novi</Link>
+      <nav className={`landing-nav ${isNavVisible ? "is-visible" : "is-hidden"}`}>
+        <Link href="/" className="logo" aria-label="Novi">
+          <Image
+            src="/NOVI.png"
+            alt="Novi"
+            width={140}
+            height={44}
+            className="logo-img"
+            priority
+          />
+        </Link>
         <Link href="/login" className="btn-nav">Empezar gratis</Link>
       </nav>
 
       <section id="hero">
+        <canvas id="hero-canvas" />
         <div className="blob b1" />
         <div className="blob b2" />
         <div className="blob b3" />
+        <div className="hero-grid-floor" />
         <div className="hero-planet" />
         <div className="hero-planet-ring" />
 
@@ -134,6 +392,10 @@ export default function HomeView() {
         <span className="flt" style={{ left: "34%", top: "18%", fontSize: "14px", "--d": "3.5s", "--dl": "2s" } as CSSProperties}>.</span>
 
         <div className="hero-headline">
+          <div className="hero-badge">
+            <span className="badge-dot" />
+            50.000 aventureros activos ahora mismo
+          </div>
           <div className="overline">Aprende jugando</div>
           <h1>
             <span className="h1-line1">Subí</span>
@@ -154,8 +416,20 @@ export default function HomeView() {
             <span className="trust-dot" />
             <span className="trust-item">50.000 estudiantes</span>
           </div>
+
+          <div className="xp-bar-wrap">
+            <span className="xp-label">TU XP</span>
+            <div className="hero-xp-track">
+              <div className="xp-fill-bar" />
+            </div>
+            <span className="xp-val">{xpText}</span>
+          </div>
         </div>
 
+        <div className="scroll-hint">
+          <span>Explorar</span>
+          <div className="scroll-arrow" />
+        </div>
       </section>
 
       <section id="roles">
@@ -165,13 +439,19 @@ export default function HomeView() {
 
         <div className="role-row rv">
           <div className="role-visual"><div className="role-glow-circle role-alumno" style={{ "--rf": "5s" } as CSSProperties}><div className="role-emoji-wrap"><img src="/astronautaNiño.png" alt="Astronauta niño" className="role-emoji-img" /></div><span className="orbit-chip" style={{ top: "-10px", right: "-30px", "--oc": "5s", "--od": "0s" } as CSSProperties}>Misiones</span><span className="orbit-chip" style={{ bottom: "10px", left: "-40px", "--oc": "6s", "--od": ".8s" } as CSSProperties}>Logros</span><span className="orbit-chip" style={{ bottom: "-14px", right: "0px", "--oc": "4.5s", "--od": "1.5s" } as CSSProperties}>XP</span></div></div>
-          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><Link href="/login" className="role-btn rb-alumno">Empezar aventura <span>→</span></Link></div>
+          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><button className="role-btn rb-alumno" onClick={() => { window.location.href = "/parental-gate.html"; }}>Empezar aventura <span>→</span></button></div>
         </div>
         <div className="role-divider" />
 
         <div className="role-row reverse rv">
           <div className="role-visual"><div className="role-glow-circle role-docente" style={{ "--rf": "6s" } as CSSProperties}><div className="role-emoji-wrap role-emoji-wrap-docente"><img src="/maestra.png" alt="Maestra" className="role-emoji-img role-emoji-img-docente" /></div><span className="orbit-chip" style={{ top: "-8px", left: "-20px", "--oc": "5.5s", "--od": ".4s" } as CSSProperties}>Reportes</span><span className="orbit-chip" style={{ bottom: "0", right: "-30px", "--oc": "4s", "--od": "1.2s" } as CSSProperties}>Alumnos</span></div></div>
-          <div className="role-text"><div className="role-num">02</div><span className="role-tag docente-tag">Para docentes</span><h3 className="role-h">Soy docente</h3><p className="role-desc">Creá clases, asigná misiones y seguí el progreso de cada alumno con reportes detallados en tiempo real.</p><Link href="/login" className="role-btn rb-docente">Crear mi clase <span>→</span></Link></div>
+          <div className="role-text"><div className="role-num">02</div><span className="role-tag docente-tag">Para docentes</span><h3 className="role-h">Soy docente</h3><p className="role-desc">Creá clases, asigná misiones y seguí el progreso de cada alumno con reportes detallados en tiempo real.</p><Link href="/register.html?role=teacher" className="role-btn rb-docente">Crear mi clase <span>→</span></Link></div>
+        </div>
+        <div className="role-divider" />
+
+        <div className="role-row rv">
+          <div className="role-visual"><div className="role-glow-circle role-familia" style={{ "--rf": "4.5s" } as CSSProperties}>👨‍👩‍👧<span className="orbit-chip" style={{ top: "-10px", right: "-20px", "--oc": "6s", "--od": ".6s" } as CSSProperties}>Progreso</span><span className="orbit-chip" style={{ bottom: "-8px", left: "-10px", "--oc": "5s", "--od": "1.8s" } as CSSProperties}>Logros</span></div></div>
+          <div className="role-text"><div className="role-num">03</div><span className="role-tag familia-tag">Para familias</span><h3 className="role-h">Soy familia</h3><p className="role-desc">Seguí el avance de tus hijos, celebrá sus logros y acompañalos en su camino de aprendizaje desde la app.</p><button className="role-btn rb-familia" onClick={goStep3}>Ver progreso <span>→</span></button></div>
         </div>
       </section>
       <section id="como">
@@ -232,7 +512,7 @@ export default function HomeView() {
           <p className="cta-sub">Completamente gratis para estudiantes. Más de 50.000 chicos ya aprendiendo jugando cada día.</p>
           <div className="cta-row">
             <Link href="/login" className="btn-main" style={{ borderRadius: "16px" }}>Empezar gratis <span className="arr">GO</span></Link>
-            <Link href="/login" className="btn-ghost" style={{ borderRadius: "16px" }}>Soy docente →</Link>
+            <Link href="/register.html?role=teacher" className="btn-ghost" style={{ borderRadius: "16px" }}>Soy docente →</Link>
           </div>
         </div>
       </section>
@@ -248,17 +528,25 @@ export default function HomeView() {
         html{scroll-behavior:smooth}
         body{font-family:'Nunito',sans-serif;background:#07061a;color:#fff;overflow-x:hidden}
         #starfield{position:fixed;inset:0;z-index:0;pointer-events:none}
-        nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.9rem 5%;background:rgba(7,6,26,.5);backdrop-filter:blur(24px)}
-        .logo{font-size:28px;font-weight:900;letter-spacing:-.5px;color:#fff;text-decoration:none}
+        #hero-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+        .landing-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.9rem 5%;background:rgba(7,6,26,.5);backdrop-filter:blur(24px);transition:transform .35s ease,opacity .3s ease}
+        .landing-nav.is-visible{transform:translateY(0);opacity:1}
+        .landing-nav.is-hidden{transform:translateY(-120%);opacity:0;pointer-events:none}
+        .logo{display:inline-flex;align-items:center;text-decoration:none}
+        .logo-img{height:64px;width:auto;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(11,10,34,.35))}
         .btn-nav{background:linear-gradient(135deg,#6C63FF,#9B5DE5);color:#fff;border:none;border-radius:50px;padding:10px 26px;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 4px 20px rgba(108,99,255,.5);transition:transform .15s,box-shadow .15s}
         .btn-nav:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(108,99,255,.65)}
 
         #hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;padding:8rem 5% 4rem;z-index:10}
         .blob{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none}
+        .hero-grid-floor{position:absolute;bottom:0;left:0;right:0;height:45%;background:repeating-linear-gradient(90deg,rgba(108,99,255,.05) 0px,rgba(108,99,255,.05) 1px,transparent 1px,transparent 80px),repeating-linear-gradient(0deg,rgba(108,99,255,.05) 0px,rgba(108,99,255,.05) 1px,transparent 1px,transparent 80px);transform:perspective(400px) rotateX(60deg);transform-origin:bottom center;z-index:2;pointer-events:none;mask-image:linear-gradient(to top,rgba(0,0,0,.5),transparent);-webkit-mask-image:linear-gradient(to top,rgba(0,0,0,.5),transparent)}
         .b1{width:700px;height:700px;background:radial-gradient(circle,rgba(108,99,255,.22),transparent 70%);top:-10%;left:-5%}
         .b2{width:500px;height:500px;background:radial-gradient(circle,rgba(255,107,157,.14),transparent 70%);bottom:0;right:-10%}
         .b3{width:350px;height:350px;background:radial-gradient(circle,rgba(45,212,191,.1),transparent 70%);top:40%;right:30%}
         .hero-headline{position:relative;z-index:2;max-width:900px}
+        .hero-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:8px 20px;font-size:13px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:2rem}
+        .badge-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 8px #4ADE80;animation:dotPulse 2s ease-in-out infinite}
+        @keyframes dotPulse{0%,100%{box-shadow:0 0 4px #4ADE80}50%{box-shadow:0 0 16px #4ADE80,0 0 32px rgba(74,222,128,.4)}}
         .overline{font-size:12px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px}
         .overline::before{content:'';width:30px;height:1px;background:rgba(255,255,255,.25)}
         h1{font-size:clamp(54px,9vw,120px);font-weight:900;line-height:.95;letter-spacing:-3px;margin-bottom:2rem}
@@ -281,6 +569,16 @@ export default function HomeView() {
         .trust-strip{display:flex;gap:2rem;align-items:center;margin-top:3rem;flex-wrap:wrap}
         .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:rgba(255,255,255,.5)}
         .trust-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2)}
+        .xp-bar-wrap{display:inline-flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:50px;padding:10px 24px;margin-top:2.2rem}
+        .xp-label{font-size:13px;font-weight:900;color:rgba(255,255,255,.35);letter-spacing:.1em}
+        .hero-xp-track{width:140px;height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+        .xp-fill-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,#6C63FF,#FF6B9D,#FFD700);background-size:200%;animation:xpLoad 2s ease-out 2s forwards,xpGrad 3s linear infinite;width:0}
+        @keyframes xpLoad{to{width:68%}}
+        .xp-val{font-size:14px;font-weight:900;color:#FFD700;min-width:74px}
+        .scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px}
+        .scroll-hint span{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+        .scroll-arrow{width:20px;height:20px;border-right:2px solid rgba(255,255,255,.18);border-bottom:2px solid rgba(255,255,255,.18);transform:rotate(45deg);animation:arrowBounce 1.5s ease-in-out infinite}
+        @keyframes arrowBounce{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(3px,3px)}}
 
         #roles{position:relative;z-index:10;padding:4rem 5% 8rem;overflow:hidden}
         .roles-blob{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}.rb1{width:500px;height:500px;background:rgba(108,99,255,.1);left:-10%;top:0}.rb2{width:400px;height:400px;background:rgba(45,212,191,.08);right:-5%;bottom:0}
@@ -372,6 +670,11 @@ export default function HomeView() {
 
         @media(max-width:768px){
           .hero-planet,.hero-planet-ring{display:none}
+          .hero-grid-floor{display:none}
+          .hero-badge{font-size:11px;padding:7px 14px}
+          .xp-bar-wrap{width:100%;justify-content:space-between}
+          .scroll-hint{display:none}
+          .logo-img{height:50px}
           .role-row,.role-row.reverse{flex-direction:column}
           .tl-item,.tl-item.reverse{flex-direction:column;text-align:center}
           .tl-item .tl-side{text-align:center!important}

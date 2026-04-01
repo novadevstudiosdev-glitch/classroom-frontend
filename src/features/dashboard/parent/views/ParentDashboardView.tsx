@@ -1,87 +1,123 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  ParentBottomNavigation,
-  ParentChildrenSelector,
-  ParentClassProgressList,
-  ParentCompletedLessonsList,
-  ParentDashboardTopbar,
-  ParentLastSessionReportCard,
-  ParentStreakCard,
-  ParentWeeklyXpChart,
-} from "@/features/dashboard/parent/components";
-import { PARENT_DASHBOARD_MOCK } from "@/features/dashboard/parent/data";
-import { getParentDashboardData } from "@/features/dashboard/parent/services";
-import type { ParentDashboardData } from "@/features/dashboard/parent/types";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getParentProfile, type ParentProfile } from "@/services/parents/parents.service";
+import { useAuthStore } from "@/store/auth/auth.store";
 
-const ParentDashboardView = () => {
-  const [dashboardData, setDashboardData] = useState<ParentDashboardData>(PARENT_DASHBOARD_MOCK);
-  const [selectedChildId, setSelectedChildId] = useState(PARENT_DASHBOARD_MOCK.children[0]?.id ?? "");
+export default function ParentDashboardView() {
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+
+  const [profile, setProfile] = useState<ParentProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-
-    const loadDashboardData = async () => {
-      if (!selectedChildId) {
-        return;
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getParentProfile();
+        setProfile(data);
+      } catch {
+        setError("No se pudo cargar tu dashboard de familia.");
+      } finally {
+        setIsLoading(false);
       }
-
-      const response = await getParentDashboardData(selectedChildId);
-
-      if (!mounted) {
-        return;
-      }
-
-      setDashboardData(response);
-
-      // Si backend trae hijos distintos, dejamos seleccionado el primero para evitar estado roto.
-      setSelectedChildId((currentSelectedChildId) => {
-        if (response.children.length === 0) {
-          return "";
-        }
-
-        return response.children.some((child) => child.id === currentSelectedChildId)
-          ? currentSelectedChildId
-          : response.children[0].id;
-      });
     };
 
-    loadDashboardData();
+    load();
+  }, []);
 
-    return () => {
-      mounted = false;
-    };
-  }, [selectedChildId]);
+  const linkedStudents = useMemo(() => profile?.students ?? [], [profile]);
 
-  const selectedChild = useMemo(
-    () => dashboardData.children.find((child) => child.id === selectedChildId) ?? dashboardData.children[0],
-    [dashboardData.children, selectedChildId],
-  );
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
-    <div className="landing-module-shell pb-24">
-      <ParentDashboardTopbar profile={dashboardData.profile} />
+    <main className="min-h-screen bg-[#0b1230] text-white p-4 sm:p-6 md:p-8">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/60">Dashboard de familia</p>
+              <h1 className="mt-2 text-2xl font-black sm:text-3xl">
+                {profile ? `${profile.first_name} ${profile.last_name}` : "Padre / Madre / Tutor"}
+              </h1>
+            </div>
+            <div className="flex gap-2">
+              <Link
+                href="/"
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-white/90 hover:bg-white/10"
+              >
+                Inicio
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-2 text-sm font-bold text-red-100 hover:bg-red-500/30"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </header>
 
-      <ParentChildrenSelector
-        items={dashboardData.children}
-        selectedChildId={selectedChild?.id ?? ""}
-        onSelectChild={setSelectedChildId}
-      />
+        {isLoading ? (
+          <section className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
+            Cargando datos de familia...
+          </section>
+        ) : null}
 
-      <ParentStreakCard streak={dashboardData.streak} />
+        {!isLoading && error ? (
+          <section className="rounded-2xl border border-red-300/40 bg-red-500/10 p-6">
+            <p className="font-semibold text-red-100">{error}</p>
+            <p className="mt-2 text-sm text-red-100/80">
+              Si recién creaste tu cuenta, verificá tu email y volvé a iniciar sesión.
+            </p>
+          </section>
+        ) : null}
 
-      <ParentLastSessionReportCard report={dashboardData.lastSessionReport} />
+        {!isLoading && !error ? (
+          <section className="grid gap-4 sm:grid-cols-2">
+            <article className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-white/60">Alumnos vinculados</p>
+              <p className="mt-2 text-4xl font-black">{linkedStudents.length}</p>
+              <p className="mt-1 text-sm text-white/70">
+                Esta cifra muestra vínculos confirmados disponibles para tu cuenta.
+              </p>
+            </article>
 
-      <ParentClassProgressList items={dashboardData.classProgress} />
+            <article className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-white/60">Acción recomendada</p>
+              <p className="mt-2 text-sm text-white/80">
+                Si no ves alumnos, revisá el email de confirmación de vinculación enviado durante el registro.
+              </p>
+            </article>
 
-      <ParentCompletedLessonsList lessons={dashboardData.completedLessons} />
-
-      <ParentWeeklyXpChart items={dashboardData.weeklyXp} />
-
-      <ParentBottomNavigation items={dashboardData.bottomNavigation} />
-    </div>
+            <article className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-white/60">Detalle de vínculos</p>
+              {linkedStudents.length === 0 ? (
+                <p className="mt-3 text-sm text-white/70">Todavía no hay alumnos confirmados.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {linkedStudents.map((student) => (
+                    <li
+                      key={student.id}
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/85"
+                    >
+                      Alumno vinculado ID: {student.student_id}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          </section>
+        ) : null}
+      </div>
+    </main>
   );
-};
-
-export default ParentDashboardView;
+}

@@ -30,6 +30,15 @@ type RegisterTeacherRequest = {
   recaptcha_token: string;
 };
 
+type RegisterParentRequest = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  student_email: string;
+  recaptcha_token: string;
+};
+
 type LoginBackendResponse = {
   access_token?: string;
   refresh_token?: string;
@@ -110,6 +119,11 @@ export async function loginWithEmailPassword(payload: LoginRequest) {
 
 export async function registerTeacher(payload: RegisterTeacherRequest) {
   const response = await axiosClient.post("/auth/register/teacher", payload);
+  return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
+}
+
+export async function registerParent(payload: RegisterParentRequest) {
+  const response = await axiosClient.post("/auth/register/parent", payload);
   return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
 }
 
