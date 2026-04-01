@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { loginWithEmail } from "@/services/auth/auth.service";
+import { loginWithEmailPassword } from "@/services/auth/auth.service";
 import { useAuthStore } from "@/store/auth/auth.store";
 
 export const dynamic = "force-dynamic";
@@ -38,26 +38,27 @@ const LoginContent = () => {
       setIsSubmitting(true);
       setErrorMessage(null);
 
-      const tokens = await loginWithEmail({
+      const session = await loginWithEmailPassword({
         email: email.trim(),
         password,
       });
 
-      if (!tokens.accessToken) {
+      if (!session.accessToken) {
         setErrorMessage("No se recibió access token del backend.");
         return;
       }
 
       setSession({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
       });
 
       // Traemos perfil para dejar el store listo antes de navegar.
       await refreshUser();
 
       router.push(redirectTo);
-    } catch {
+    } catch (error) {
+      console.error("Login error:", error);
       setErrorMessage("Credenciales inválidas o servidor no disponible.");
     } finally {
       setIsSubmitting(false);
