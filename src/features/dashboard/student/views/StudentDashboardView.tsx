@@ -29,7 +29,7 @@ export default function StudentDashboardPage() {
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* MISION */}
-          <motion.div className="md:col-span-2 bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 text-white shadow-lg">
+          <motion.div className="md:col-span-2 bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-all">
             <div className="flex justify-between items-start mb-5">
               <h3 className="text-lg sm:text-xl font-black">Misión del Día</h3>
               <span className="text-2xl sm:text-3xl">✨</span>
@@ -66,7 +66,7 @@ export default function StudentDashboardPage() {
           </motion.div>
 
           {/* SUBJECT MAP */}
-          <motion.div className="md:col-span-2 bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg">
+          <motion.div className="md:col-span-2 bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg sm:text-xl font-black text-white mb-5">
               Mapa de Materias
             </h3>
@@ -123,7 +123,7 @@ export default function StudentDashboardPage() {
           </motion.div>
 
           {/* ACTIVITY */}
-          <motion.div className="bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg">
+          <motion.div className="bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg sm:text-xl font-black mb-4">
               Actividad Reciente
             </h3>
@@ -152,7 +152,7 @@ export default function StudentDashboardPage() {
           </motion.div>
 
           {/* LEADERBOARD */}
-          <motion.div className="bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg">
+          <motion.div className="bg-[#ffffff25] rounded-[20px] p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg sm:text-xl font-black mb-4">
               Tabla de Posiciones
             </h3>

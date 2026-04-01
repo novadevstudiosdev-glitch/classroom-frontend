@@ -1,7 +1,20 @@
+import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
 import { ExerciseBuilderView } from "@/features/exercise-builder/views";
 
-const NewExerciseBuilderPage = () => {
-  return <ExerciseBuilderView />;
-};
+export default function NewExerciseBuilderPage() {
+  return (
+    <div className="relative min-h-screen">
 
-export default NewExerciseBuilderPage;
+      {/* BACKGROUND */}
+      <div className="fixed inset-0 z-0">
+        <AuthBackgroundCanvas />
+      </div>
+
+      {/* CONTENIDO */}
+      <div className="relative z-10">
+        <ExerciseBuilderView />
+      </div>
+
+    </div>
+  );
+}
