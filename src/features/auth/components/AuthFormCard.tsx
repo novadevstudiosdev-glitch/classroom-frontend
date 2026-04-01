@@ -143,7 +143,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("No se pudo completar la operación. Intentalo de nuevo.");
+        setErrorMessage("No se pudo completar la operación. Inténtalo de nuevo.");
       }
     } finally {
       setIsSubmitting(false);
@@ -186,7 +186,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
             }`}
             type="button"
           >
-            Iniciar sesiÃ³n
+            Iniciar sesión
           </button>
           <button
             onClick={() => setMode("register")}
@@ -231,8 +231,8 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   </p>
                   <p className="text-xs text-slate-600 mt-1">
                     {registerRole === "teacher"
-                      ? "CompletÃ¡ los datos para crear tu cuenta docente."
-                      : "CompletÃ¡ los datos del adulto responsable para crear la cuenta."}
+                      ? "Completá los datos para crear tu cuenta docente."
+                      : "Completá los datos del adulto responsable para crear la cuenta."}
                   </p>
                 </div>
               ) : null}
@@ -254,7 +254,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         setFormData({ ...formData, name: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="Ej: MarÃ­a GonzÃ¡lez"
+                      placeholder="Ej: María González"
                       required
                     />
                   </div>
@@ -302,7 +302,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         setFormData({ ...formData, schoolName: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="Ej: Escuela Primaria NÂ° 12"
+                      placeholder="Ej: Escuela Primaria N° 12"
                       required
                     />
                   </div>
@@ -311,7 +311,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Correo electrÃ³nico
+                  Correo electrónico
                 </label>
                 <div className="relative">
                   <Mail
@@ -333,7 +333,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  ContraseÃ±a
+                  Contraseña
                 </label>
                 <div className="relative">
                   <Lock
@@ -363,7 +363,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {isRegister ? (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Confirmar contraseÃ±a
+                    Confirmar contraseña
                   </label>
                   <div className="relative">
                     <Lock
@@ -411,7 +411,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                     href="#"
                     className="text-sm font-semibold text-blue-600 hover:text-blue-700"
                   >
-                    Â¿Olvidaste tu contraseÃ±a?
+                    ¿Olvidaste tu contraseña?
                   </a>
                 </div>
               )}
@@ -441,7 +441,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   ? "Procesando..."
                   : isRegister
                     ? "Crear mi cuenta"
-                    : "Iniciar sesiÃ³n"}
+                    : "Iniciar sesión"}
               </motion.button>
 
               <div className="relative my-5">
@@ -484,7 +484,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               </motion.button>
 
               <p className="text-center text-sm text-slate-600 mt-4">
-                {isRegister ? "Â¿Ya tenÃ©s cuenta? " : "Â¿No tenÃ©s una cuenta? "}
+                {isRegister ? "¿Ya tenés cuenta? " : "¿No tenés una cuenta? "}
                 <button
                   type="button"
                   onClick={() =>
@@ -494,7 +494,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   }
                   className="font-bold text-blue-600 hover:text-blue-700"
                 >
-                  {isRegister ? "IniciÃ¡ sesiÃ³n" : "Registrate aquÃ­"}
+                  {isRegister ? "Iniciá sesión" : "Registrate aquí"}
                 </button>
               </p>
             </form>
@@ -509,7 +509,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         className="mt-4 text-center"
       >
         <p className="text-xs text-slate-300 italic">
-          &quot;El aprendizaje es un tesoro que seguirÃ¡ a su dueÃ±o en todas partes&quot;
+          &quot;El aprendizaje es un tesoro que seguirá a su dueño en todas partes&quot;
         </p>
       </motion.div>
     </motion.div>

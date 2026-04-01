@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent } from "react";
+import type { CSSProperties } from "react";
 
 type Star = {
   x: number;
@@ -121,7 +121,7 @@ export default function HomeView() {
       lastScrollYRef.current = currentScrollY;
     };
 
-    const handleMouseMove = (event: MouseEvent) => {
+    const handleMouseMove = (event: globalThis.MouseEvent) => {
       const currentScrollY = window.scrollY;
       const isBelowHero = currentScrollY > heroBottom - revealOffset;
 
