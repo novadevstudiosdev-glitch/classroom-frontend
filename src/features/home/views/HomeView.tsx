@@ -33,17 +33,6 @@ export default function HomeView() {
   const lastScrollYRef = useRef(0);
   const lastMouseYRef = useRef(0);
   const [xpText, setXpText] = useState("0 XP");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalStep, setModalStep] = useState<1 | 2 | 3>(1);
-  const [fromKidFlow, setFromKidFlow] = useState(false);
-  const [guardianChecked, setGuardianChecked] = useState(false);
-  const [submitDone, setSubmitDone] = useState(false);
-  const [formData, setFormData] = useState({
-    adultName: "",
-    kidName: "",
-    email: "",
-    password: "",
-  });
 
   useEffect(() => {
     const canvas = document.getElementById("starfield") as HTMLCanvasElement | null;
@@ -329,13 +318,6 @@ export default function HomeView() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalOpen]);
-
-  useEffect(() => {
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -373,66 +355,9 @@ export default function HomeView() {
     };
   }, []);
 
-  const isRegisterReady =
-    formData.adultName.trim() &&
-    formData.kidName.trim() &&
-    formData.email.trim() &&
-    formData.password.trim() &&
-    guardianChecked;
-
-  const openModal = () => {
-    setSubmitDone(false);
-    setFromKidFlow(false);
-    setModalStep(1);
-    setModalOpen(true);
+  const goStep3 = () => {
+    window.location.href = "/parental-gate.html";
   };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setModalStep(1);
-    setFromKidFlow(false);
-    setSubmitDone(false);
-    setGuardianChecked(false);
-    setFormData({
-      adultName: "",
-      kidName: "",
-      email: "",
-      password: "",
-    });
-  };
-
-  const goStep3 = (fromKid: boolean) => {
-    setFromKidFlow(fromKid);
-    setModalStep(3);
-  };
-
-  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) {
-      closeModal();
-    }
-  };
-
-  const handleSubmit = () => {
-    if (!isRegisterReady) return;
-    setSubmitDone(true);
-    window.setTimeout(() => {
-      closeModal();
-    }, 2500);
-  };
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeModal();
-    };
-
-    if (modalOpen) {
-      window.addEventListener("keydown", onKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [modalOpen]);
 
   return (
     <div className="landing-root">
@@ -514,19 +439,19 @@ export default function HomeView() {
 
         <div className="role-row rv">
           <div className="role-visual"><div className="role-glow-circle role-alumno" style={{ "--rf": "5s" } as CSSProperties}><div className="role-emoji-wrap"><img src="/astronautaNiño.png" alt="Astronauta niño" className="role-emoji-img" /></div><span className="orbit-chip" style={{ top: "-10px", right: "-30px", "--oc": "5s", "--od": "0s" } as CSSProperties}>Misiones</span><span className="orbit-chip" style={{ bottom: "10px", left: "-40px", "--oc": "6s", "--od": ".8s" } as CSSProperties}>Logros</span><span className="orbit-chip" style={{ bottom: "-14px", right: "0px", "--oc": "4.5s", "--od": "1.5s" } as CSSProperties}>XP</span></div></div>
-          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><button className="role-btn rb-alumno" onClick={openModal}>Empezar aventura <span>→</span></button></div>
+          <div className="role-text"><div className="role-num">01</div><span className="role-tag alumno-tag">Para estudiantes</span><h3 className="role-h">Soy alumno</h3><p className="role-desc">Completá misiones, ganás XP y desbloqueás logros mientras aprendés jugando. El universo del conocimiento te espera.</p><button className="role-btn rb-alumno" onClick={() => { window.location.href = "/parental-gate.html"; }}>Empezar aventura <span>→</span></button></div>
         </div>
         <div className="role-divider" />
 
         <div className="role-row reverse rv">
           <div className="role-visual"><div className="role-glow-circle role-docente" style={{ "--rf": "6s" } as CSSProperties}><div className="role-emoji-wrap role-emoji-wrap-docente"><img src="/maestra.png" alt="Maestra" className="role-emoji-img role-emoji-img-docente" /></div><span className="orbit-chip" style={{ top: "-8px", left: "-20px", "--oc": "5.5s", "--od": ".4s" } as CSSProperties}>Reportes</span><span className="orbit-chip" style={{ bottom: "0", right: "-30px", "--oc": "4s", "--od": "1.2s" } as CSSProperties}>Alumnos</span></div></div>
-          <div className="role-text"><div className="role-num">02</div><span className="role-tag docente-tag">Para docentes</span><h3 className="role-h">Soy docente</h3><p className="role-desc">Creá clases, asigná misiones y seguí el progreso de cada alumno con reportes detallados en tiempo real.</p><Link href="/login" className="role-btn rb-docente">Crear mi clase <span>→</span></Link></div>
+          <div className="role-text"><div className="role-num">02</div><span className="role-tag docente-tag">Para docentes</span><h3 className="role-h">Soy docente</h3><p className="role-desc">Creá clases, asigná misiones y seguí el progreso de cada alumno con reportes detallados en tiempo real.</p><Link href="/register.html?role=teacher" className="role-btn rb-docente">Crear mi clase <span>→</span></Link></div>
         </div>
         <div className="role-divider" />
 
         <div className="role-row rv">
           <div className="role-visual"><div className="role-glow-circle role-familia" style={{ "--rf": "4.5s" } as CSSProperties}>👨‍👩‍👧<span className="orbit-chip" style={{ top: "-10px", right: "-20px", "--oc": "6s", "--od": ".6s" } as CSSProperties}>Progreso</span><span className="orbit-chip" style={{ bottom: "-8px", left: "-10px", "--oc": "5s", "--od": "1.8s" } as CSSProperties}>Logros</span></div></div>
-          <div className="role-text"><div className="role-num">03</div><span className="role-tag familia-tag">Para familias</span><h3 className="role-h">Soy familia</h3><p className="role-desc">Seguí el avance de tus hijos, celebrá sus logros y acompañalos en su camino de aprendizaje desde la app.</p><button className="role-btn rb-familia" onClick={() => goStep3(false)}>Ver progreso <span>→</span></button></div>
+          <div className="role-text"><div className="role-num">03</div><span className="role-tag familia-tag">Para familias</span><h3 className="role-h">Soy familia</h3><p className="role-desc">Seguí el avance de tus hijos, celebrá sus logros y acompañalos en su camino de aprendizaje desde la app.</p><button className="role-btn rb-familia" onClick={goStep3}>Ver progreso <span>→</span></button></div>
         </div>
       </section>
       <section id="como">
@@ -587,7 +512,7 @@ export default function HomeView() {
           <p className="cta-sub">Completamente gratis para estudiantes. Más de 50.000 chicos ya aprendiendo jugando cada día.</p>
           <div className="cta-row">
             <Link href="/login" className="btn-main" style={{ borderRadius: "16px" }}>Empezar gratis <span className="arr">GO</span></Link>
-            <Link href="/login" className="btn-ghost" style={{ borderRadius: "16px" }}>Soy docente →</Link>
+            <Link href="/register.html?role=teacher" className="btn-ghost" style={{ borderRadius: "16px" }}>Soy docente →</Link>
           </div>
         </div>
       </section>
@@ -597,130 +522,6 @@ export default function HomeView() {
         <ul className="fl-links"><li><a href="#">Privacidad</a></li><li><a href="#">Términos</a></li><li><a href="#">Contacto</a></li></ul>
         <span className="fl-copy">© 2026 Novi</span>
       </footer>
-
-      <div
-        className={`pg-overlay ${modalOpen ? "open" : ""}`}
-        onClick={handleOverlayClick}
-      >
-        <div className="pg-modal">
-          <button className="pg-close" onClick={closeModal}>✕</button>
-
-          <div className="pg-dots">
-            <div className={`pg-dot ${modalStep === 1 ? "active" : ""} ${modalStep > 1 ? "done" : ""}`} />
-            <div className={`pg-dot ${modalStep === 2 ? "active" : ""} ${modalStep > 2 ? "done" : ""}`} />
-            <div className={`pg-dot ${modalStep === 3 ? "active" : ""}`} />
-          </div>
-
-          {modalStep === 1 ? (
-            <div className="pg-step active">
-              <span className="pg-emoji">🚀</span>
-              <div className="pg-title">¡Bienvenido a Novi!</div>
-              <p className="pg-sub">Para empezar tu aventura, contanos quién quiere unirse.</p>
-              <div className="pg-who-grid">
-                <button className="pg-who kid" onClick={() => setModalStep(2)}>
-                  <span className="we">🧒</span>
-                  <span className="wl">Soy un niño</span>
-                  <span className="wa">6 - 12 años</span>
-                </button>
-                <button className="pg-who adult" onClick={() => goStep3(false)}>
-                  <span className="we">👨‍👩‍👧</span>
-                  <span className="wl">Soy padre/madre</span>
-                  <span className="wa">Cuenta familiar</span>
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {modalStep === 2 ? (
-            <div className="pg-step active">
-              <span className="pg-ship">🛸</span>
-              <div className="pg-title">¡Necesitás a mamá o papá para despegar!</div>
-              <p className="pg-sub">En Novi tu seguridad es lo más importante. Un adulto de tu familia tiene que crear la cuenta.</p>
-              <div className="pg-bubbles">
-                <div className="pg-bubble">
-                  <span>🔒</span>
-                  <p><strong>Tu cuenta es segura</strong> — Solo tu familia puede ver tu información.</p>
-                </div>
-                <div className="pg-bubble">
-                  <span>👨‍👩‍👧</span>
-                  <p><strong>Papá o mamá crean la cuenta</strong> — Vos elegís tu nombre de explorador.</p>
-                </div>
-                <div className="pg-bubble">
-                  <span>🎮</span>
-                  <p><strong>¡Y después a jugar!</strong> — Misiones, XP y premios te esperan.</p>
-                </div>
-              </div>
-              <button className="pg-btn-call" onClick={() => goStep3(true)}>📲 ¡Llamar a mamá o papá!</button>
-              <button className="pg-back" onClick={() => setModalStep(1)}>← Volver</button>
-            </div>
-          ) : null}
-
-          {modalStep === 3 ? (
-            <div className="pg-step active">
-              <span className="pg-emoji">{fromKidFlow ? "📲" : "👋"}</span>
-              <div className="pg-title">{fromKidFlow ? "¡Tu hijo/a te necesita!" : "Hola, adulto responsable"}</div>
-              <p className="pg-sub">
-                {fromKidFlow
-                  ? "El/la peque quiere unirse a Novi. Completá el registro para que pueda empezar su aventura espacial."
-                  : "Creá la cuenta familiar y tu hijo/a podrá explorar Novi de forma segura."}
-              </p>
-
-              <div className="pg-form">
-                <div className="pg-row">
-                  <input
-                    className="pg-input"
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={formData.adultName}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, adultName: event.target.value }))
-                    }
-                  />
-                  <input
-                    className="pg-input"
-                    type="text"
-                    placeholder="Nombre del niño/a"
-                    value={formData.kidName}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, kidName: event.target.value }))
-                    }
-                  />
-                </div>
-                <input
-                  className="pg-input"
-                  type="email"
-                  placeholder="Tu correo electrónico"
-                  value={formData.email}
-                  onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, email: event.target.value }))
-                  }
-                />
-                <input
-                  className="pg-input"
-                  type="password"
-                  placeholder="Contraseña (solo vos la sabés)"
-                  value={formData.password}
-                  onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, password: event.target.value }))
-                  }
-                />
-                <button className="pg-check" onClick={() => setGuardianChecked((prev) => !prev)}>
-                  <div className={`pg-chk-box ${guardianChecked ? "on" : ""}`} />
-                  <p>Confirmo que soy el <strong>padre, madre o tutor legal</strong> y acepto los términos y la política de privacidad para menores.</p>
-                </button>
-              </div>
-
-              <button
-                className={`pg-btn-reg ${isRegisterReady ? "rdy" : ""}`}
-                onClick={handleSubmit}
-              >
-                {submitDone ? "✅ ¡Cuenta creada! Bienvenidos a Novi" : "🚀 Crear cuenta familiar"}
-              </button>
-              <button className="pg-back" onClick={() => setModalStep(1)}>← Volver</button>
-            </div>
-          ) : null}
-        </div>
-      </div>
 
       <style jsx global>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -862,51 +663,6 @@ export default function HomeView() {
 
         footer{position:relative;z-index:10;padding:2rem 5%;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
         .fl{font-size:22px;font-weight:900;color:rgba(255,255,255,.6)}.fl-links{display:flex;gap:1.5rem;list-style:none}.fl-links a{font-size:12px;color:rgba(255,255,255,.25);text-decoration:none;font-weight:700}.fl-links a:hover{color:rgba(255,255,255,.6)}.fl-copy{font-size:11px;color:rgba(255,255,255,.18)}
-        .pg-overlay{position:fixed;inset:0;z-index:1000;background:rgba(4,3,14,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .3s ease}
-        .pg-overlay.open{opacity:1;pointer-events:all}
-        .pg-modal{background:radial-gradient(ellipse at 30% 20%,rgba(108,99,255,.18),transparent 60%),linear-gradient(145deg,#0f0d2e,#0a0820);border:1px solid rgba(108,99,255,.25);border-radius:32px;padding:2.5rem 2rem;max-width:480px;width:100%;position:relative;transform:scale(.88) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 60px rgba(108,99,255,.12);text-align:center;overflow:hidden}
-        .pg-overlay.open .pg-modal{transform:scale(1) translateY(0)}
-        .pg-close{position:absolute;top:1.2rem;right:1.2rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:rgba(255,255,255,.5);transition:all .2s}
-        .pg-close:hover{background:rgba(255,255,255,.12);color:#fff}
-        .pg-dots{display:flex;gap:8px;justify-content:center;margin-bottom:2rem}
-        .pg-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .35s}
-        .pg-dot.active{width:24px;border-radius:4px;background:#6C63FF}
-        .pg-dot.done{background:rgba(108,99,255,.4)}
-        .pg-step{display:flex;flex-direction:column;align-items:center}
-        .pg-emoji{font-size:64px;margin-bottom:1rem;display:block}
-        .pg-ship{font-size:72px;margin-bottom:1rem}
-        .pg-title{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:.6rem;line-height:1.2}
-        .pg-sub{font-size:14px;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:1.5rem;max-width:360px}
-        .pg-who-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
-        .pg-who{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:1.5rem 1rem;cursor:pointer;color:#fff;transition:all .22s;display:flex;flex-direction:column;align-items:center;gap:10px}
-        .pg-who .we{font-size:40px}
-        .pg-who .wl{font-size:16px;font-weight:900}
-        .pg-who .wa{font-size:11px;color:rgba(255,255,255,.35);font-weight:700}
-        .pg-who.kid:hover{border-color:rgba(108,99,255,.5);background:rgba(108,99,255,.1);transform:translateY(-4px)}
-        .pg-who.adult:hover{border-color:rgba(45,212,191,.5);background:rgba(45,212,191,.08);transform:translateY(-4px)}
-        .pg-bubbles{display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:1.5rem;text-align:left}
-        .pg-bubble{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px}
-        .pg-bubble span{font-size:24px;flex-shrink:0}
-        .pg-bubble p{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
-        .pg-bubble p strong{color:#fff;font-weight:800}
-        .pg-btn-call{width:100%;border:none;border-radius:16px;padding:17px;font-size:17px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#9B5DE5);color:#fff;box-shadow:0 8px 28px rgba(108,99,255,.45);transition:transform .15s;margin-bottom:10px}
-        .pg-btn-call:hover{transform:translateY(-3px)}
-        .pg-form{display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:1.2rem;text-align:left}
-        .pg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .pg-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 16px;font-size:14px;font-weight:700;color:#fff;outline:none;transition:border-color .2s,background .2s;width:100%}
-        .pg-input::placeholder{color:rgba(255,255,255,.25)}
-        .pg-input:focus{border-color:rgba(108,99,255,.5);background:rgba(108,99,255,.05)}
-        .pg-check{display:flex;align-items:flex-start;gap:10px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.15);border-radius:12px;padding:12px;cursor:pointer;text-align:left}
-        .pg-chk-box{width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,215,0,.4);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s}
-        .pg-chk-box.on{background:#FFD700;border-color:#FFD700}
-        .pg-chk-box.on::after{content:'✓';font-size:12px;font-weight:900;color:#1a0f00}
-        .pg-check p{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5}
-        .pg-check p strong{color:#FFD700}
-        .pg-btn-reg{width:100%;border:none;border-radius:16px;padding:17px;font-size:16px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#FFD700,#FF9500);color:#1a0f00;transition:transform .15s,opacity .2s;opacity:.45}
-        .pg-btn-reg.rdy{opacity:1}
-        .pg-btn-reg.rdy:hover{transform:translateY(-3px)}
-        .pg-back{background:transparent;border:none;color:rgba(255,255,255,.3);font-size:13px;font-weight:700;cursor:pointer;padding:8px;margin-top:4px;transition:color .2s}
-        .pg-back:hover{color:rgba(255,255,255,.6)}
 
         .rv{opacity:0;transform:translateY(36px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}.rv.in{opacity:1;transform:none}
         .rv1{transition-delay:.1s}.rv2{transition-delay:.2s}.rv3{transition-delay:.3s}.rv4{transition-delay:.4s}
@@ -926,8 +682,6 @@ export default function HomeView() {
           .testi-scatter{grid-template-columns:1fr}
           .testi:nth-child(2),.testi:nth-child(3){margin-top:0}
           .preview-layout{flex-direction:column}
-          .pg-row,.pg-who-grid{grid-template-columns:1fr}
-          .pg-modal{padding:2.2rem 1.1rem}
         }
       `}</style>
     </div>
