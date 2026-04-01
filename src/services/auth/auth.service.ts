@@ -1,5 +1,13 @@
 import axios from "axios";
+import type { LoginParams, RefreshResponse } from "@/types/auth.types";
 import { axiosClient } from "@/lib/axios/axios-client";
+
+type RefreshApiResponse = {
+  accessToken?: string;
+  refreshToken?: string;
+  access_token?: string;
+  refresh_token?: string;
+};
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -50,8 +58,33 @@ export type AuthSession = {
 
 const getApiBaseUrl = () => {
   const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
-  return rawBaseUrl.replace(/\/+$/, "");
+  const normalizedBaseUrl = rawBaseUrl.replace(/\/+$/, "");
+  return normalizedBaseUrl.endsWith("/api")
+    ? normalizedBaseUrl
+    : `${normalizedBaseUrl}/api`;
 };
+
+const normalizeTokens = (payload: RefreshApiResponse): RefreshResponse => {
+  const accessToken = payload.access_token ?? payload.accessToken ?? "";
+  const refreshToken = payload.refresh_token ?? payload.refreshToken;
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
+
+export async function loginWithEmail(params: LoginParams): Promise<RefreshResponse> {
+  const apiBaseUrl = getApiBaseUrl();
+
+  const response = await axios.post<RefreshApiResponse>(`${apiBaseUrl}/auth/login`, {
+    email: params.email,
+    password: params.password,
+    recaptcha_token: params.recaptchaToken,
+  });
+
+  return normalizeTokens(response.data);
+}
 
 const extractData = <T>(payload: unknown): T => {
   if (
@@ -97,23 +130,12 @@ export async function registerParent(payload: RegisterParentRequest) {
 export async function refreshAccessToken(refreshToken: string) {
   const apiBaseUrl = getApiBaseUrl();
 
-  const response = await axios.post(
-    `${apiBaseUrl}/api/auth/refresh`,
-    { refresh_token: refreshToken },
-    {
-      headers: {
-        Authorization: `Bearer ${refreshToken}`,
-      },
-    }
+  const response = await axios.post<RefreshApiResponse>(
+    `${apiBaseUrl}/auth/refresh`,
+    { refresh_token: refreshToken }
   );
 
-  const normalized = normalizeSession(extractData<LoginBackendResponse>(response.data));
-
-  if (!normalized.accessToken) {
-    throw new Error("No se recibió access token al refrescar sesión.");
-  }
-
-  return normalized;
+  return normalizeTokens(response.data);
 }
 
 export function getGoogleAuthUrl() {

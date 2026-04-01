@@ -942,22 +942,8 @@ html,body{height:100%;font-family:'Nunito',system-ui,sans-serif;background:var(-
     </div>
     <!-- Center: scorebar + wheel/question panels -->
     <div class="game-center" style="padding:0;justify-content:flex-start">
-      <!-- Score bar -->
-      <div class="pq-scorebar" style="width:100%;flex-shrink:0">
-        <div class="pq-player-card active-turn" id="pq-pc1">
-          <div class="pq-player-alias" id="pq-alias1">Jugador 1</div>
-          <div class="pq-player-score" id="pq-score1">0</div>
-          <div class="pq-player-correct" id="pq-correct1">0 ✓</div>
-          <div class="pq-wedges" id="pq-wedges1"></div>
-        </div>
-        <div class="pq-vs">VS</div>
-        <div class="pq-player-card" id="pq-pc2">
-          <div class="pq-player-alias" id="pq-alias2">Jugador 2</div>
-          <div class="pq-player-score" id="pq-score2">0</div>
-          <div class="pq-player-correct" id="pq-correct2">0 ✓</div>
-          <div class="pq-wedges" id="pq-wedges2"></div>
-        </div>
-      </div>
+      <!-- Score bar — populated dynamically by startPreguntados() -->
+      <div class="pq-scorebar" id="pq-scorebar" style="width:100%;flex-shrink:0"></div>
       <!-- Wheel panel -->
       <div class="pq-panel" id="pq-panel-wheel">
         <div class="pq-turn-banner" id="pq-turn-banner">Turno de ...</div>
@@ -1130,6 +1116,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   const storedRoom=sessionStorage.getItem('novi_room');
   const storedAlias=sessionStorage.getItem('novi_alias');
   const storedIsHost=sessionStorage.getItem('novi_isHost')==='1';
+  const autoAlias=sessionStorage.getItem('novi_auto_alias');
+  const jwtToken=sessionStorage.getItem('novi_jwt');
   if(storedRoom&&storedAlias){
     // Coming from redirect (rooms.html backward compat)
     sessionStorage.removeItem('novi_room');
@@ -1137,7 +1125,14 @@ window.addEventListener('DOMContentLoaded',()=>{
     sessionStorage.removeItem('novi_isHost');
     myAlias=storedAlias;
     isHost=storedIsHost;
+    if(jwtToken)window.__NOVI_JWT__=jwtToken;
     connectSocket(()=>socket.emit('join-room',{roomCode:storedRoom,alias:storedAlias}),'lb-enter-err','s-enter',null,'');
+  } else if(autoAlias&&jwtToken){
+    // Auth-gate flow: auto-connect with JWT
+    window.__NOVI_JWT__=jwtToken;
+    myAlias=autoAlias;
+    $('lb-alias-inp').value=autoAlias;
+    enterLobbyBrowser();
   } else {
     show('s-enter');
   }
@@ -1154,7 +1149,8 @@ function enterLobbyBrowser(){
   myAlias=alias;
   show('s-loading');$('spin-txt').textContent='Conectando...';
   if(socket){try{socket.disconnect();}catch(e){}socket=null;}
-  socket=io(WS+'/game',{path:'/socket.io',transports:['websocket','polling'],reconnectionAttempts:3,forceNew:true});
+  const _tok=window.__NOVI_JWT__||null;
+  socket=io(WS+'/game',{path:'/socket.io',transports:['websocket','polling'],reconnectionAttempts:3,forceNew:true,auth:_tok?{token:_tok}:{}});
   socket.on('connect',()=>{
     socket.emit('join-lobby',{alias:myAlias});
     $('lb-nav-alias').textContent=myAlias;
@@ -1182,9 +1178,7 @@ function enterLobbyBrowser(){
   socket.on('kicked',d=>{
     AUDIO.stop();isHost=false;selectedInstanceId=null;roomCode='';
     alert(d.message||'Fuiste expulsado de la sala.');
-    // Stay on lobby browser — reconnect with same alias
-    if(myAlias){$('lb-alias-inp').value=myAlias;enterLobbyBrowser();}
-    else show('s-enter');
+    window.location.href='/minigame/lobby';
   });
 }
 
@@ -1234,6 +1228,12 @@ function registerRoomEvents(){
   socket.on('pq-question',d=>pqOnQuestion(d));
   socket.on('pq-answer-result',d=>pqOnAnswerResult(d));
   socket.on('pq-next-turn',d=>pqOnNextTurn(d));
+  socket.on('reconnected',d=>{
+    // Restored to an in-progress game — update state and show current screen
+    myAlias=d.alias;myScore=d.score||0;isHost=d.isHost||false;
+    roomCode=d.roomCode;currentGameType=d.gameType||'quiz';
+    showLobbyError('🔄 Reconectado a la partida.');
+  });
 }
 
 function renderRooms(rooms){
@@ -1573,12 +1573,13 @@ async function saveAIGame(){
 function connectSocket(onConnect,errId,errScreen,btn,btnLabel){
   show('s-loading');$('spin-txt').textContent='Conectando...';
   if(socket){socket.disconnect();socket=null;}
-  socket=io(WS+'/game',{path:'/socket.io',transports:['websocket','polling'],reconnectionAttempts:3});
+  const _ctok=window.__NOVI_JWT__||null;
+  socket=io(WS+'/game',{path:'/socket.io',transports:['websocket','polling'],reconnectionAttempts:3,auth:_ctok?{token:_ctok}:{}});
 
   socket.on('connect',onConnect);
   socket.on('connect_error',()=>showConnErr('No se pudo conectar al servidor.',errId,errScreen,btn,btnLabel));
   socket.on('error',d=>showConnErr(d.message||'Error desconocido.',errId,errScreen,btn,btnLabel));
-  socket.on('kicked',d=>{AUDIO.stop();isHost=false;selectedInstanceId=null;roomCode='';if(socket){try{socket.disconnect();}catch(e){}socket=null;}alert(d.message||'Fuiste expulsado de la sala.');if(myAlias){$('lb-alias-inp').value=myAlias;enterLobbyBrowser();}else show('s-enter');});
+  socket.on('kicked',d=>{AUDIO.stop();isHost=false;selectedInstanceId=null;roomCode='';if(socket){try{socket.disconnect();}catch(e){}socket=null;}alert(d.message||'Fuiste expulsado de la sala.');window.location.href='/minigame/lobby';});
 
   socket.on('room-created',d=>{roomCode=d.roomCode;isHost=true;enterLobby(d.roomCode,d.roomName,d.alias);});
   socket.on('joined',d=>{
@@ -1655,6 +1656,7 @@ function connectSocket(onConnect,errId,errScreen,btn,btnLabel){
   socket.on('pq-question',d=>pqOnQuestion(d));
   socket.on('pq-answer-result',d=>pqOnAnswerResult(d));
   socket.on('pq-next-turn',d=>pqOnNextTurn(d));
+  socket.on('reconnected',d=>{myAlias=d.alias;myScore=d.score||0;isHost=d.isHost||false;roomCode=d.roomCode;currentGameType=d.gameType||'quiz';showLobbyError('🔄 Reconectado a la partida.');});
 }
 
 function showConnErr(msg,errId,errScreen,btn,btnLabel){
@@ -1677,8 +1679,7 @@ function enterLobby(code,roomName,alias){
 function exitLobby(){
   if(socket){socket.removeAllListeners();socket.disconnect();socket=null;}
   isHost=false;selectedInstanceId=null;roomCode='';
-  if(myAlias){$('lb-alias-inp').value=myAlias;enterLobbyBrowser();}
-  else show('s-enter');
+  window.location.href='/minigame/lobby';
 }
 
 function resetLobby(code,roomName){
@@ -1747,8 +1748,10 @@ async function deleteGame(id){
   const apiBase=(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')
     ?`${window.location.protocol}//${window.location.hostname}:3000/api`
     :(typeof NOVI_CONFIG!=='undefined'?NOVI_CONFIG.API_URL:'https://classroom-backend.up.railway.app/api');
+  const tok=window.__NOVI_JWT__||sessionStorage.getItem('novi_jwt')||'';
   try{
-    await fetch(`${apiBase}/minigame-instances/${id}/force`,{method:'DELETE'});
+    const res=await fetch(`${apiBase}/minigame-instances/${id}/force`,{method:'DELETE',headers:tok?{Authorization:`Bearer ${tok}`}:{}});
+    if(!res.ok&&res.status===401){alert('Sesión expirada. Volvé a iniciar sesión.');window.location.href='/minigame/lobby';return;}
     if(selectedInstanceId===id){selectedInstanceId=null;const bs=$('btn-start');if(bs)bs.disabled=true;}
     if(socket)socket.emit('get-quizzes');
   }catch(e){console.error('[deleteGame]',e);}
@@ -2373,8 +2376,7 @@ function exitGame(){
   if(pqTimerIv)clearInterval(pqTimerIv);
   if(socket){socket.removeAllListeners();socket.disconnect();socket=null;}
   isHost=false;selectedInstanceId=null;roomCode='';
-  if(myAlias){$('lb-alias-inp').value=myAlias;enterLobbyBrowser();}
-  else show('s-enter');
+  window.location.href='/minigame/lobby';
 }
 
 // ══ Confetti ═══════════════════════════════════════════════════════════════
@@ -2405,12 +2407,18 @@ function startPreguntados(d){
   pqPlayerOrder.forEach(p=>{pqWedges[p.alias]=new Set();});
   const totalRounds=d.gameData.rounds||6;
 
-  // Render score bar
-  pqPlayerOrder.forEach((p,i)=>{
-    $(`pq-alias${i+1}`).textContent=p.alias;
-    $(`pq-score${i+1}`).textContent=p.score||0;
-    $(`pq-correct${i+1}`).textContent='0 ✓';
-  });
+  // Build score bar dynamically for N players
+  const scorebar=$('pq-scorebar');
+  if(scorebar){
+    scorebar.innerHTML=pqPlayerOrder.map((p,i)=>
+      `<div class="pq-player-card${i===0?' active-turn':''}" id="pq-pc${i+1}" style="flex:1;min-width:0">
+        <div class="pq-player-alias" id="pq-alias${i+1}">${esc(p.alias)}</div>
+        <div class="pq-player-score" id="pq-score${i+1}">0</div>
+        <div class="pq-player-correct" id="pq-correct${i+1}">0 ✓</div>
+        <div class="pq-wedges" id="pq-wedges${i+1}"></div>
+      </div>${i<pqPlayerOrder.length-1?'<div class="pq-vs" style="flex:0 0 auto;font-size:11px;padding:0 4px">⚡</div>':''}`
+    ).join('');
+  }
   pqRenderWedges();
 
   // Draw wheel (static, CSS rotation used for spin)
@@ -2648,10 +2656,9 @@ function pqStartTimer(totalMs,color){
 }
 
 function pqUpdateActiveTurn(turnAlias){
-  [$('pq-pc1'),$('pq-pc2')].forEach((el,i)=>{
-    if(!el)return;
-    const alias=$(`pq-alias${i+1}`)?.textContent;
-    el.classList.toggle('active-turn',alias===turnAlias);
+  pqPlayerOrder.forEach((p,i)=>{
+    const el=$(`pq-pc${i+1}`);if(!el)return;
+    el.classList.toggle('active-turn',p.alias===turnAlias);
   });
 }
 </script>
