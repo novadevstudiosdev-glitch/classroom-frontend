@@ -17,7 +17,7 @@ const LessonBuilderVideoSection = ({ video }: LessonBuilderVideoSectionProps) =>
           </button>
         </div>
 
-        <div className="aspect-video w-[30%] min-w-[220px] rounded-xl border border-white/20 bg-[#0f1636]/70" />
+        <div className="aspect-video w-[30%] min-w-55 rounded-xl border border-white/20 bg-[#0f1636]/70" />
       </div>
     </section>
   );

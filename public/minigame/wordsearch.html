@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sopa de Letras</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --space:#06080f;
+      --card:#0d1117;
+      --card2:#111827;
+      --purple:#7c3aed;
+      --cyan:#06b6d4;
+      --border:rgba(255,255,255,.08);
+      --muted:rgba(255,255,255,.45);
+      --radius:16px;
+    }
+
+    body{
+      font-family:'Nunito',system-ui,sans-serif;
+      background:var(--space);
+      color:#fff;
+      min-height:100vh;
+      display:flex;flex-direction:column;
+      overflow:hidden;
+    }
+
+    /* Stars */
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--delay,0s)}
+    @keyframes twinkle{0%,100%{opacity:.08}50%{opacity:.55}}
+
+    /* Header */
+    .ws-header{
+      position:relative;z-index:10;
+      background:rgba(13,17,23,.85);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(12px);
+      padding:10px 20px;
+      display:flex;align-items:center;gap:12px;
+      flex-shrink:0;
+    }
+    .back-btn{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:rgba(255,255,255,.8);
+      font-family:inherit;font-size:14px;font-weight:700;
+      padding:7px 16px;border-radius:999px;cursor:pointer;
+      transition:background .15s;white-space:nowrap;
+    }
+    .back-btn:hover{background:rgba(255,255,255,.12)}
+    .ws-title{font-size:18px;font-weight:900;color:#fff;flex:1;text-align:center}
+
+    /* Stats */
+    .ws-timer{
+      font-weight:800;font-size:14px;
+      padding:7px 16px;border-radius:999px;white-space:nowrap;
+      background:rgba(249,200,79,.12);border:1px solid rgba(249,200,79,.3);color:#f9c84f;
+    }
+    .ws-score{
+      font-weight:800;font-size:14px;
+      padding:7px 16px;border-radius:999px;white-space:nowrap;
+      background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);color:var(--cyan);
+    }
+
+    /* Main layout */
+    .ws-body{
+      position:relative;z-index:10;
+      flex:1;
+      display:flex;
+      align-items:flex-start;justify-content:center;
+      gap:20px;
+      padding:20px;
+      overflow:hidden;
+    }
+
+    /* Grid */
+    .grid-wrap{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px;
+      flex-shrink:0;
+      user-select:none;
+    }
+
+    .grid{
+      display:grid;
+      gap:3px;
+      cursor:crosshair;
+    }
+
+    .cell{
+      width:38px;height:38px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;font-weight:800;
+      border-radius:8px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      color:rgba(255,255,255,.85);
+      transition:background .1s, transform .1s;
+    }
+    .cell:hover{background:rgba(6,182,212,.12);}
+    .cell.selecting{
+      background:rgba(6,182,212,.25)!important;
+      border-color:var(--cyan)!important;
+      color:#fff!important;
+      transform:scale(1.08);
+      z-index:2;
+    }
+    .cell.found{
+      color:#fff!important;
+      border-color:transparent!important;
+      transform:none;
+    }
+    .cell.found-flash{animation:foundFlash .4s ease}
+    @keyframes foundFlash{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+
+    /* Word list */
+    .word-list-wrap{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px;
+      min-width:180px;max-width:220px;
+    }
+    .ws-stats{display:flex;gap:8px;margin-bottom:16px}
+    .word-list-title{
+      font-size:11px;font-weight:800;
+      text-transform:uppercase;letter-spacing:1px;
+      color:var(--muted);margin-bottom:14px;
+    }
+    .word-list{display:flex;flex-direction:column;gap:8px}
+    .word-item{
+      display:flex;align-items:center;gap:10px;
+      font-size:15px;font-weight:700;color:rgba(255,255,255,.8);
+      padding:8px 12px;
+      border-radius:10px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      transition:all .3s;
+    }
+    .word-item.found-word{
+      color:#fff;
+      text-decoration:line-through;
+      text-decoration-color:rgba(255,255,255,.5);
+    }
+    .word-dot{
+      width:10px;height:10px;border-radius:50%;
+      background:rgba(255,255,255,.15);flex-shrink:0;
+      transition:background .3s;
+    }
+    .word-item.found-word .word-dot{background:rgba(255,255,255,.4)}
+
+    /* Progress */
+    .progress-section{margin-top:20px}
+    .progress-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .progress-track{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--cyan);border-radius:999px;transition:width .5s ease}
+    .progress-count{font-size:12px;font-weight:700;color:var(--muted);margin-top:6px;text-align:right}
+
+    /* Win overlay */
+    .win-overlay{
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+      z-index:500;align-items:center;justify-content:center;
+    }
+    .win-overlay.show{display:flex}
+    .win-card{
+      background:var(--card2);
+      border:1px solid rgba(124,58,237,.4);
+      border-radius:28px;padding:40px 48px;
+      text-align:center;max-width:380px;width:90%;
+      box-shadow:0 0 60px rgba(124,58,237,.2),0 20px 60px rgba(0,0,0,.4);
+      animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes winPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    .win-emoji{font-size:72px;display:block;margin-bottom:16px;animation:float 2s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .win-title{font-size:32px;font-weight:900;color:#fff;margin-bottom:8px}
+    .win-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+    .win-stats{display:flex;gap:12px;margin-bottom:28px}
+    .win-stat{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .win-stat-num{font-size:28px;font-weight:900;color:var(--cyan)}
+    .win-stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:2px}
+    .win-btns{display:flex;gap:10px}
+    .btn-win-retry{
+      flex:1;padding:14px;border:1px solid var(--border);border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:background .15s;
+    }
+    .btn-win-home{
+      flex:1;padding:14px;border:none;border-radius:var(--radius);
+      font-family:inherit;font-size:15px;font-weight:800;
+      background:var(--cyan);color:#000;cursor:pointer;
+      box-shadow:0 0 20px rgba(6,182,212,.4);transition:transform .1s;
+    }
+    .btn-win-retry:hover{background:rgba(255,255,255,.12)}
+    .btn-win-home:hover{transform:translateY(-2px)}
+    .btn-win-home:active{transform:translateY(2px)}
+
+    /* Confetti */
+    .confetti-piece{
+      position:fixed;width:10px;height:10px;top:-20px;
+      border-radius:2px;pointer-events:none;z-index:600;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+  </style>
+</head>
+<body>
+
+<!-- Stars -->
+<div id="stars"></div>
+
+<div class="ws-header">
+  <button class="back-btn" onclick="location.href='index.html'">← Volver</button>
+  <span class="ws-title">🔤 Sopa de Letras</span>
+  <div class="ws-timer" id="ws-timer">⏱ 00:00</div>
+  <div class="ws-score" id="ws-score">★ 0</div>
+</div>
+
+<div class="ws-body">
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="word-list-wrap">
+    <div class="word-list-title">Encontrá las palabras</div>
+    <div class="word-list" id="word-list"></div>
+    <div class="progress-section">
+      <div class="progress-label">Progreso</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-count" id="progress-count">0 / 8</div>
+    </div>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div class="win-overlay" id="win-overlay">
+  <div class="win-card">
+    <span class="win-emoji">🏆</span>
+    <div class="win-title">¡Encontraste todas!</div>
+    <div class="win-sub" id="win-sub">¡Excelente trabajo!</div>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="win-stat-num" id="win-score">0</div>
+        <div class="win-stat-label">Puntos</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-num" id="win-time">0s</div>
+        <div class="win-stat-label">Tiempo</div>
+      </div>
+    </div>
+    <div class="win-btns">
+      <button class="btn-win-retry" id="btn-retry">🔄 Jugar de nuevo</button>
+      <button class="btn-win-home" onclick="location.href='index.html'">🏠 Menú</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Stars ─────────────────────────────────────────────────────
+(function(){
+  const container = document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const sz = Math.random()*2+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:${Math.random()*.4+.05};--d:${(Math.random()*3+2).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s`;
+    container.appendChild(s);
+  }
+})();
+
+// ── Words & Colors ─────────────────────────────────────────────
+const WORDS = ['GATO','PERRO','PATO','LEON','TIGRE','OSO','RANA','LOBO'];
+const WORD_COLORS = ['#e74c5e','#3b82f6','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+const GRID_SIZE   = 12;
+const LETTERS     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const DIRS = [
+  [0,1],[1,0],[1,1],[1,-1],
+  [0,-1],[-1,0],[-1,-1],[-1,1],
+];
+
+// ── State ─────────────────────────────────────────────────────
+let grid = [], wordPlacements = [];
+let selecting = false, selStart = null, selCells = [];
+let foundWords = new Set();
+let score = 0, timerSecs = 0, timerInterval = null;
+
+// ── Init ──────────────────────────────────────────────────────
+function init() {
+  foundWords = new Set();
+  score = 0;
+  timerSecs = 0;
+  clearInterval(timerInterval);
+
+  buildGrid();
+  renderGrid();
+  renderWordList();
+  updateProgress();
+  updateScore();
+
+  timerInterval = setInterval(() => {
+    timerSecs++;
+    const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+    const s = String(timerSecs % 60).padStart(2,'0');
+    document.getElementById('ws-timer').textContent = `⏱ ${m}:${s}`;
+  }, 1000);
+
+  document.getElementById('win-overlay').classList.remove('show');
+}
+
+// ── Grid Generation ───────────────────────────────────────────
+function buildGrid() {
+  grid = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+  wordPlacements = [];
+
+  for (const word of WORDS) {
+    let placed = false;
+    const shuffledDirs = [...DIRS].sort(() => Math.random() - 0.5);
+
+    for (let attempt = 0; attempt < 200 && !placed; attempt++) {
+      const dir = shuffledDirs[attempt % shuffledDirs.length];
+      const r   = Math.floor(Math.random() * GRID_SIZE);
+      const c   = Math.floor(Math.random() * GRID_SIZE);
+
+      if (canPlace(word, r, c, dir)) {
+        placeWord(word, r, c, dir);
+        placed = true;
+      }
+    }
+  }
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (!grid[r][c]) {
+        grid[r][c] = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+      }
+    }
+  }
+}
+
+function canPlace(word, r, c, [dr, dc]) {
+  for (let i = 0; i < word.length; i++) {
+    const nr = r + i*dr, nc = c + i*dc;
+    if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+    if (grid[nr][nc] && grid[nr][nc] !== word[i]) return false;
+  }
+  return true;
+}
+
+function placeWord(word, r, c, [dr, dc]) {
+  const cells = [];
+  for (let i = 0; i < word.length; i++) {
+    const nr = r + i*dr, nc = c + i*dc;
+    grid[nr][nc] = word[i];
+    cells.push([nr, nc]);
+  }
+  wordPlacements.push({ word, cells });
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderGrid() {
+  const gridEl = document.getElementById('grid');
+  gridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 38px)`;
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className  = 'cell';
+      cell.textContent = grid[r][c];
+      cell.dataset.r  = r;
+      cell.dataset.c  = c;
+
+      cell.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        selecting  = true;
+        selStart   = [r, c];
+        selCells   = [[r, c]];
+        cell.setPointerCapture(e.pointerId);
+        updateHighlight();
+      });
+      cell.addEventListener('pointermove', e => {
+        if (!selecting) return;
+        e.preventDefault();
+        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+        if (!target) return;
+        const er = +target.dataset.r, ec = +target.dataset.c;
+        selCells = getCellsBetween(selStart[0], selStart[1], er, ec);
+        updateHighlight();
+      });
+      cell.addEventListener('pointerup', e => {
+        if (!selecting) return;
+        selecting = false;
+        checkSelection();
+        selCells = [];
+        updateHighlight();
+      });
+
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function getCellsBetween(r1, c1, r2, c2) {
+  const dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1);
+  const rowD = Math.abs(r2-r1), colD = Math.abs(c2-c1);
+  if (rowD !== 0 && colD !== 0 && rowD !== colD) {
+    if (rowD > colD) return getCellsBetween(r1, c1, r2, c1);
+    else return getCellsBetween(r1, c1, r1, c2);
+  }
+  const steps = Math.max(rowD, colD);
+  const cells = [];
+  for (let i = 0; i <= steps; i++) cells.push([r1 + i*dr, c1 + i*dc]);
+  return cells;
+}
+
+function updateHighlight() {
+  document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  for (const [r, c] of selCells) {
+    const el = getCell(r, c);
+    if (el && !el.classList.contains('found')) el.classList.add('selecting');
+  }
+}
+
+// ── Check Selection ───────────────────────────────────────────
+function checkSelection() {
+  if (selCells.length < 2) return;
+  const letters = selCells.map(([r,c]) => grid[r][c]).join('');
+  const reversed = letters.split('').reverse().join('');
+
+  for (const { word, cells } of wordPlacements) {
+    if (foundWords.has(word)) continue;
+    const match = (letters === word) || (reversed === word);
+    if (match) {
+      foundWords.add(word);
+      score += 100;
+      markFound(word, cells);
+      updateScore();
+      updateProgress();
+      if (foundWords.size === WORDS.length) setTimeout(showWin, 600);
+      return;
+    }
+  }
+}
+
+function markFound(word, cells) {
+  const colorIdx = WORDS.indexOf(word);
+  const color    = WORD_COLORS[colorIdx];
+
+  for (const [r, c] of cells) {
+    const el = getCell(r, c);
+    if (!el) continue;
+    el.classList.remove('selecting');
+    el.classList.add('found', 'found-flash');
+    el.style.background = color;
+    el.style.color = '#fff';
+    el.addEventListener('animationend', () => el.classList.remove('found-flash'), { once: true });
+  }
+
+  document.querySelectorAll('.word-item').forEach(item => {
+    if (item.dataset.word === word) {
+      item.classList.add('found-word');
+      item.style.background = color + '22';
+      item.style.borderColor = color + '66';
+      item.querySelector('.word-dot').style.background = color;
+    }
+  });
+}
+
+function renderWordList() {
+  const list = document.getElementById('word-list');
+  list.innerHTML = '';
+  WORDS.forEach((word) => {
+    const item = document.createElement('div');
+    item.className = 'word-item';
+    item.dataset.word = word;
+    item.innerHTML = `<span class="word-dot"></span>${word}`;
+    list.appendChild(item);
+  });
+}
+
+function updateProgress() {
+  const pct = (foundWords.size / WORDS.length) * 100;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('progress-count').textContent = `${foundWords.size} / ${WORDS.length}`;
+}
+
+function updateScore() {
+  document.getElementById('ws-score').textContent = `★ ${score}`;
+}
+
+// ── Win ───────────────────────────────────────────────────────
+function showWin() {
+  clearInterval(timerInterval);
+  const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+  const s = String(timerSecs % 60).padStart(2,'0');
+
+  document.getElementById('win-score').textContent = score;
+  document.getElementById('win-time').textContent  = `${m}:${s}`;
+  document.getElementById('win-sub').textContent   =
+    timerSecs < 60 ? '¡Velocidad increíble! 🚀' :
+    timerSecs < 120 ? '¡Excelente trabajo! 🌟' : '¡Bien hecho! 💪';
+
+  document.getElementById('win-overlay').classList.add('show');
+  document.getElementById('btn-retry').onclick = init;
+
+  spawnConfetti();
+}
+
+function spawnConfetti() {
+  const colors = ['#f9c74f','#06b6d4','#10b981','#e74c5e','#8b5cf6','#f97316'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const sz = 6 + Math.random() * 8;
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[i % colors.length]};
+      width:${sz}px;height:${sz}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${i*50}ms;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+init();
+</script>
+</body>
+</html>

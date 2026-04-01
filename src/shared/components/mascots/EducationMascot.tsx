@@ -205,12 +205,12 @@ export function EducationMascot({
   const armPaths = getArmPaths();
 
   // Floating animation
-  const floatAnimation = {
+  const floatAnimation: import('framer-motion').TargetAndTransition = {
     y: [0, -8, 0],
     transition: {
       duration: 2.5,
       repeat: Infinity,
-      ease: 'easeInOut',
+      ease: "easeInOut" as const,
     },
   };
 
