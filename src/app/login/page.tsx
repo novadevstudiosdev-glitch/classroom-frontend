@@ -1,13 +1,13 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loginWithEmail } from "@/services/auth/auth.service";
 import { useAuthStore } from "@/store/auth/auth.store";
 
 export const dynamic = "force-dynamic";
 
-const LoginPage = () => {
+const LoginContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -121,6 +121,22 @@ const LoginPage = () => {
         </form>
       </div>
     </main>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center px-6">
+          <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
+            <p className="text-gray-600">Cargando...</p>
+          </div>
+        </main>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 };
 
