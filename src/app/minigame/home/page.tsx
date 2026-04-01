@@ -41,7 +41,7 @@ export default function MinigameHomePage() {
           {/* Action cards */}
           <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
             {/* Lobby multiplayer */}
-            <Link href="/minigame/lobby.html" className="flex-1">
+            <Link href="/minigame/lobby" className="flex-1">
               <div className="group h-full flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-white/10 bg-white/5 backdrop-blur hover:border-cyan-400/60 hover:bg-white/10 transition-all duration-200 cursor-pointer">
                 <span className="text-4xl">🎮</span>
                 <div className="text-center">

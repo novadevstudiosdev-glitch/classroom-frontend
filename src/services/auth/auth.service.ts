@@ -1,12 +1,13 @@
 import axios from "axios";
 import type { LoginParams, RefreshResponse } from "@/types/auth.types";
+import { axiosClient } from "@/lib/axios/axios-client";
 
 type RefreshApiResponse = {
   accessToken?: string;
   refreshToken?: string;
   access_token?: string;
   refresh_token?: string;
-import { axiosClient } from "@/lib/axios/axios-client";
+};
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -74,8 +75,7 @@ export async function loginWithEmail(params: LoginParams): Promise<RefreshRespon
   });
 
   return normalizeTokens(response.data);
-  return rawBaseUrl.replace(/\/+$/, "");
-};
+}
 
 const extractData = <T>(payload: unknown): T => {
   if (
@@ -122,23 +122,6 @@ export async function refreshAccessToken(refreshToken: string) {
   );
 
   return normalizeTokens(response.data);
-  const response = await axios.post(
-    `${apiBaseUrl}/api/auth/refresh`,
-    { refresh_token: refreshToken },
-    {
-      headers: {
-        Authorization: `Bearer ${refreshToken}`,
-      },
-    }
-  );
-
-  const normalized = normalizeSession(extractData<LoginBackendResponse>(response.data));
-
-  if (!normalized.accessToken) {
-    throw new Error("No se recibió access token al refrescar sesión.");
-  }
-
-  return normalized;
 }
 
 export function getGoogleAuthUrl() {
