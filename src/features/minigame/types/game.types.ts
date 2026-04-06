@@ -79,6 +79,7 @@ export interface TrucoPlayerView {
   florStatus: 'none' | 'pending' | 'resolved';
   florMustDeclare: boolean;
   florDeclaredAliases: string[];
+  florResponderTeam: 'A' | 'B' | null;
   trucoStatus: 'available' | 'pending' | 'resolved';
   trucoChain: TrucoTrucoCall[];
   trucoResponderTeam: 'A' | 'B' | null;

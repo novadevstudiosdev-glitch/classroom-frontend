@@ -329,12 +329,12 @@ function getPositions(n: number): Pos[] {
   ];
 }
 
-/** Played card position = 42% of the way from player seat toward center of felt */
+/** Played card position = 62% of the way from player seat toward center of felt */
 function getPlayedCardPos(pos: Pos): { x: number; y: number } {
   const cx = 50, cy = 48; // felt center (slightly above geometric center)
   return {
-    x: pos.x + (cx - pos.x) * 0.42,
-    y: pos.y + (cy - pos.y) * 0.42,
+    x: pos.x + (cx - pos.x) * 0.62,
+    y: pos.y + (cy - pos.y) * 0.62,
   };
 }
 
@@ -416,59 +416,85 @@ function Btn({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SCORE PANEL
+   TANTEADOR — traditional Argentine Truco score board
+   Squares in groups of 5; filled squares get an X through them
 ═══════════════════════════════════════════════════════════════════════════ */
+const TANTO_SQ   = 9;  // px per square
+const TANTO_GAP  = 2;  // px between squares in a group
+const TANTO_GSEP = 5;  // px between groups
+
+function TanteadorSide({ score, maxPoints, ink }: { score: number; maxPoints: number; ink: string }) {
+  const GROUP = 5;
+  const numGroups = Math.ceil(maxPoints / GROUP);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'row', gap: TANTO_GSEP, alignItems: 'flex-start' }}>
+      {Array.from({ length: numGroups }).map((_, g) => (
+        <div key={g} style={{ display: 'flex', flexDirection: 'column', gap: TANTO_GAP }}>
+          {Array.from({ length: GROUP }).map((_, s) => {
+            const idx = g * GROUP + s;
+            if (idx >= maxPoints) return null;
+            const filled = idx < score;
+            return (
+              <div key={s} style={{
+                width: TANTO_SQ, height: TANTO_SQ,
+                border: `1.5px solid ${ink}`,
+                borderRadius: 1,
+                position: 'relative',
+                opacity: filled ? 1 : 0.22,
+              }}>
+                {filled && (
+                  <svg
+                    style={{ position: 'absolute', inset: 0 }}
+                    width={TANTO_SQ} height={TANTO_SQ}
+                    viewBox={`0 0 ${TANTO_SQ} ${TANTO_SQ}`}
+                  >
+                    <line x1="1" y1="1" x2={TANTO_SQ - 1} y2={TANTO_SQ - 1} stroke={ink} strokeWidth="1.5" />
+                    <line x1={TANTO_SQ - 1} y1="1" x2="1" y2={TANTO_SQ - 1} stroke={ink} strokeWidth="1.5" />
+                  </svg>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ScorePanel({
-  teamAScore, teamBScore, myTeam, maxPoints, themeText,
+  teamAScore, teamBScore, myTeam, maxPoints,
 }: {
-  teamAScore: number; teamBScore: number; myTeam: 'A' | 'B'; maxPoints: number; themeText: string;
+  teamAScore: number; teamBScore: number; myTeam: 'A' | 'B'; maxPoints: number;
 }) {
+  const nosotros = myTeam === 'A' ? teamAScore : teamBScore;
+  const ellos    = myTeam === 'A' ? teamBScore : teamAScore;
+
   return (
     <div style={{
-      position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-      display: 'flex', alignItems: 'center', gap: 0,
-      background: 'rgba(0,0,0,0.55)',
-      backdropFilter: 'blur(12px)',
-      borderRadius: 16,
-      border: '1px solid rgba(255,255,255,0.1)',
-      overflow: 'hidden', zIndex: 20,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+      position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+      background: 'rgba(238,231,212,0.97)',
+      border: '2px solid rgba(90,65,30,0.4)',
+      borderRadius: 10, padding: '7px 10px',
+      zIndex: 20,
+      boxShadow: '0 3px 16px rgba(0,0,0,0.5)',
+      display: 'flex', gap: 10, alignItems: 'flex-start',
     }}>
-      {(['A', 'B'] as const).map((team, ti) => {
-        const score = team === 'A' ? teamAScore : teamBScore;
-        const isMe = team === myTeam;
-        const pct = Math.min(100, (score / maxPoints) * 100);
-        return (
-          <div key={team} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: '8px 20px', gap: 3,
-            borderRight: ti === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-            background: isMe ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.05)',
-          }}>
-            <div style={{
-              fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-              color: isMe ? '#6ee7b7' : '#fca5a5',
-            }}>
-              {isMe ? 'Nosotros' : 'Ellos'}
-            </div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: themeText, lineHeight: 1, letterSpacing: '-0.03em' }}>
-              {score}
-            </div>
-            <div style={{ width: 52, height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: 99, width: `${pct}%`,
-                background: isMe
-                  ? 'linear-gradient(90deg,#059669,#10b981)'
-                  : 'linear-gradient(90deg,#dc2626,#ef4444)',
-                transition: 'width 0.6s ease',
-              }} />
-            </div>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>
-              / {maxPoints}
-            </div>
-          </div>
-        );
-      })}
+      {/* Nosotros */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 7, fontWeight: 900, color: '#1a3a1a', letterSpacing: '0.1em' }}>NOSOTROS</span>
+        <TanteadorSide score={nosotros} maxPoints={maxPoints} ink="#1a3a1a" />
+        <span style={{ fontSize: 15, fontWeight: 900, color: '#1a3a1a', lineHeight: 1 }}>{nosotros}</span>
+      </div>
+
+      {/* Divider */}
+      <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(90,65,30,0.35)' }} />
+
+      {/* Ellos */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 7, fontWeight: 900, color: '#3a1a1a', letterSpacing: '0.1em' }}>ELLOS</span>
+        <TanteadorSide score={ellos} maxPoints={maxPoints} ink="#3a1a1a" />
+        <span style={{ fontSize: 15, fontWeight: 900, color: '#3a1a1a', lineHeight: 1 }}>{ellos}</span>
+      </div>
     </div>
   );
 }
@@ -543,21 +569,30 @@ function PlayerSlot({
    PLAYED CARD ON FELT — card positioned at a player's played-card zone
 ═══════════════════════════════════════════════════════════════════════════ */
 function PlayedCardOnFelt({
-  card, x, y, rot, alias, isMe,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  card, x, y, rot, alias, isMe, dimmed = false, roundIdx = 0,
 }: {
-  card: TrucoCard; x: number; y: number; rot?: number; alias: string; isMe: boolean;
+  card: TrucoCard; x: number; y: number; rot?: number; alias: string;
+  isMe: boolean; dimmed?: boolean; roundIdx?: number;
 }) {
   const tiltDeg = isMe ? 0 : (rot ?? 0) + 180;
+  // Offset each round slightly so cards from different rounds don't overlap perfectly
+  const offsetX = (roundIdx - 1) * 6;
+  const offsetY = (roundIdx - 1) * 4;
   return (
     <div style={{
       position: 'absolute',
       left: `${x}%`, top: `${y}%`,
-      transform: `translate(-50%, -50%) rotate(${tiltDeg}deg)`,
-      zIndex: 12,
-      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
-      animation: 'cardLand 0.25s cubic-bezier(.34,1.56,.64,1)',
+      transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) rotate(${tiltDeg}deg)`,
+      zIndex: dimmed ? 10 : 12,
+      filter: dimmed
+        ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) grayscale(0.4)'
+        : 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
+      opacity: dimmed ? 0.65 : 1,
+      animation: dimmed ? 'none' : 'cardLand 0.25s cubic-bezier(.34,1.56,.64,1)',
+      transition: 'opacity 0.3s',
     }}>
-      <PlayingCard card={card} size="md" />
+      <PlayingCard card={card} size={dimmed ? 'sm' : 'md'} />
     </div>
   );
 }
@@ -745,12 +780,15 @@ function ActionPanel({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAction: (a: { type: string; [k: string]: any }) => void;
 }) {
-  const isMyTurn   = view.currentTurnAlias === myAlias;
-  const phase      = view.phase as string;
-  const envidoSt   = view.envidoStatus as string;
-  const trucoSt    = view.trucoStatus as string;
-  const florMust   = view.florMustDeclare as boolean;
-  const florDone   = (view.florDeclaredAliases as string[]).includes(myAlias);
+  const isMyTurn          = view.currentTurnAlias === myAlias;
+  const phase             = view.phase as string;
+  const envidoSt          = view.envidoStatus as string;
+  const trucoSt           = view.trucoStatus as string;
+  const florSt            = view.florStatus as string;
+  const florMust          = view.florMustDeclare as boolean;
+  const florDone          = (view.florDeclaredAliases as string[]).includes(myAlias);
+  const florResp          = view.florResponderTeam === myTeam; // my team must respond to flor
+  const contraFlorEnabled = (view.config?.contraFlorEnabled as boolean) ?? false;
   const envidoResp = view.envidoResponderTeam === myTeam;
   const trucoResp  = view.trucoResponderTeam === myTeam;
   const trucoChain = (view.trucoChain ?? []) as { type: string }[];
@@ -766,15 +804,33 @@ function ActionPanel({
   if (florMust && !florDone && phase === 'playing') {
     sections.push(
       <div key="flor" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700 }}>¡Flor!</span>
-        <Btn label="Declarar Flor" variant="warning" onClick={() => onAction({ type: 'flor' })} />
-        <Btn label="Con Flor Me Gano" variant="warning" small onClick={() => onAction({ type: 'con-flor-me-gano' })} />
+        <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>¡Tenés Flor!</span>
+        <Btn label="Declarar Flor" variant="success" onClick={() => onAction({ type: 'flor' })} />
+      </div>
+    );
+  }
+
+  /* ── Flor responder (opponent declared flor, my team must respond) ── */
+  if (florSt === 'pending' && florResp && !florMust && phase === 'playing') {
+    sections.push(
+      <div key="flor-resp" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <span style={{ fontSize: 10, color: '#10b981', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>
+          ¿QUIEREN LA FLOR?
+        </span>
+        <Btn label="Con Gangamos" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
+        {contraFlorEnabled && (
+          <Btn label="Contra Flor" variant="warning" small onClick={() => onAction({ type: 'contraflor' })} />
+        )}
+        {contraFlorEnabled && (
+          <Btn label="Contra Flor al Resto" variant="warning" small onClick={() => onAction({ type: 'contraflor-al-resto' })} />
+        )}
+        <Btn label="Con Quiero" variant="success" onClick={() => onAction({ type: 'quiero' })} />
       </div>
     );
   }
 
   /* ── Envido call (available on round 1, any player can call) ── */
-  if (envidoSt === 'available' && phase === 'playing' && !florMust) {
+  if (envidoSt === 'available' && phase === 'playing' && !florMust && florSt !== 'pending') {
     sections.push(
       <div key="envido-call" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginRight: 2 }}>ENVIDO</span>
@@ -806,7 +862,7 @@ function ActionPanel({
   }
 
   /* ── Truco call (truco available, any player can call) ── */
-  if (trucoSt === 'available' && phase === 'playing') {
+  if (trucoSt === 'available' && phase === 'playing' && florSt !== 'pending') {
     sections.push(
       <div key="truco-call" style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginRight: 2 }}>TRUCO</span>
@@ -878,6 +934,54 @@ function ActionPanel({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   CALL NOTIFICATION — floating banner when envido/truco is called at you
+═══════════════════════════════════════════════════════════════════════════ */
+function CallNotification({
+  call, sub, color, onDismiss,
+}: {
+  call: string; sub: string; color: string; onDismiss: () => void;
+}) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 3500);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+
+  return (
+    <div style={{
+      position: 'absolute', top: '28%', left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 40,
+      animation: 'callBounce 0.4s cubic-bezier(.34,1.56,.64,1)',
+      pointerEvents: 'none',
+    }}>
+      <div style={{
+        background: `linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,20,20,0.95))`,
+        border: `2px solid ${color}`,
+        borderRadius: 16,
+        padding: '14px 24px',
+        textAlign: 'center',
+        boxShadow: `0 0 40px ${color}44, 0 8px 32px rgba(0,0,0,0.6)`,
+        minWidth: 180,
+      }}>
+        <div style={{
+          fontSize: 22, fontWeight: 900, color,
+          letterSpacing: '-0.02em', lineHeight: 1,
+          textShadow: `0 0 20px ${color}88`,
+        }}>
+          {call}
+        </div>
+        <div style={{
+          fontSize: 12, color: 'rgba(255,255,255,0.6)',
+          fontWeight: 600, marginTop: 5,
+        }}>
+          {sub}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MAIN TRUCO SCREEN
 ═══════════════════════════════════════════════════════════════════════════ */
 export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Props) {
@@ -895,16 +999,27 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   const [envidoTimer, setEnvidoTimer]   = useState(30);
   const envidoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Track all played cards for the current hand (across rounds)
+  const [historicCards, setHistoricCards] = useState<
+    Array<{ alias: string; card: TrucoCard; round: number }>
+  >([]);
+  const seenPlayedRef = useRef<Set<string>>(new Set());
+  const lastHandRef   = useRef(-1);
+
+  // Call notifications (envido / truco / flor called at us)
+  const [callNotif, setCallNotif] = useState<{ call: string; sub: string; color: string } | null>(null);
+  const prevEnvidoStRef = useRef('');
+  const prevTrucoStRef  = useRef('');
+  const prevFlorStRef   = useRef('');
+
   // Sync theme with room config (valid: syncing server config → local state)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (view?.config?.tableTheme) setTheme(view.config.tableTheme);
   }, [view?.config?.tableTheme]);
 
   // Countdown for show_envido phase
   useEffect(() => {
     if (view?.phase === 'show_envido') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnvidoTimer(30);
       envidoTimerRef.current = setInterval(() => {
         setEnvidoTimer(t => {
@@ -920,8 +1035,76 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   }, [view?.phase]);
 
   // Reset selected card on new hand / round
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setSelectedCard(null); }, [view?.handNum, view?.round]);
+
+  // Accumulate played cards so they stay on the table across rounds
+  useEffect(() => {
+    if (!view) return;
+    const currentCards = view.currentRoundCards as Record<string, TrucoCard | null>;
+
+    if (view.handNum !== lastHandRef.current) {
+      lastHandRef.current = view.handNum;
+      seenPlayedRef.current = new Set();
+      setHistoricCards([]);
+      return;
+    }
+
+    const newEntries: Array<{ alias: string; card: TrucoCard; round: number }> = [];
+    for (const [alias, card] of Object.entries(currentCards)) {
+      if (!card) continue;
+      const key = `${view.handNum}-${view.round}-${alias}`;
+      if (!seenPlayedRef.current.has(key)) {
+        seenPlayedRef.current.add(key);
+        newEntries.push({ alias, card, round: view.round as number });
+      }
+    }
+    if (newEntries.length > 0) {
+      setHistoricCards(prev => [...prev, ...newEntries]);
+    }
+  }, [view]);
+
+  // Show call notification when envido, truco, or flor is called at our team
+  useEffect(() => {
+    if (!view) return;
+    const myTm       = view.myTeam as string;
+    const envidoSt   = view.envidoStatus as string;
+    const trucoSt    = view.trucoStatus as string;
+    const florSt     = view.florStatus as string;
+    const envidoResp = view.envidoResponderTeam === myTm;
+    const trucoResp  = view.trucoResponderTeam  === myTm;
+    const florResp   = view.florResponderTeam   === myTm;
+    const envidoCh   = (view.envidoChain ?? []) as { type: string; alias: string }[];
+    const trucoCh    = (view.trucoChain  ?? []) as { type: string; alias: string }[];
+    const lastEnvido = envidoCh[envidoCh.length - 1];
+    const lastTruco  = trucoCh[trucoCh.length - 1];
+
+    if (envidoSt === 'pending' && prevEnvidoStRef.current !== 'pending' && envidoResp && lastEnvido) {
+      setCallNotif({
+        call: `¡${lastEnvido.type.toUpperCase()}!`,
+        sub: `${lastEnvido.alias} te cantó — ¿lo querés?`,
+        color: '#fbbf24',
+      });
+    }
+    if (trucoSt === 'pending' && prevTrucoStRef.current !== 'pending' && trucoResp && lastTruco) {
+      setCallNotif({
+        call: `¡${lastTruco.type.toUpperCase()}!`,
+        sub: `${lastTruco.alias} te cantó — ¿lo querés?`,
+        color: '#ef4444',
+      });
+    }
+    if (florSt === 'pending' && prevFlorStRef.current !== 'pending' && florResp) {
+      setCallNotif({
+        call: '¡FLOR!',
+        sub: 'El rival cantó flor — ¿qué respondés?',
+        color: '#10b981',
+      });
+    }
+
+    prevEnvidoStRef.current = envidoSt;
+    prevTrucoStRef.current  = trucoSt;
+    prevFlorStRef.current   = florSt;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view?.envidoStatus, view?.trucoStatus, view?.florStatus, view?.envidoResponderTeam, view?.trucoResponderTeam, view?.florResponderTeam, view?.envidoChain, view?.trucoChain]);
 
   if (!view) {
     return (
@@ -1051,23 +1234,48 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           </div>
         )}
 
-        {/* ── Played cards on the felt (per-player positions) ── */}
+        {/* ── Played cards on the felt: all rounds of this hand ── */}
+        {historicCards.map(({ alias, card, round }) => {
+          const seatIdx = seating.indexOf(alias);
+          const pos     = positions[seatIdx];
+          if (!pos) return null;
+          const { x, y } = getPlayedCardPos(pos);
+          const currentRoundNum = view.round as number;
+          const isCurrent = round === currentRoundNum && !!currentRound[alias];
+          return (
+            <PlayedCardOnFelt
+              key={`hist-${alias}-${round}`}
+              card={card}
+              x={x} y={y}
+              rot={pos.rot}
+              alias={alias}
+              isMe={alias === myAlias}
+              dimmed={!isCurrent}
+              roundIdx={round - 1}
+            />
+          );
+        })}
+        {/* Current round cards (shown immediately before historicCards effect fires) */}
         {seating.map((alias, seatIdx) => {
           const card = currentRound[alias];
           if (!card) return null;
+          const alreadyInHistory = historicCards.some(
+            h => h.alias === alias && h.round === (view.round as number)
+          );
+          if (alreadyInHistory) return null; // avoid duplicate
           const pos = positions[seatIdx];
           if (!pos) return null;
           const { x, y } = getPlayedCardPos(pos);
-          const isMe = alias === myAlias;
           return (
             <PlayedCardOnFelt
-              key={`played-${alias}`}
+              key={`curr-${alias}`}
               card={card}
-              x={x}
-              y={y}
+              x={x} y={y}
               rot={pos.rot}
               alias={alias}
-              isMe={isMe}
+              isMe={alias === myAlias}
+              dimmed={false}
+              roundIdx={(view.round as number) - 1}
             />
           );
         })}
@@ -1078,7 +1286,6 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           teamBScore={view.teamBScore}
           myTeam={myTeam}
           maxPoints={view.config.maxPoints}
-          themeText={th.text}
         />
 
         {/* ── Round indicators (top-left) ── */}
@@ -1143,7 +1350,6 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
             fontSize: 11, color: '#fbbf24', fontWeight: 700, zIndex: 20,
           }}>
             Envido: {view.envidoResult.winnerTeam === myTeam ? '+' : '-'}{view.envidoResult.pts} pts
-            {view.envidoResult.winnerAlias ? ` · ${view.envidoResult.winnerAlias}` : ''}
           </div>
         )}
 
@@ -1174,6 +1380,16 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
             </div>
           );
         })}
+
+        {/* ── Call notification overlay ── */}
+        {callNotif && (
+          <CallNotification
+            call={callNotif.call}
+            sub={callNotif.sub}
+            color={callNotif.color}
+            onDismiss={() => setCallNotif(null)}
+          />
+        )}
 
         {/* ── Show Envido prompt ── */}
         {needShowEnvido && (
@@ -1320,11 +1536,12 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
 
         {/* Animations */}
         <style>{`
-          @keyframes turnPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
-          @keyframes slideIn   { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-          @keyframes slideUp   { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
-          @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-          @keyframes cardLand  { from{opacity:0;transform:translate(-50%,-50%) scale(0.7)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+          @keyframes turnPulse  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+          @keyframes slideIn    { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+          @keyframes slideUp    { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
+          @keyframes fadeIn     { from{opacity:0} to{opacity:1} }
+          @keyframes cardLand   { from{opacity:0;transform:translate(-50%,-50%) scale(0.7)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+          @keyframes callBounce { 0%{opacity:0;transform:translateX(-50%) scale(0.7)} 60%{transform:translateX(-50%) scale(1.06)} 100%{opacity:1;transform:translateX(-50%) scale(1)} }
         `}</style>
       </div>
 
