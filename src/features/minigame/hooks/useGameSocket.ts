@@ -415,7 +415,7 @@ export function useGameSocket() {
 
     socket.on('pq-question', (d: { question: { text: string; options: { id: string; text: string }[] }; categoryName: string; categoryColor: string; categoryIcon: string; turnAlias: string; timeLimitMs: number }) => {
       getStore().setPreguntados({
-        currentQuestion: d.question as any,
+        currentQuestion: d.question,
         panel: 'question',
         categoryInfo: { icon: d.categoryIcon, name: d.categoryName, color: d.categoryColor },
         currentTurnAlias: d.turnAlias,

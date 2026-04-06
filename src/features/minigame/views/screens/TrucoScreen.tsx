@@ -895,14 +895,16 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   const [envidoTimer, setEnvidoTimer]   = useState(30);
   const envidoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Sync theme with room config
+  // Sync theme with room config (valid: syncing server config → local state)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (view?.config?.tableTheme) setTheme(view.config.tableTheme);
   }, [view?.config?.tableTheme]);
 
   // Countdown for show_envido phase
   useEffect(() => {
     if (view?.phase === 'show_envido') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnvidoTimer(30);
       envidoTimerRef.current = setInterval(() => {
         setEnvidoTimer(t => {
@@ -918,6 +920,7 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   }, [view?.phase]);
 
   // Reset selected card on new hand / round
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setSelectedCard(null); }, [view?.handNum, view?.round]);
 
   if (!view) {

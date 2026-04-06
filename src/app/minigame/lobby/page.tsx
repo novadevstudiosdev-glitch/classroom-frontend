@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth/auth.store';
 import { MinigameLobbyView } from '@/features/minigame/views/MinigameLobbyView';
@@ -7,19 +7,14 @@ import { MinigameLobbyView } from '@/features/minigame/views/MinigameLobbyView';
 function LobbyInner() {
   const router = useRouter();
   const { isAuthenticated, initialized } = useAuthStore();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (initialized) setReady(true);
-  }, [initialized]);
-
-  useEffect(() => {
-    if (ready && !isAuthenticated) {
+    if (initialized && !isAuthenticated) {
       router.push('/login?redirect=/minigame/lobby');
     }
-  }, [ready, isAuthenticated, router]);
+  }, [initialized, isAuthenticated, router]);
 
-  if (!ready || !isAuthenticated) {
+  if (!initialized || !isAuthenticated) {
     return (
       <div style={{
         minHeight: '100vh', background: '#06080f',

@@ -6,16 +6,18 @@ interface Props {
 }
 
 export function FloatReaction({ reaction }: Props) {
-  const [visible, setVisible] = useState(false);
+  // Track IDs that have already faded out so we can hide them without synchronous setState in effect
+  const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!reaction) return;
-    setVisible(true);
-    const t = setTimeout(() => setVisible(false), 2200);
+    const t = setTimeout(() => {
+      setHiddenIds(prev => { const s = new Set(prev); s.add(reaction.id); return s; });
+    }, 2200);
     return () => clearTimeout(t);
   }, [reaction?.id]);
 
-  if (!reaction || !visible) return null;
+  if (!reaction || hiddenIds.has(reaction.id)) return null;
 
   return (
     <div style={{

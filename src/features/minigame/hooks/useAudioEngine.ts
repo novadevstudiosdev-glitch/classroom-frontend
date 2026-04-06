@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,9 @@ function createAudioEngine(): AudioEngine {
   function getCtx(): AudioContext | null {
     if (!ctx) {
       try {
-        ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioCtx = window.AudioContext ||
+          (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) ctx = new AudioCtx();
       } catch { return null; }
     }
     return ctx;
@@ -163,7 +165,7 @@ function getEngine(): AudioEngine {
 // ── Hook ───────────────────────────────────────────────────────────────────
 
 export function useAudioEngine(): AudioEngine {
-  const ref = useRef<AudioEngine | null>(null);
-  if (!ref.current) ref.current = getEngine();
-  return ref.current;
+  // useState with a factory function: runs only once, no ref access during render
+  const [engine] = useState<AudioEngine>(() => getEngine());
+  return engine;
 }

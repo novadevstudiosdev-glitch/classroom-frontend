@@ -11,13 +11,14 @@ interface Props {
 
 export function CircularTimer({ durationMs, onExpire, size = 64, strokeWidth = 5, color = '#6366f1' }: Props) {
   const [remaining, setRemaining] = useState(durationMs);
-  const startRef = useRef(Date.now());
+  const startRef = useRef(0); // initialized in the effect below
   const rafRef = useRef<number>(0);
   const expiredRef = useRef(false);
 
   useEffect(() => {
     expiredRef.current = false;
     startRef.current = Date.now();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemaining(durationMs);
 
     const tick = () => {

@@ -60,20 +60,22 @@ export function AIGeneratorModal({ onClose, onSaved }: Props) {
     setStatus('loading');
     try {
       const res = await minigameService.generateAI({ topic: topic.trim(), questionCount: count, difficulty, gameType, language: 'es' });
-      const raw = (res.data as any).data ?? (res.data as AIGenerateResponse);
+      const responseData = res.data as { data?: AIGenerateResponse } & AIGenerateResponse;
+      const raw: AIGenerateResponse = responseData.data ?? responseData;
       setRawResponse(raw);
       setEditTitle(raw.title ?? topic);
       if (raw.type === 'quiz') {
         setEditQuestions(raw.questions ?? []);
         setEditWords([]);
       } else {
-        setEditWords((raw as any).words ?? []);
+        setEditWords((raw as AIGenerateResponse & { words?: string[] }).words ?? []);
         setEditQuestions([]);
       }
       setHasResults(true);
       setStatus('done');
-    } catch (e: any) {
-      const msg = e?.response?.data?.message ?? 'Error al generar. Intentá de nuevo.';
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string | string[] } } };
+      const msg = err?.response?.data?.message ?? 'Error al generar. Intentá de nuevo.';
       setError(Array.isArray(msg) ? msg.join(', ') : msg);
       setStatus(hasResults ? 'done' : 'idle');
     }
@@ -100,13 +102,15 @@ export function AIGeneratorModal({ onClose, onSaved }: Props) {
       await minigameService.saveGeneratedGame({ title: editTitle, topic: topic.trim(), content_json });
       onSaved();
       onClose();
-    } catch (e: any) {
-      const msg = e?.response?.data?.message ?? 'Error al guardar.';
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string | string[] } } };
+      const msg = err?.response?.data?.message ?? 'Error al guardar.';
       setError(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 
-  const activeType = GAME_TYPES.find(g => g.type === gameType)!;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _activeType = GAME_TYPES.find(g => g.type === gameType)!
 
   return (
     <Overlay onClose={onClose} maxWidth={660}>
