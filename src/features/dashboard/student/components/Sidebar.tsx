@@ -37,7 +37,7 @@ export default function SidebarNav() {
       {/* 🔹 SIDEBAR */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-65 bg-[#090f2a] z-50 p-4
+          fixed top-0 left-0 h-full w-[260px] bg-[#090f2a] z-50 p-4
           transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0 md:static md:flex

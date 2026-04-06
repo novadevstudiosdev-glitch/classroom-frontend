@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Lock, Star } from "lucide-react";
@@ -20,11 +21,19 @@ type World = {
   progress: number;
   mapX: number;
   mapY: number;
-  planetColors: [string, string];
-  planetPattern: "bands" | "craters" | "storm" | "marble" | "ice";
-  ringColor?: string;
-  ringTilt?: number;
+  planetImage: string;
   missions: Mission[];
+};
+
+type RocketTrip = {
+  id: number;
+  toIndex: number;
+  fromX: number;
+  fromY: number;
+  controlX: number;
+  controlY: number;
+  toX: number;
+  toY: number;
 };
 
 const WORLDS: World[] = [
@@ -35,10 +44,7 @@ const WORLDS: World[] = [
     progress: 62,
     mapX: 12,
     mapY: 24,
-    planetColors: ["#7C90E9", "#9AB7FA"],
-    planetPattern: "bands",
-    ringColor: "rgba(198,212,255,0.58)",
-    ringTilt: -16,
+    planetImage: "/mercurio.png",
     missions: [
       { id: "m-1", title: "Mision 1 - Sumas y restas", status: "completed" },
       { id: "m-2", title: "Mision 2 - Multiplicacion", status: "completed" },
@@ -53,8 +59,7 @@ const WORLDS: World[] = [
     progress: 44,
     mapX: 34,
     mapY: 44,
-    planetColors: ["#EE8CA5", "#F4C19A"],
-    planetPattern: "marble",
+    planetImage: "/marte.png",
     missions: [
       { id: "l-1", title: "Mision 1 - Lectura activa", status: "completed" },
       { id: "l-2", title: "Mision 2 - Vocabulario", status: "in_progress" },
@@ -68,10 +73,7 @@ const WORLDS: World[] = [
     progress: 73,
     mapX: 56,
     mapY: 21,
-    planetColors: ["#4FD1C7", "#7CD8B7"],
-    planetPattern: "storm",
-    ringColor: "rgba(163,255,242,0.52)",
-    ringTilt: 14,
+    planetImage: "/tierra.png",
     missions: [
       { id: "c-1", title: "Mision 1 - Materia y energia", status: "completed" },
       { id: "c-2", title: "Mision 2 - Estados del agua", status: "completed" },
@@ -86,8 +88,7 @@ const WORLDS: World[] = [
     progress: 28,
     mapX: 78,
     mapY: 42,
-    planetColors: ["#F7D34C", "#EEDB7B"],
-    planetPattern: "craters",
+    planetImage: "/saturno.png",
     missions: [
       { id: "h-1", title: "Mision 1 - Primeros periodos", status: "completed" },
       { id: "h-2", title: "Mision 2 - Cambios y causas", status: "in_progress" },
@@ -101,10 +102,7 @@ const WORLDS: World[] = [
     progress: 84,
     mapX: 63,
     mapY: 72,
-    planetColors: ["#BA9BEA", "#CFAFEF"],
-    planetPattern: "marble",
-    ringColor: "rgba(229,210,255,0.5)",
-    ringTilt: -22,
+    planetImage: "/neptuno.png",
     missions: [
       { id: "a-1", title: "Mision 1 - Paleta base", status: "completed" },
       { id: "a-2", title: "Mision 2 - Formas y equilibrio", status: "completed" },
@@ -119,8 +117,7 @@ const WORLDS: World[] = [
     progress: 56,
     mapX: 26,
     mapY: 74,
-    planetColors: ["#9BBAD3", "#B8D0E6"],
-    planetPattern: "ice",
+    planetImage: "/urano.png",
     missions: [
       { id: "t-1", title: "Mision 1 - Patrones", status: "completed" },
       { id: "t-2", title: "Mision 2 - Secuencias", status: "completed" },
@@ -150,9 +147,23 @@ const itemVariants = {
 };
 
 function routePath(from: World, to: World, index: number) {
+  const { controlX, controlY } = routeControlPoint(from, to, index);
+  return `M ${from.mapX} ${from.mapY} Q ${controlX} ${controlY} ${to.mapX} ${to.mapY}`;
+}
+
+function routeControlPoint(from: World, to: World, index: number) {
   const controlX = (from.mapX + to.mapX) / 2 + (index % 2 === 0 ? 5 : -5);
   const controlY = (from.mapY + to.mapY) / 2 + (index % 2 === 0 ? -7 : 7);
-  return `M ${from.mapX} ${from.mapY} Q ${controlX} ${controlY} ${to.mapX} ${to.mapY}`;
+  return { controlX, controlY };
+}
+
+function worldProgressFromMissions(missions: Mission[]) {
+  const completed = missions.filter((mission) => mission.status === "completed").length;
+  return Math.round((completed / missions.length) * 100);
+}
+
+function worldIsCompleted(world: World) {
+  return world.missions.every((mission) => mission.status === "completed");
 }
 
 function progressOrbit(progress: number) {
@@ -160,67 +171,6 @@ function progressOrbit(progress: number) {
   return {
     background: `conic-gradient(rgba(255,255,255,0.95) ${angle}deg, rgba(255,255,255,0.24) ${angle}deg 360deg)`,
   };
-}
-
-function planetGradient(colors: [string, string]) {
-  return {
-    background: `radial-gradient(circle at 28% 24%, rgba(255,255,255,0.46), rgba(255,255,255,0.03) 34%), linear-gradient(148deg, ${colors[0]}, ${colors[1]})`,
-  };
-}
-
-function PlanetTexture({ world }: { world: World }) {
-  if (world.planetPattern === "bands") {
-    return (
-      <>
-        <span className="absolute inset-x-[-8%] top-[32%] h-[12%] rounded-full bg-white/28 blur-[0.5px]" />
-        <span className="absolute inset-x-[-6%] top-[53%] h-[9%] rounded-full bg-slate-900/14" />
-        <span className="absolute inset-x-[12%] top-[68%] h-[7%] rounded-full bg-white/18" />
-      </>
-    );
-  }
-
-  if (world.planetPattern === "craters") {
-    return (
-      <>
-        <span className="absolute left-[18%] top-[28%] h-[16%] w-[16%] rounded-full bg-slate-900/14" />
-        <span className="absolute left-[52%] top-[40%] h-[13%] w-[13%] rounded-full bg-slate-900/12" />
-        <span className="absolute left-[35%] top-[62%] h-[10%] w-[10%] rounded-full bg-slate-900/15" />
-        <span className="absolute left-[62%] top-[62%] h-[7%] w-[7%] rounded-full bg-white/17" />
-      </>
-    );
-  }
-
-  if (world.planetPattern === "storm") {
-    return (
-      <>
-        <span className="absolute inset-x-[14%] top-[22%] h-[14%] rounded-full bg-white/24 blur-[0.4px]" />
-        <span className="absolute inset-x-[12%] top-[48%] h-[18%] rounded-full bg-emerald-950/16" />
-        <motion.span
-          className="absolute left-[46%] top-[42%] h-[24%] w-[24%] rounded-full border border-white/30"
-          animate={{ rotate: [0, 360] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-        />
-      </>
-    );
-  }
-
-  if (world.planetPattern === "ice") {
-    return (
-      <>
-        <span className="absolute inset-x-[10%] top-[34%] h-[9%] rounded-full bg-white/26" />
-        <span className="absolute left-[20%] top-[53%] h-[7%] w-[58%] rounded-full bg-slate-50/35" />
-        <span className="absolute left-[54%] top-[24%] h-[11%] w-[11%] rounded-full bg-white/20" />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <span className="absolute inset-x-[10%] top-[31%] h-[12%] rounded-full bg-white/20 blur-[0.3px]" />
-      <span className="absolute inset-x-[14%] top-[56%] h-[10%] rounded-full bg-slate-900/12" />
-      <span className="absolute left-[62%] top-[38%] h-[12%] w-[12%] rounded-full bg-white/16" />
-    </>
-  );
 }
 
 function PlanetVisual({
@@ -235,8 +185,7 @@ function PlanetVisual({
   atmosphericGlow?: boolean;
 }) {
   const padding = Math.max(3, Math.round(diameter * 0.06));
-  const ringWidth = Math.round(diameter * 1.55);
-  const ringHeight = Math.round(diameter * 0.42);
+  const imageScale = withProgress ? 1.95 : 1.55;
 
   return (
     <div className="relative" style={{ width: `${diameter}px`, height: `${diameter}px` }}>
@@ -244,35 +193,27 @@ function PlanetVisual({
         <span className="absolute inset-[-14%] rounded-full bg-white/10 blur-xl" />
       ) : null}
 
-      {world.ringColor ? (
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border"
-          style={{
-            width: `${ringWidth}px`,
-            height: `${ringHeight}px`,
-            borderColor: world.ringColor,
-            transform: `translate(-50%, -50%) rotate(${world.ringTilt ?? -14}deg)`,
-            boxShadow: `0 0 14px ${world.ringColor}`,
-          }}
-        />
-      ) : null}
-
       <div
         className="relative h-full w-full rounded-full shadow-[0_14px_30px_rgba(7,10,28,0.62)]"
         style={withProgress ? progressOrbit(world.progress) : undefined}
       >
         <div
-          className="relative overflow-hidden rounded-full border border-white/40"
+          className="relative flex items-center justify-center rounded-full border border-white/40"
           style={{
-            ...planetGradient(world.planetColors),
             margin: withProgress ? `${padding}px` : "0px",
             width: withProgress ? `calc(100% - ${padding * 2}px)` : "100%",
             height: withProgress ? `calc(100% - ${padding * 2}px)` : "100%",
           }}
         >
-          <PlanetTexture world={world} />
-          <span className="absolute inset-0 bg-[radial-gradient(circle_at_74%_72%,rgba(2,6,23,0.42),transparent_58%)]" />
-          <span className="absolute inset-[6%] rounded-full border border-white/12" />
+          <Image
+            src={world.planetImage}
+            alt={world.name}
+            fill
+            sizes={`${diameter}px`}
+            className="h-full w-full object-contain select-none pointer-events-none mix-blend-lighten"
+            style={{ transform: `scale(${imageScale})` }}
+            draggable={false}
+          />
         </div>
       </div>
     </div>
@@ -299,13 +240,28 @@ function MissionStatusIcon({ status }: { status: MissionStatus }) {
   return <span className="inline-flex h-3 w-3 rounded-full bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.25)]" />;
 }
 
+function MapRocketSprite() {
+  return (
+    <span className="relative block">
+      <span className="block text-[30px] leading-none filter drop-shadow-[0_0_10px_#fcd34d] drop-shadow-[0_0_20px_#fb923c]">
+        🚀
+      </span>
+      <span className="pointer-events-none absolute left-1/2 top-[78%] -translate-x-1/2 text-[14px] opacity-80 filter drop-shadow-[0_0_8px_#fb923c]">
+        🔥
+      </span>
+    </span>
+  );
+}
+
 function PlanetNode({
   world,
   index,
+  isCompleted,
   onSelect,
 }: {
   world: World;
   index: number;
+  isCompleted: boolean;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -319,8 +275,19 @@ function PlanetNode({
       className="group absolute -translate-x-1/2 -translate-y-1/2 text-center"
     >
       <div className="relative">
-        <PlanetVisual world={world} diameter={132} />
-        <span className="pointer-events-none absolute inset-[-10px] rounded-full border border-white/20 transition group-hover:scale-110" />
+        {isCompleted ? (
+          <motion.span
+            className="pointer-events-none absolute inset-[-18px] rounded-full bg-amber-300/30 blur-2xl"
+            animate={{ opacity: [0.35, 0.75, 0.35], scale: [1, 1.08, 1] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ) : null}
+        <PlanetVisual world={world} diameter={168} withProgress={false} />
+        <span
+          className={`pointer-events-none absolute inset-[-10px] rounded-full border transition group-hover:scale-110 ${
+            isCompleted ? "border-amber-300/60 shadow-[0_0_20px_rgba(252,211,77,0.55)]" : "border-white/20"
+          }`}
+        />
       </div>
 
       <div className="mt-3 rounded-xl border border-white/15 bg-slate-900/45 px-3 py-2 backdrop-blur-sm">
@@ -336,12 +303,89 @@ function WorldPlanetBadge({ world }: { world: World }) {
 }
 
 export default function StudentWorldsMapView() {
+  const [worlds, setWorlds] = useState<World[]>(WORLDS);
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null);
+  const [rocketTrip, setRocketTrip] = useState<RocketTrip | null>(null);
+  const [rocketWorldIndex, setRocketWorldIndex] = useState(() => {
+    const firstIncomplete = WORLDS.findIndex((world) => !worldIsCompleted(world));
+    return firstIncomplete === -1 ? WORLDS.length - 1 : firstIncomplete;
+  });
 
   const selectedWorld = useMemo(
-    () => WORLDS.find((world) => world.id === selectedWorldId) ?? null,
-    [selectedWorldId]
+    () => worlds.find((world) => world.id === selectedWorldId) ?? null,
+    [selectedWorldId, worlds]
   );
+
+  const completeMission = (worldId: string, missionId: string) => {
+    let nextTrip: RocketTrip | null = null;
+    let nextRocketIndex: number | null = null;
+
+    setWorlds((previousWorlds) => {
+      const worldIndex = previousWorlds.findIndex((world) => world.id === worldId);
+      if (worldIndex === -1) return previousWorlds;
+
+      const currentWorld = previousWorlds[worldIndex];
+      const missionIndex = currentWorld.missions.findIndex((mission) => mission.id === missionId);
+      if (missionIndex === -1) return previousWorlds;
+
+      const selectedMission = currentWorld.missions[missionIndex];
+      if (selectedMission.status !== "in_progress") return previousWorlds;
+
+      const updatedMissions = currentWorld.missions.map((mission, index) =>
+        index === missionIndex ? { ...mission, status: "completed" as MissionStatus } : mission
+      );
+
+      if (!updatedMissions.some((mission) => mission.status === "in_progress")) {
+        const nextLockedIndex = updatedMissions.findIndex((mission) => mission.status === "locked");
+        if (nextLockedIndex !== -1) {
+          updatedMissions[nextLockedIndex] = { ...updatedMissions[nextLockedIndex], status: "in_progress" };
+        }
+      }
+
+      const wasCompleted = worldIsCompleted(currentWorld);
+      const nowCompleted = updatedMissions.every((mission) => mission.status === "completed");
+
+      const nextWorlds = [...previousWorlds];
+      nextWorlds[worldIndex] = {
+        ...currentWorld,
+        missions: updatedMissions,
+        progress: worldProgressFromMissions(updatedMissions),
+      };
+
+      if (!wasCompleted && nowCompleted) {
+        const targetIndex = Math.min(worldIndex + 1, nextWorlds.length - 1);
+        nextRocketIndex = targetIndex;
+
+        if (targetIndex !== worldIndex) {
+          const from = nextWorlds[worldIndex];
+          const to = nextWorlds[targetIndex];
+          const { controlX, controlY } = routeControlPoint(from, to, worldIndex);
+
+          nextTrip = {
+            id: Date.now(),
+            toIndex: targetIndex,
+            fromX: from.mapX,
+            fromY: from.mapY,
+            controlX,
+            controlY,
+            toX: to.mapX,
+            toY: to.mapY,
+          };
+        }
+      }
+
+      return nextWorlds;
+    });
+
+    if (nextTrip) {
+      setRocketTrip(nextTrip);
+      return;
+    }
+
+    if (nextRocketIndex !== null) {
+      setRocketWorldIndex(nextRocketIndex);
+    }
+  };
 
   return (
     <section className="relative min-h-[calc(100vh-3rem)] overflow-hidden rounded-[28px] border border-white/15 bg-[#090f2a] p-6 md:p-10">
@@ -391,8 +435,8 @@ export default function StudentWorldsMapView() {
                   preserveAspectRatio="none"
                   aria-hidden
                 >
-                  {WORLDS.slice(0, -1).map((world, index) => {
-                    const next = WORLDS[index + 1];
+                  {worlds.slice(0, -1).map((world, index) => {
+                    const next = worlds[index + 1];
                     return (
                       <path
                         key={`${world.id}-${next.id}`}
@@ -406,9 +450,47 @@ export default function StudentWorldsMapView() {
                   })}
                 </svg>
 
-                {WORLDS.map((world, index) => (
-                  <PlanetNode key={world.id} world={world} index={index} onSelect={setSelectedWorldId} />
+                {worlds.map((world, index) => (
+                  <PlanetNode
+                    key={world.id}
+                    world={world}
+                    index={index}
+                    isCompleted={worldIsCompleted(world)}
+                    onSelect={setSelectedWorldId}
+                  />
                 ))}
+
+                {rocketTrip ? (
+                  <motion.div
+                    key={rocketTrip.id}
+                    className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                    initial={{ left: `${rocketTrip.fromX}%`, top: `${rocketTrip.fromY}%`, rotate: -20 }}
+                    animate={{
+                      left: [`${rocketTrip.fromX}%`, `${rocketTrip.controlX}%`, `${rocketTrip.toX}%`],
+                      top: [`${rocketTrip.fromY}%`, `${rocketTrip.controlY}%`, `${rocketTrip.toY}%`],
+                      rotate: [-20, 8, 20],
+                    }}
+                    transition={{ duration: 1.6, ease: "easeInOut" }}
+                    onAnimationComplete={() => {
+                      setRocketWorldIndex(rocketTrip.toIndex);
+                      setRocketTrip(null);
+                    }}
+                  >
+                    <MapRocketSprite />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${worlds[Math.max(0, Math.min(rocketWorldIndex, worlds.length - 1))].mapX}%`,
+                      top: `${worlds[Math.max(0, Math.min(rocketWorldIndex, worlds.length - 1))].mapY}%`,
+                    }}
+                    animate={{ y: [0, -4, 0], rotate: [-8, 8, -8] }}
+                    transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <MapRocketSprite />
+                  </motion.div>
+                )}
               </motion.div>
 
               <motion.div
@@ -417,7 +499,7 @@ export default function StudentWorldsMapView() {
                 initial="initial"
                 animate="animate"
               >
-                {WORLDS.map((world) => (
+                {worlds.map((world) => (
                   <motion.button
                     key={world.id}
                     type="button"
@@ -516,11 +598,22 @@ export default function StudentWorldsMapView() {
                             </p>
                             <h3 className="mt-1 text-base font-medium text-slate-900">{mission.title}</h3>
                           </div>
-                          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">
-                            {mission.status === "completed" ? "Completada" : ""}
-                            {mission.status === "in_progress" ? "En progreso" : ""}
-                            {mission.status === "locked" ? "Bloqueada" : ""}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {mission.status === "in_progress" ? (
+                              <button
+                                type="button"
+                                onClick={() => completeMission(selectedWorld.id, mission.id)}
+                                className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-200"
+                              >
+                                Completar
+                              </button>
+                            ) : null}
+                            <span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">
+                              {mission.status === "completed" ? "Completada" : ""}
+                              {mission.status === "in_progress" ? "En progreso" : ""}
+                              {mission.status === "locked" ? "Bloqueada" : ""}
+                            </span>
+                          </div>
                         </div>
                       </motion.article>
                     );

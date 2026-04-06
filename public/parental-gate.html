@@ -164,6 +164,27 @@ body{
 }
 @keyframes btnRing{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.05);opacity:0}}
 
+.btn-secondary{
+  background:transparent;
+  border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.82);
+  border-radius:16px;
+  width:100%;
+  padding:clamp(12px,2.2vw,16px) clamp(16px,3.2vw,24px);
+  font-size:clamp(14px,2.8vw,16px);
+  font-weight:800;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  transition:border-color .2s,background .2s,color .2s,transform .15s;
+  animation:fadeIn .6s ease .9s both;
+}
+.btn-secondary:hover{
+  border-color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  transform:translateY(-1px);
+}
+
 .btn-back{
   background:transparent;border:none;
   color:rgba(255,255,255,.3);font-size:13px;font-weight:800;
@@ -276,6 +297,9 @@ body{
     <button class="btn-primary" onclick="goRegister()">
       📲 ¡Llamar a mamá o papá para registrarse!
     </button>
+    <button class="btn-secondary" onclick="goLogin()">
+      ¿Ya tenés cuenta? Iniciá sesión
+    </button>
     <button class="btn-back" onclick="goBack()">
       ← Volver a la página principal
     </button>
@@ -314,7 +338,10 @@ draw();
 
 // navegación
 function goRegister(){
-  window.location.href='register.html?role=parent';
+  window.location.href='/register?role=parent';
+}
+function goLogin(){
+  window.location.href='/register?mode=login&role=parent';
 }
 function goBack(){
   window.location.href='/';
