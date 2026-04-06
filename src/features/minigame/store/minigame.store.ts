@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { MinigameStore, QuizState, WordSearchState, AnagramState, PreguntadosState } from '../types/store.types';
-import type { GameInstance, GameType, PlayerInfo, RoomInfo, ScoreboardEntry, ChatMessage } from '../types/game.types';
+import type { GameInstance, GameType, PlayerInfo, RoomInfo, ScoreboardEntry, ChatMessage, TrucoPlayerView, TrucoConfig } from '../types/game.types';
 
 const defaultQuiz: QuizState = {
   currentQuestion: null,
@@ -71,6 +71,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   players: [],
   hostAlias: '',
   roomChat: [],
+  roomTrucoConfig: null,
 
   // ── Game selection ──
   availableGames: [],
@@ -84,6 +85,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   wordSearch: defaultWordSearch,
   anagram: defaultAnagram,
   preguntados: defaultPreguntados,
+  truco: null,
 
   // ── Shared ──
   roundScoreboard: [],
@@ -132,6 +134,9 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   setPreguntados: (partial) =>
     set((s) => ({ preguntados: { ...s.preguntados, ...partial } })),
 
+  setRoomTrucoConfig: (config: TrucoConfig | null) => set({ roomTrucoConfig: config }),
+  setTruco: (view: TrucoPlayerView | null) => set({ truco: view }),
+
   setRoundScoreboard: (sb: ScoreboardEntry[]) => set({ roundScoreboard: sb }),
   setFinalScoreboard: (sb: ScoreboardEntry[]) => set({ finalScoreboard: sb }),
 
@@ -147,6 +152,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
       players: [],
       hostAlias: '',
       roomChat: [],
+      roomTrucoConfig: null,
       selectedInstanceId: null,
       selectedGameTitle: '',
       currentGameType: 'quiz',
@@ -161,6 +167,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
       wordSearch: defaultWordSearch,
       anagram: defaultAnagram,
       preguntados: defaultPreguntados,
+      truco: null,
       roundScoreboard: [],
       finalScoreboard: [],
     }),

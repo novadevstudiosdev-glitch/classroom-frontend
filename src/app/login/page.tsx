@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { FormEvent, useMemo, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { loginWithEmailPassword } from "@/services/auth/auth.service";
-import { useAuthStore } from "@/store/auth/auth.store";
+import { FormEvent, useMemo, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { loginWithEmailPassword } from '@/services/auth/auth.service';
+import { useAuthStore } from '@/store/auth/auth.store';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const LoginContent = () => {
   const router = useRouter();
@@ -14,23 +14,21 @@ const LoginContent = () => {
   const setSession = useAuthStore((state) => state.setSession);
   const refreshUser = useAuthStore((state) => state.refreshUser);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const redirectTo = useMemo(() => {
-    const redirectParam = searchParams.get("redirect");
-    return redirectParam && redirectParam.startsWith("/")
-      ? redirectParam
-      : "/dashboard/teacher";
+    const redirectParam = searchParams.get('redirect');
+    return redirectParam && redirectParam.startsWith('/') ? redirectParam : '/dashboard/teacher';
   }, [searchParams]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!email.trim() || !password.trim()) {
-      setErrorMessage("Completa email y contraseña.");
+      setErrorMessage('Completa email y contraseña.');
       return;
     }
 
@@ -44,7 +42,7 @@ const LoginContent = () => {
       });
 
       if (!session.accessToken) {
-        setErrorMessage("No se recibió access token del backend.");
+        setErrorMessage('No se recibió access token del backend.');
         return;
       }
 
@@ -58,8 +56,8 @@ const LoginContent = () => {
 
       router.push(redirectTo);
     } catch (error) {
-      console.error("Login error:", error);
-      setErrorMessage("Credenciales inválidas o servidor no disponible.");
+      console.error('Login error:', error);
+      setErrorMessage('Credenciales inválidas o servidor no disponible.');
     } finally {
       setIsSubmitting(false);
     }
@@ -76,48 +74,20 @@ const LoginContent = () => {
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email
             </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-gray-800 outline-none transition focus:border-[#1CB0F6]"
-              placeholder="tu@email.com"
-              disabled={isSubmitting}
-            />
+            <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-gray-800 outline-none transition focus:border-[#1CB0F6]" placeholder="tu@email.com" disabled={isSubmitting} />
           </div>
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
               Contraseña
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-gray-800 outline-none transition focus:border-[#1CB0F6]"
-              placeholder="••••••••"
-              disabled={isSubmitting}
-            />
+            <input id="password" name="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-gray-800 outline-none transition focus:border-[#1CB0F6]" placeholder="••••••••" disabled={isSubmitting} />
           </div>
 
-          {errorMessage ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600">
-              {errorMessage}
-            </p>
-          ) : null}
+          {errorMessage ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600">{errorMessage}</p> : null}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-xl bg-[#1CB0F6] px-4 py-2 font-semibold text-white transition hover:bg-[#16a1df] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSubmitting ? "Entrando..." : "Entrar"}
+          <button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-[#1CB0F6] px-4 py-2 font-semibold text-white transition hover:bg-[#16a1df] disabled:cursor-not-allowed disabled:opacity-70">
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
       </div>
