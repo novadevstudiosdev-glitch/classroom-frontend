@@ -13,12 +13,12 @@ export default function StudentLayout({
         <AuthBackgroundCanvas />
       </div>
 
-      <div className="fixed top-0 left-0 h-screen z-20">
+      <div className="fixed top-0 left-0 h-screen z-20 md:static md:h-auto md:flex-shrink-0">
         <SidebarNav />
       </div>
 
       {/* CONTENIDO */}
-      <main className="relative z-10 w-full md:ml-65 p-4 md:p-8">
+      <main className="relative z-10 flex-1 p-4 md:p-8">
         <div className="max-w-6xl mx-auto w-full">{children}</div>
       </main>
     </div>

@@ -36,9 +36,15 @@ export default function Navbar() {
 
         {/* DERECHA */}
         <div className="relative">
+<<<<<<< HEAD
           {!isAuthenticated || !user ? (
             <Link href="/login">
               <button className="px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300 text-sm">
+=======
+          {!user ? (
+            <Link href="/register">
+              <button className="px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
+>>>>>>> 50e2948fd1969b03f901027691f85dda6c476e6a
                 Iniciar sesión
               </button>
             </Link>
