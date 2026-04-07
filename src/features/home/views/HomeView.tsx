@@ -374,7 +374,7 @@ export default function HomeView() {
             priority
           />
         </Link>
-        <Link href="/login" className="btn-nav">Empezar gratis</Link>
+        <Link href="/register" className="btn-nav">Empezar gratis</Link>
       </nav>
 
       <section id="hero">

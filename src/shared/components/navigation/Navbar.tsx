@@ -37,7 +37,7 @@ export default function Navbar() {
         {/* DERECHA */}
         <div className="relative">
           {!user ? (
-            <Link href="/login">
+            <Link href="/register">
               <button className="px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
                 Iniciar sesión
               </button>
