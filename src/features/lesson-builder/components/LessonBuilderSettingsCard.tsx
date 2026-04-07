@@ -3,7 +3,7 @@ import type { LessonBuilderSettingsCardProps } from "@/features/lesson-builder/t
 const LessonBuilderSettingsCard = ({ data }: LessonBuilderSettingsCardProps) => {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur-md">
-      <h3 className="mb-3 text-sm font-bold text-white">Configuración</h3>
+      <h4 className="mb-3 text-[20px] font-bold text-white">Configuración</h4>
 
       <form className="space-y-3">
         <div className="space-y-1">
