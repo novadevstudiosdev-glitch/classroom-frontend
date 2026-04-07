@@ -1,21 +1,29 @@
 'use client';
 
-import { useState } from "react";
+import { useMemo } from "react";
+
+const pseudoRandom = (seed: number) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+};
 
 export function BackgroundOrbs() {
-  const [stars] = useState(() =>
-    Array.from({ length: 40 }).map(() => {
-      const colors = ["#ffffff", "#c4b5fd", "#93c5fd", "#6ee7b7"];
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 40 }).map((_, index) => {
+        const colors = ["#ffffff", "#c4b5fd", "#93c5fd", "#6ee7b7"];
+        const base = index + 1;
 
-      return {
-        top: Math.random() * 100,
-        left: Math.random() * 100,
-        delay: Math.random() * 4,
-        opacity: Math.random() * 0.6 + 0.6,
-        size: Math.random() > 0.6 ? 2.5 : 1.5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      };
-    })
+        return {
+          top: pseudoRandom(base * 1.11) * 100,
+          left: pseudoRandom(base * 2.17) * 100,
+          delay: pseudoRandom(base * 3.29) * 4,
+          opacity: pseudoRandom(base * 4.43) * 0.6 + 0.6,
+          size: pseudoRandom(base * 5.57) > 0.6 ? 2.5 : 1.5,
+          color: colors[Math.floor(pseudoRandom(base * 6.73) * colors.length)],
+        };
+      }),
+    []
   );
 
   return (

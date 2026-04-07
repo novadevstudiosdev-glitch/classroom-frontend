@@ -17,6 +17,11 @@
 }
 
 /* 🌍 BASE GLOBAL */
+html,
+body {
+  background-color: #07061a;
+}
+
 body {
   font-family: var(--font-main);
   background: linear-gradient(
