@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { motion } from "motion/react";
-import { Suspense } from "react";
-import type { AuthMode } from "@/features/auth/types/auth-view.types";
-import { AuthFormCard } from "@/features/auth/components/AuthFormCard";
-import { AuthHero } from "@/features/auth/components/AuthHero";
-import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
-import { AuthRocketOverlay } from "@/features/auth/components/AuthRocketOverlay";
+import { motion } from 'motion/react';
+import { Suspense } from 'react';
+import type { AuthMode } from '@/features/auth/types/auth-view.types';
+import { AuthFormCard } from '@/features/auth/components/AuthFormCard';
+import { AuthHero } from '@/features/auth/components/AuthHero';
+import { AuthBackgroundCanvas } from '@/features/auth/components/AuthBackgroundCanvas';
+import { AuthRocketOverlay } from '@/features/auth/components/AuthRocketOverlay';
 
 type AuthViewProps = {
   defaultMode?: AuthMode;
 };
 
-export function AuthView({ defaultMode = "login" }: AuthViewProps) {
+export function AuthView({ defaultMode = 'login' }: AuthViewProps) {
   return (
     <div className="min-h-screen bg-[#090f2a] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -37,28 +37,35 @@ export function AuthView({ defaultMode = "login" }: AuthViewProps) {
         <motion.div
           className="absolute top-[12%] left-[8%] w-64 h-64 rounded-full border border-indigo-300/15"
           animate={{ scale: [0.9, 2.8], opacity: [0.5, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeOut" }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeOut' }}
         />
         <motion.div
           className="absolute bottom-[16%] right-[12%] w-52 h-52 rounded-full border border-pink-300/15"
           animate={{ scale: [0.9, 2.4], opacity: [0.45, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeOut", delay: 2 }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeOut', delay: 2 }}
         />
         <motion.div
           className="absolute top-[10%] right-[30%] w-40 h-40 rounded-full border border-yellow-300/15"
           animate={{ scale: [0.9, 2.2], opacity: [0.45, 0] }}
-          transition={{ duration: 6.5, repeat: Infinity, ease: "easeOut", delay: 4 }}
+          transition={{ duration: 6.5, repeat: Infinity, ease: 'easeOut', delay: 4 }}
         />
 
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-950/20 to-slate-950/55" />
       </div>
       <AuthRocketOverlay anchorId="auth-logo-anchor" />
 
-      <div className="w-full max-w-275 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] gap-8 xl:gap-10 items-center relative z-10">
-        <AuthHero />
-        <Suspense fallback={null}>
-          <AuthFormCard defaultMode={defaultMode} />
-        </Suspense>
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-12 lg:gap-16 items-center justify-center relative z-10">
+        {/* Hero - Hidden on mobile, shown on lg+ */}
+        <div className="hidden lg:flex flex-1 min-w-0">
+          <AuthHero />
+        </div>
+
+        {/* Form - Full width on mobile, takes space on lg+ */}
+        <div className="w-full lg:flex-1 flex justify-center lg:justify-end">
+          <Suspense fallback={null}>
+            <AuthFormCard defaultMode={defaultMode} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

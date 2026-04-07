@@ -15,5 +15,9 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
   const defaultMode: AuthMode = requestedMode === 'login' ? 'login' : 'register';
 
-  return <AuthView defaultMode={defaultMode} />;
+  return (
+    <div id="auth-container">
+      <AuthView defaultMode={defaultMode} />
+    </div>
+  );
 }

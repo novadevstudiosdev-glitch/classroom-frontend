@@ -1,0 +1,34 @@
+/* 🔐 AUTH PAGE RESET - Override global styles that interfere with Tailwind */
+
+/* Allow Tailwind to work properly in auth pages */
+#auth-container,
+#auth-container *,
+#auth-container *::before,
+#auth-container *::after {
+  all: revert;
+}
+
+/* Re-enable Tailwind for auth container */
+#auth-container {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+#auth-container * {
+  box-sizing: border-box;
+}
+
+/* Ensure form inputs aren't affected by global form resets */
+#auth-container input,
+#auth-container button,
+#auth-container label {
+  all: revert;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+/* Prevent home-view.css * selector from affecting auth */
+#auth-container body {
+  margin: auto !important;
+  padding: auto !important;
+}
