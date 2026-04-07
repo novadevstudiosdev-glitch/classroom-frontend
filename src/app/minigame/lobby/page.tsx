@@ -1,49 +1,41 @@
 'use client';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth/auth.store';
+import { MinigameLobbyView } from '@/features/minigame/views/MinigameLobbyView';
 
-export default function LobbyPage() {
+function LobbyInner() {
   const router = useRouter();
+  const { isAuthenticated, initialized } = useAuthStore();
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    if (initialized && !isAuthenticated) {
       router.push('/login?redirect=/minigame/lobby');
-      return;
     }
+  }, [initialized, isAuthenticated, router]);
 
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const firstName: string = payload.first_name ?? '';
-      const lastName: string = payload.last_name ?? '';
-      const alias = [firstName, lastName].filter(Boolean).join(' ') || payload.email || 'Jugador';
-      sessionStorage.setItem('novi_jwt', token);
-      sessionStorage.setItem('novi_auto_alias', alias.slice(0, 24));
-    } catch {
-      router.push('/login?redirect=/minigame/lobby');
-      return;
-    }
+  if (!initialized || !isAuthenticated) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#06080f',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#e2e8f0', fontFamily: "'Nunito', system-ui, sans-serif",
+        fontSize: 18, fontWeight: 700, gap: 12,
+      }}>
+        <span style={{ fontSize: 28, animation: 'spin 1.2s linear infinite' }}>🚀</span>
+        <span>Cargando...</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
-    window.location.href = '/minigame/lobby.html';
-  }, [router]);
+  return <MinigameLobbyView />;
+}
 
+export default function LobbyPage() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#06080f',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#e2e8f0',
-        fontFamily: "'Nunito', system-ui, sans-serif",
-        fontSize: '18px',
-        fontWeight: 700,
-        gap: '12px',
-      }}
-    >
-      <span style={{ fontSize: '28px' }}>🚀</span>
-      <span>Cargando lobby...</span>
-    </div>
+    <Suspense>
+      <LobbyInner />
+    </Suspense>
   );
 }

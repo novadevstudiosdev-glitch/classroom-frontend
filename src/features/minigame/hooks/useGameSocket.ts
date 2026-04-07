@@ -37,12 +37,32 @@ export function useGameSocket() {
 
   // ── Connect ───────────────────────────────────────────────────────────────
 
-  const connect = useCallback(() => {
-    if (socketRef.current?.connected) return;
+  const pendingRoomRef = useRef<string | null>(null);
+
+  const connect = useCallback(async (autoJoinRoom?: string) => {
+    if (autoJoinRoom) pendingRoomRef.current = autoJoinRoom;
+    if (socketRef.current?.connected) {
+      // Already connected — just join the room now
+      if (autoJoinRoom) {
+        const s = getStore();
+        emit('join-room', { roomCode: autoJoinRoom.toUpperCase(), alias: s.myAlias });
+        pendingRoomRef.current = null;
+      }
+      return;
+    }
+    // Already connecting (socket exists but handshake not done yet) — wait for connect event
+    if (socketRef.current && !socketRef.current.connected) return;
 
     const s = getStore();
-    const user = useAuthStore.getState().user;
-    const alias = (user?.name ?? 'Jugador').slice(0, 24);
+
+    const auth = useAuthStore.getState();
+    let displayName = auth.user?.name?.trim();
+    if (!displayName) {
+      await auth.refreshUser();
+      displayName = useAuthStore.getState().user?.name?.trim();
+    }
+
+    const alias = (displayName || 'Jugador').slice(0, 48);
     s.setAlias(alias);
     s.setScreen('loading');
     s.setLoadingText('Conectando...');
@@ -60,21 +80,46 @@ export function useGameSocket() {
     // ── Connection events ──
 
     socket.on('connect', () => {
-      emit('join-lobby', { alias });
-      const navAlias = getStore().myAlias;
-      getStore().setLoadingText(`Conectado como ${navAlias}`);
+      const s = getStore();
+      const pending = pendingRoomRef.current;
+      pendingRoomRef.current = null;
+      // Priority: pending URL room > existing store room > lobby
+      if (pending) {
+        emit('join-room', { roomCode: pending.toUpperCase(), alias });
+      } else if (s.roomCode) {
+        emit('join-room', { roomCode: s.roomCode, alias: s.myAlias });
+      } else {
+        emit('join-lobby', { alias });
+      }
+      s.setLoadingText(`Conectado como ${s.myAlias}`);
     });
 
     socket.on('connect_error', () => {
       getStore().setError('No se pudo conectar al servidor.');
-      getStore().setScreen('rooms'); // show rooms with error
+      getStore().setScreen('rooms');
+    });
+
+    socket.on('disconnect', (reason: string) => {
+      // El servidor cerró la conexión activamente (token inválido, etc.)
+      if (reason === 'io server disconnect') {
+        getStore().setError('Conexión cerrada por el servidor. Intentá recargar la página.');
+        getStore().setScreen('rooms');
+      }
+      // Para desconexiones de red, socket.io reconecta automáticamente
     });
 
     // ── Lobby browser events ──
 
     socket.on('rooms-list', ({ rooms }) => {
       getStore().setRooms(rooms);
-      getStore().setScreen('rooms');
+      // Solo ir a la pantalla de salas si el usuario no está ya en una sala
+      if (!getStore().roomCode) {
+        getStore().setScreen('rooms');
+      }
+    });
+
+    socket.on('lobby-joined', ({ alias: a }: { alias: string }) => {
+      getStore().setAlias(a);
     });
 
     socket.on('lobby-update', ({ users }) => {
@@ -87,24 +132,38 @@ export function useGameSocket() {
 
     // ── Room events ──
 
-    socket.on('room-created', (d: { roomCode: string; roomName: string; alias: string }) => {
-      getStore().setRoomInfo(d.roomCode, d.roomName);
-      getStore().setIsHost(true);
-      getStore().setScreen('lobby');
-      emit('get-quizzes');
+    socket.on('room-created', (d: {
+      roomCode: string; roomName: string; alias: string;
+      trucoConfig?: import('../types/game.types').TrucoConfig | null;
+    }) => {
+      const s = getStore();
+      s.setError(null);
+      s.setAlias(d.alias);
+      s.setRoomInfo(d.roomCode, d.roomName);
+      s.setIsHost(true);
+      s.setRoomTrucoConfig(d.trucoConfig ?? null);
+      s.setScreen('lobby');
+      // Only load quizzes for non-Truco rooms
+      if (!d.trucoConfig) emit('get-quizzes');
     });
 
     socket.on('joined', (d: {
       roomCode: string; roomName: string; alias: string;
       isHost: boolean; selectedInstanceId?: string; selectedTitle?: string; gameType?: string;
+      trucoConfig?: import('../types/game.types').TrucoConfig | null;
     }) => {
-      getStore().setRoomInfo(d.roomCode, d.roomName);
-      getStore().setIsHost(d.isHost);
+      const s = getStore();
+      s.setError(null);
+      s.setAlias(d.alias);
+      s.setRoomInfo(d.roomCode, d.roomName);
+      s.setIsHost(d.isHost);
+      s.setRoomTrucoConfig(d.trucoConfig ?? null);
       if (d.selectedInstanceId && d.selectedTitle) {
-        getStore().setSelectedGame(d.selectedInstanceId, d.selectedTitle, (d.gameType ?? 'quiz') as GameType);
+        s.setSelectedGame(d.selectedInstanceId, d.selectedTitle, (d.gameType ?? 'quiz') as GameType);
       }
-      getStore().setScreen('lobby');
-      emit('get-quizzes');
+      s.setScreen('lobby');
+      // Only load quizzes for non-Truco rooms
+      if (!d.trucoConfig) emit('get-quizzes');
     });
 
     socket.on('room-update', (d: { players: PlayerInfo[]; hostAlias: string; gameType?: string }) => {
@@ -146,6 +205,15 @@ export function useGameSocket() {
 
     socket.on('error', (d: { message: string }) => {
       getStore().setError(d.message ?? 'Error desconocido.');
+      // Only kick back to rooms if we're stuck in a pre-game connection state.
+      // Never kick during active gameplay — errors can be valid feedback (invalid move, etc.)
+      const s = getStore();
+      const gameScreens = ['quiz', 'wordsearch', 'anagram', 'preguntados', 'truco', 'round-end', 'scoreboard'];
+      const isInGame = gameScreens.includes(s.currentScreen);
+      if (!isInGame && s.roomCode && s.currentScreen !== 'lobby') {
+        s.resetRoom();
+        s.setScreen('rooms');
+      }
     });
 
     socket.on('kicked', (d: { message?: string }) => {
@@ -156,11 +224,32 @@ export function useGameSocket() {
       getStore().setScreen('rooms');
     });
 
-    socket.on('reconnected', (d: { alias: string; score: number; isHost: boolean; roomCode: string; gameType: string }) => {
-      getStore().setAlias(d.alias);
-      getStore().setIsHost(d.isHost);
-      getStore().setRoomInfo(d.roomCode, getStore().roomName);
-      getStore().setError('🔄 Reconectado a la partida.');
+    socket.on('reconnected', (d: { alias: string; score: number; isHost: boolean; roomCode: string; roomName?: string; gameType: string }) => {
+      const s = getStore();
+      s.setAlias(d.alias);
+      s.setIsHost(d.isHost);
+      s.setRoomInfo(d.roomCode, d.roomName ?? s.roomName);
+      // Restore score and navigate to the correct game screen
+      const type = d.gameType as GameType;
+      if (type === 'quiz') {
+        s.setQuiz({ myScore: d.score });
+        s.setScreen('quiz');
+      } else if (type === 'wordsearch') {
+        s.setWordSearch({ myScore: d.score });
+        s.setScreen('wordsearch');
+      } else if (type === 'anagram') {
+        s.setAnagram({ myScore: d.score });
+        s.setScreen('anagram');
+      } else if (type === 'preguntados') {
+        s.setScreen('preguntados');
+      } else if (type === 'truco') {
+        // Truco: el estado completo de la mano vendrá vía evento 'truco-state'
+        s.resetGame();
+        s.setScreen('truco');
+      } else {
+        s.setScreen('waiting');
+      }
+      s.setError('🔄 Reconectado a la partida en curso.');
     });
 
     // ── Quiz game events ──
@@ -228,6 +317,35 @@ export function useGameSocket() {
           getStore().setScreen('preguntados');
           audio.startPq();
         });
+      } else if (type === 'truco') {
+        // State will arrive via truco-state event
+        startCountdown(() => getStore().setScreen('truco'));
+      }
+    });
+
+    // ── Truco events ──────────────────────────────────────────────────────────
+
+    socket.on('truco-state', (view: import('../types/game.types').TrucoPlayerView) => {
+      getStore().setTruco(view);
+      // If game over, show scoreboard
+      if (view.phase === 'game_over') {
+        const isA = view.myTeam === 'A';
+        const winnerScore = Math.max(view.teamAScore, view.teamBScore);
+        const winnerTeam = view.teamAScore >= view.teamBScore ? 'A' : 'B';
+        const sb = [
+          ...view.teamAMembers.map((m) => ({
+            alias: m.alias,
+            score: view.teamAScore,
+            rank: winnerTeam === 'A' ? 1 : 2,
+          })),
+          ...view.teamBMembers.map((m) => ({
+            alias: m.alias,
+            score: view.teamBScore,
+            rank: winnerTeam === 'B' ? 1 : 2,
+          })),
+        ].sort((a, b) => a.rank - b.rank);
+        getStore().setFinalScoreboard(sb);
+        setTimeout(() => getStore().setScreen('scoreboard'), 3000);
       }
     });
 
@@ -301,7 +419,7 @@ export function useGameSocket() {
 
     socket.on('pq-question', (d: { question: { text: string; options: { id: string; text: string }[] }; categoryName: string; categoryColor: string; categoryIcon: string; turnAlias: string; timeLimitMs: number }) => {
       getStore().setPreguntados({
-        currentQuestion: d.question as any,
+        currentQuestion: d.question,
         panel: 'question',
         categoryInfo: { icon: d.categoryIcon, name: d.categoryName, color: d.categoryColor },
         currentTurnAlias: d.turnAlias,
@@ -357,15 +475,29 @@ export function useGameSocket() {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const createRoom = useCallback((roomName: string) => {
+  const createRoom = useCallback((payload: {
+    roomName: string; maxPlayers: number; password?: string;
+    trucoConfig?: import('../types/game.types').TrucoConfig;
+  }) => {
     const alias = getStore().myAlias;
-    emit('create-room', { alias, roomName });
+    emit('create-room', {
+      alias,
+      roomName: payload.roomName,
+      maxPlayers: payload.maxPlayers,
+      password: payload.password,
+      trucoConfig: payload.trucoConfig,
+    });
   }, [emit, getStore]);
 
-  const joinRoom = useCallback((roomCode: string) => {
+  const joinRoom = useCallback((roomCode: string, password?: string) => {
+    if (!socketRef.current?.connected) {
+      // Socket lost — reconnect first, then join
+      connect(roomCode);
+      return;
+    }
     const alias = getStore().myAlias;
-    emit('join-room', { roomCode: roomCode.toUpperCase(), alias });
-  }, [emit, getStore]);
+    emit('join-room', { roomCode: roomCode.toUpperCase(), alias, password });
+  }, [connect, emit, getStore]);
 
   const sendLobbyChat = useCallback((text: string) => {
     emit('lobby-chat', { text });
@@ -434,6 +566,10 @@ export function useGameSocket() {
     emit('get-rooms');
   }, [emit]);
 
+  const getQuizzes = useCallback(() => {
+    emit('get-quizzes');
+  }, [emit]);
+
   const exitGame = useCallback(() => {
     audio.stop();
     disconnect();
@@ -441,6 +577,11 @@ export function useGameSocket() {
     getStore().resetGame();
     connect();
   }, [audio, disconnect, connect, getStore]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sendTrucoAction = useCallback((action: { type: string; [key: string]: any }) => {
+    emit('truco-action', action);
+  }, [emit]);
 
   return {
     connect,
@@ -457,9 +598,11 @@ export function useGameSocket() {
     promotePlayer,
     sendChat,
     sendReaction,
+    sendTrucoAction,
     submitAnswer,
     findWord,
     submitGameComplete,
+    getQuizzes,
     spinWheel,
     submitPQAnswer,
     restartRoom,
