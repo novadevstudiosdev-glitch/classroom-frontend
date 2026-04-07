@@ -151,7 +151,7 @@ export function MinigameLobbyView() {
             {screen === 'wordsearch' && <WordSearchScreen onFindWord={socket.findWord} onSubmitComplete={socket.submitGameComplete} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
             {screen === 'anagram'    && <AnagramScreen onSubmitComplete={socket.submitGameComplete} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
             {screen === 'preguntados'&& <PreguntadosScreen onSpinWheel={socket.spinWheel} onSubmitPQAnswer={socket.submitPQAnswer} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
-            {screen === 'truco'      && <TrucoScreen sendTrucoAction={socket.sendTrucoAction} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
+            {screen === 'truco'      && <TrucoScreen sendTrucoAction={socket.sendTrucoAction} onSendChat={socket.sendChat} />}
             {screen === 'waiting'    && <WaitingScreen onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}
             {screen === 'round-end'  && <RoundEndScreen onContinue={() => socket.getRooms()} onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}
             {screen === 'scoreboard' && <ScoreboardScreen onRestart={socket.restartRoom} onExit={socket.exitGame} onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}

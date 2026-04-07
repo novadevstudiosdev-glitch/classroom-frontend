@@ -242,6 +242,10 @@ export function useGameSocket() {
         s.setScreen('anagram');
       } else if (type === 'preguntados') {
         s.setScreen('preguntados');
+      } else if (type === 'truco') {
+        // Truco: el estado completo de la mano vendrá vía evento 'truco-state'
+        s.resetGame();
+        s.setScreen('truco');
       } else {
         s.setScreen('waiting');
       }

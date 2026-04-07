@@ -10,7 +10,7 @@ interface Props {
   players: PlayerInfo[];
   roomChat: ChatMessage[];
   onSendChat: (t: string) => void;
-  onSendReaction: (emoji: string) => void;
+  onSendReaction?: (emoji: string) => void; // optional — omit to hide the reaction bar
   /** If provided, renders the circular timer at the top of the sidebar */
   timer?: { key: string | number; durationMs: number; onExpire?: () => void };
   /** Show the green dot per player when they've answered */
@@ -146,10 +146,12 @@ export function GameSidebar({
         </div>
       </div>
 
-      {/* ── Reactions ── */}
-      <div style={{ flexShrink: 0, padding: '8px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.045)' }}>
-        <ReactionBar onReact={onSendReaction} />
-      </div>
+      {/* ── Reactions (only when handler is provided) ── */}
+      {onSendReaction && (
+        <div style={{ flexShrink: 0, padding: '8px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.045)' }}>
+          <ReactionBar onReact={onSendReaction} />
+        </div>
+      )}
     </div>
   );
 }

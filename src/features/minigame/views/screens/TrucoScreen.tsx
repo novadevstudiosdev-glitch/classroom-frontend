@@ -10,7 +10,6 @@ import type { TrucoCard, TableTheme } from '../../types/game.types';
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTrucoAction: (action: { type: string; [k: string]: any }) => void;
-  onSendReaction: (emoji: string) => void;
   onSendChat: (text: string) => void;
 }
 
@@ -138,7 +137,7 @@ const CSIZES: Record<CardSize, { w: number; h: number; fs: number; pip: number; 
   sm: { w: 50,  h: 72,  fs: 10, pip: 12, cornerFs: 9  },
   md: { w: 66,  h: 94,  fs: 13, pip: 16, cornerFs: 11 },
   lg: { w: 82,  h: 116, fs: 16, pip: 20, cornerFs: 13 },
-  xl: { w: 100, h: 140, fs: 18, pip: 24, cornerFs: 15 },
+  xl: { w: 112, h: 156, fs: 20, pip: 26, cornerFs: 16 },
 };
 
 interface CardProps {
@@ -173,7 +172,7 @@ function PlayingCard({
       style={{
         width: d.w, height: d.h,
         borderRadius: size === 'xs' ? 4 : size === 'sm' ? 5 : 7,
-        background: 'linear-gradient(160deg, #fefdf8 0%, #f8f3e8 100%)',
+        background: 'linear-gradient(160deg, #fffefb 0%, #f9f4e8 100%)',
         border: selected
           ? '2.5px solid #fbbf24'
           : highlight
@@ -194,8 +193,22 @@ function PlayingCard({
         flexDirection: 'column',
         userSelect: 'none',
         WebkitUserSelect: 'none',
+        overflow: 'hidden',
       }}
     >
+      <div style={{
+        position: 'absolute',
+        inset: 2,
+        borderRadius: size === 'xs' ? 3 : size === 'sm' ? 4 : 6,
+        border: '1px solid rgba(65,45,20,0.12)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 6px)',
+        pointerEvents: 'none',
+      }} />
       {/* Top-left corner */}
       <div style={{
         position: 'absolute', top: size === 'xs' ? 2 : 3, left: size === 'xs' ? 3 : 4,
@@ -350,9 +363,86 @@ function buildSeating(
     if (teamA[i]) order.push(teamA[i].alias);
     if (teamB[i]) order.push(teamB[i].alias);
   }
-  const myIdx = order.indexOf(myAlias);
+  const myIdx = order.findIndex((a) => a.toLowerCase().trim() === myAlias.toLowerCase().trim());
   if (myIdx < 0) return order;
   return [...order.slice(myIdx), ...order.slice(0, myIdx)];
+}
+
+function CallLogPanel({
+  envidoChain,
+  trucoChain,
+  envidoStatus,
+  envidoResult,
+  trucoStatus,
+  trucoAccepted,
+  logLines,
+  envidoLastResponse,
+  trucoLastResponse,
+}: {
+  envidoChain: Array<{ alias: string; type: string }>;
+  trucoChain: Array<{ alias: string; type: string }>;
+  envidoStatus: string;
+  envidoResult: { winnerAlias?: string; winnerTeam?: 'A' | 'B'; pts?: number } | null;
+  trucoStatus: string;
+  trucoAccepted: boolean;
+  logLines: string[];
+  envidoLastResponse: { alias: string; response: string } | null;
+  trucoLastResponse: { alias: string; response: string } | null;
+}) {
+  const lastEnvido = envidoChain[envidoChain.length - 1];
+  const lastTruco = trucoChain[trucoChain.length - 1];
+  const envidoName = (t: string) => t === 'realenvido' ? 'Real Envido' : t === 'faltaenvido' ? 'Falta Envido' : 'Envido';
+  const trucoName = (t: string) => t === 'retruco' ? 'Retruco' : t === 'valecuatro' ? 'Vale Cuatro' : 'Truco';
+
+  return (
+    <div style={{
+      position: 'absolute', top: 56, left: 16, zIndex: 24,
+      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 10, padding: '8px 10px',
+      minWidth: 280,
+      maxWidth: 340,
+      display: 'flex', flexDirection: 'column', gap: 5,
+    }}>
+      <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em' }}>
+        CANTOS
+      </div>
+      <div style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700 }}>
+        Envido: {lastEnvido ? `${lastEnvido.alias} cantó ${envidoName(lastEnvido.type)}` : '—'}
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
+        {envidoStatus === 'pending' ? 'Respuesta: pendiente'
+          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoLastResponse.response === 'noquiero' ? 'No Quiero' : envidoLastResponse.response === 'quiero' ? 'Quiero' : envidoLastResponse.response}`
+          : envidoResult ? `Resultado: ${envidoResult.winnerAlias ?? 'equipo ganador'} (${envidoResult.pts ?? 0} pts)`
+          : 'Resultado: —'}
+      </div>
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+      <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
+        Truco: {lastTruco ? `${lastTruco.alias} cantó ${trucoName(lastTruco.type)}` : '—'}
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
+        {trucoStatus === 'pending' ? 'Respuesta: pendiente'
+          : trucoLastResponse ? `Respuesta: ${trucoLastResponse.alias} dijo ${trucoLastResponse.response === 'noquiero' ? 'No Quiero' : trucoLastResponse.response === 'quiero' ? 'Quiero' : trucoLastResponse.response}`
+          : lastTruco ? (trucoAccepted ? 'Respuesta: Quiero' : 'Respuesta: No Quiero')
+          : 'Respuesta: —'}
+      </div>
+      {logLines.length > 0 && (
+        <>
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em' }}>
+            HISTORIAL
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 112, overflowY: 'auto' }}>
+            {logLines.slice(-6).reverse().map((line, i) => (
+              <div key={`${line}-${i}`} style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)' }}>
+                {line}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -419,9 +509,9 @@ function Btn({
    TANTEADOR — traditional Argentine Truco score board
    Squares in groups of 5; filled squares get an X through them
 ═══════════════════════════════════════════════════════════════════════════ */
-const TANTO_SQ   = 9;  // px per square
+const TANTO_SQ   = 11; // px per square
 const TANTO_GAP  = 2;  // px between squares in a group
-const TANTO_GSEP = 5;  // px between groups
+const TANTO_GSEP = 6;  // px between groups
 
 function TanteadorSide({ score, maxPoints, ink }: { score: number; maxPoints: number; ink: string }) {
   const GROUP = 5;
@@ -440,7 +530,7 @@ function TanteadorSide({ score, maxPoints, ink }: { score: number; maxPoints: nu
                 border: `1.5px solid ${ink}`,
                 borderRadius: 1,
                 position: 'relative',
-                opacity: filled ? 1 : 0.22,
+                opacity: filled ? 1 : 0.35,
               }}>
                 {filled && (
                   <svg
@@ -471,29 +561,29 @@ function ScorePanel({
 
   return (
     <div style={{
-      position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+      position: 'absolute', top: 10, left: 10,
       background: 'rgba(238,231,212,0.97)',
-      border: '2px solid rgba(90,65,30,0.4)',
-      borderRadius: 10, padding: '7px 10px',
+      border: '2px solid rgba(90,65,30,0.45)',
+      borderRadius: 10, padding: '8px 12px',
       zIndex: 20,
-      boxShadow: '0 3px 16px rgba(0,0,0,0.5)',
-      display: 'flex', gap: 10, alignItems: 'flex-start',
+      boxShadow: '0 3px 18px rgba(0,0,0,0.55)',
+      display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       {/* Nosotros */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 7, fontWeight: 900, color: '#1a3a1a', letterSpacing: '0.1em' }}>NOSOTROS</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+        <span style={{ fontSize: 8, fontWeight: 900, color: '#1a3a1a', letterSpacing: '0.1em' }}>NOSOTROS</span>
         <TanteadorSide score={nosotros} maxPoints={maxPoints} ink="#1a3a1a" />
-        <span style={{ fontSize: 15, fontWeight: 900, color: '#1a3a1a', lineHeight: 1 }}>{nosotros}</span>
+        <span style={{ fontSize: 17, fontWeight: 900, color: '#1a3a1a', lineHeight: 1 }}>{nosotros}</span>
       </div>
 
       {/* Divider */}
-      <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(90,65,30,0.35)' }} />
+      <div style={{ height: 1, background: 'rgba(90,65,30,0.35)' }} />
 
       {/* Ellos */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 7, fontWeight: 900, color: '#3a1a1a', letterSpacing: '0.1em' }}>ELLOS</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+        <span style={{ fontSize: 8, fontWeight: 900, color: '#3a1a1a', letterSpacing: '0.1em' }}>ELLOS</span>
         <TanteadorSide score={ellos} maxPoints={maxPoints} ink="#3a1a1a" />
-        <span style={{ fontSize: 15, fontWeight: 900, color: '#3a1a1a', lineHeight: 1 }}>{ellos}</span>
+        <span style={{ fontSize: 17, fontWeight: 900, color: '#3a1a1a', lineHeight: 1 }}>{ellos}</span>
       </div>
     </div>
   );
@@ -508,7 +598,7 @@ function PlayerSlot({
   alias: string; cardCount: number; isMyTeam: boolean;
   isCurrentTurn: boolean; rot: number; themeText: string;
 }) {
-  const cardSize: CardSize = 'xs';
+  const cardSize: CardSize = 'sm';
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
@@ -592,7 +682,73 @@ function PlayedCardOnFelt({
       animation: dimmed ? 'none' : 'cardLand 0.25s cubic-bezier(.34,1.56,.64,1)',
       transition: 'opacity 0.3s',
     }}>
-      <PlayingCard card={card} size={dimmed ? 'sm' : 'md'} />
+      <PlayingCard card={card} size={dimmed ? 'lg' : 'xl'} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAYER CALL BUBBLE — floats above a player's seat when they make a call
+═══════════════════════════════════════════════════════════════════════════ */
+function PlayerCallBubble({ text, color }: { text: string; color: string }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: '100%', left: '50%',
+      transform: 'translateX(-50%)',
+      marginBottom: 6,
+      pointerEvents: 'none',
+      animation: 'bubblePop 0.3s cubic-bezier(.34,1.56,.64,1)',
+      zIndex: 30,
+    }}>
+      <div style={{
+        background: `linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,20,40,0.95))`,
+        border: `1.5px solid ${color}`,
+        borderRadius: 10,
+        padding: '5px 10px',
+        whiteSpace: 'nowrap',
+        fontSize: 13,
+        fontWeight: 900,
+        color,
+        letterSpacing: '-0.01em',
+        boxShadow: `0 2px 16px ${color}44`,
+      }}>
+        {text}
+      </div>
+      {/* Tail */}
+      <div style={{
+        position: 'absolute', top: '100%', left: '50%',
+        transform: 'translateX(-50%)',
+        width: 0, height: 0,
+        borderLeft: '5px solid transparent',
+        borderRight: '5px solid transparent',
+        borderTop: `5px solid ${color}`,
+      }} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TURN TIMER — counts down when it's someone's turn
+═══════════════════════════════════════════════════════════════════════════ */
+function TurnTimer({ seconds }: { seconds: number }) {
+  const pct = seconds / 30;
+  const color = seconds > 10 ? '#10b981' : seconds > 5 ? '#f59e0b' : '#ef4444';
+  const r = 14;
+  const circ = 2 * Math.PI * r;
+  return (
+    <div style={{
+      position: 'absolute', top: 10, right: 10,
+      zIndex: 20,
+      display: 'flex', alignItems: 'center', gap: 4,
+    }}>
+      <svg width={34} height={34} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={17} cy={17} r={r} fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
+        <circle cx={17} cy={17} r={r} fill="none" stroke={color} strokeWidth={2.5}
+          strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
+          style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.5s' }}
+        />
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 700, color, minWidth: 18 }}>{seconds}s</span>
     </div>
   );
 }
@@ -830,7 +986,8 @@ function ActionPanel({
   }
 
   /* ── Envido call (available on round 1, any player can call) ── */
-  if (envidoSt === 'available' && phase === 'playing' && !florMust && florSt !== 'pending') {
+  // Envido solo en la primera ronda de la mano, mientras esté disponible
+  if (envidoSt === 'available' && phase === 'playing' && view.round === 0 && !florMust && florSt !== 'pending') {
     sections.push(
       <div key="envido-call" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginRight: 2 }}>ENVIDO</span>
@@ -843,17 +1000,22 @@ function ActionPanel({
 
   /* ── Envido response (opponent called envido) ── */
   if (envidoSt === 'pending' && envidoResp && phase === 'playing') {
-    const canRaise = lastEnvido === 'envido' || lastEnvido === 'real-envido';
+    // lastEnvido comes from the engine chain (.type = 'envido'|'realenvido'|'faltaenvido' — no hyphens)
+    const canRaiseToReal  = lastEnvido === 'envido';
+    const canRaiseToFalta = lastEnvido === 'envido' || lastEnvido === 'realenvido';
+    const displayName = lastEnvido === 'realenvido' ? 'REAL ENVIDO'
+      : lastEnvido === 'faltaenvido' ? 'FALTA ENVIDO'
+      : (lastEnvido ?? '').toUpperCase();
     sections.push(
       <div key="envido-resp" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: '#fbbf24', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>
-          ¿QUIEREN EL {(lastEnvido ?? '').toUpperCase()}?
+          ¿QUIEREN EL {displayName}?
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
-        {canRaise && lastEnvido === 'envido' && (
+        {canRaiseToReal && (
           <Btn label="Real Envido" variant="primary" small onClick={() => onAction({ type: 'real-envido' })} />
         )}
-        {canRaise && (
+        {canRaiseToFalta && (
           <Btn label="Falta Envido" variant="warning" small onClick={() => onAction({ type: 'falta-envido' })} />
         )}
         <Btn label="Quiero" variant="success" onClick={() => onAction({ type: 'quiero' })} />
@@ -984,7 +1146,7 @@ function CallNotification({
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN TRUCO SCREEN
 ═══════════════════════════════════════════════════════════════════════════ */
-export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Props) {
+export function TrucoScreen({ sendTrucoAction, onSendChat }: Props) {
   const myAlias  = useMinigameStore(s => s.myAlias);
   const isHost   = useMinigameStore(s => s.isHost);
   const players  = useMinigameStore(s => s.players);
@@ -1005,6 +1167,25 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   >([]);
   const seenPlayedRef = useRef<Set<string>>(new Set());
   const lastHandRef   = useRef(-1);
+
+  // Turn timer (30 seconds per turn)
+  const [turnTimer, setTurnTimer]   = useState(30);
+  const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastTurnRef  = useRef('');
+
+  // Player call bubbles: alias → { text, color, id }
+  const [callBubbles, setCallBubbles] = useState<Record<string, { text: string; color: string; id: number }>>({});
+  const [callHistory, setCallHistory] = useState<string[]>([]);
+  const prevEnvidoChainLenRef = useRef(0);
+  const prevTrucoChainLenRef  = useRef(0);
+  const prevEnvidoResultRef   = useRef<string | null>(null);
+  const prevTrucoAcceptedRef  = useRef(false);
+  const prevBubbleEnvidoStatusRef = useRef('');
+  const prevBubbleTrucoStatusRef = useRef('');
+  const prevHistEnvidoLenRef = useRef(0);
+  const prevHistTrucoLenRef = useRef(0);
+  const prevHistEnvidoStatusRef = useRef('');
+  const prevHistTrucoStatusRef = useRef('');
 
   // Call notifications (envido / truco / flor called at us)
   const [callNotif, setCallNotif] = useState<{ call: string; sub: string; color: string } | null>(null);
@@ -1046,6 +1227,7 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
       lastHandRef.current = view.handNum;
       seenPlayedRef.current = new Set();
       setHistoricCards([]);
+      setCallHistory([]);
       return;
     }
 
@@ -1106,6 +1288,141 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view?.envidoStatus, view?.trucoStatus, view?.florStatus, view?.envidoResponderTeam, view?.trucoResponderTeam, view?.florResponderTeam, view?.envidoChain, view?.trucoChain]);
 
+  // Turn timer — resets to 30s each time the current player changes
+  useEffect(() => {
+    if (!view || view.phase !== 'playing') return;
+    const currentTurn = view.currentTurnAlias as string;
+    if (currentTurn === lastTurnRef.current) return;
+    lastTurnRef.current = currentTurn;
+    setTurnTimer(30);
+    if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+    turnTimerRef.current = setInterval(() => {
+      setTurnTimer(t => {
+        if (t <= 1) { clearInterval(turnTimerRef.current!); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+    return () => { if (turnTimerRef.current) clearInterval(turnTimerRef.current); };
+  }, [view?.currentTurnAlias, view?.phase, view]);
+
+  // Call bubbles — show speech bubble near player when they make a call
+  useEffect(() => {
+    if (!view) return;
+    const envidoCh  = (view.envidoChain ?? []) as { type: string; alias: string }[];
+    const trucoCh   = (view.trucoChain  ?? []) as { type: string; alias: string }[];
+    const envidoRes = view.envidoResult as { winnerTeam?: string; pts?: number } | null;
+    const trucoAcc  = view.trucoAccepted as boolean;
+    const envidoSt  = view.envidoStatus as string;
+    const trucoSt   = view.trucoStatus as string;
+    let changed = false;
+
+    // New envido call
+    if (envidoCh.length > prevEnvidoChainLenRef.current) {
+      const last = envidoCh[envidoCh.length - 1];
+      const label = last.type === 'realenvido' ? 'Real Envido' : last.type === 'faltaenvido' ? 'Falta Envido' : last.type.charAt(0).toUpperCase() + last.type.slice(1);
+      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `¡${label}!`, color: '#fbbf24', id: Date.now() } }));
+      changed = true;
+    }
+    prevEnvidoChainLenRef.current = envidoCh.length;
+
+    // Envido accepted/refused (status resolved)
+    const envidoResKey = envidoRes ? JSON.stringify(envidoRes) : null;
+    if (envidoSt === 'resolved' && envidoResKey !== prevEnvidoResultRef.current && envidoResKey) {
+      if (envidoRes?.winnerTeam && (view as { envidoResult?: { winnerAlias?: string; pts?: number } }).envidoResult) {
+        const result = (view as { envidoResult?: { winnerAlias?: string; pts?: number } }).envidoResult!;
+        const winnerAlias = result.winnerAlias;
+        if (winnerAlias) {
+          setCallBubbles(prev => ({
+            ...prev,
+            [winnerAlias]: { text: `${result.pts ?? 0} de envido`, color: '#10b981', id: Date.now() },
+          }));
+        }
+      }
+      changed = true;
+    }
+    prevEnvidoResultRef.current = envidoResKey;
+
+    // New truco call
+    if (trucoCh.length > prevTrucoChainLenRef.current) {
+      const last = trucoCh[trucoCh.length - 1];
+      const label = last.type === 'valecuatro' ? 'Vale Cuatro' : last.type === 'retruco' ? 'Retruco' : 'Truco';
+      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `¡${label}!`, color: '#ef4444', id: Date.now() } }));
+      changed = true;
+    }
+    prevTrucoChainLenRef.current = trucoCh.length;
+
+    // Truco accepted
+    if (trucoSt !== 'pending' && trucoAcc && !prevTrucoAcceptedRef.current) {
+      const lastCall = trucoCh[trucoCh.length - 1];
+      if (lastCall) {
+        setCallBubbles(prev => ({ ...prev, [lastCall.alias]: { text: '¡Quiero!', color: '#10b981', id: Date.now() } }));
+        changed = true;
+      }
+    }
+    if (
+      prevBubbleTrucoStatusRef.current === 'pending' &&
+      trucoSt === 'resolved' &&
+      !trucoAcc
+    ) {
+      const lastCall = trucoCh[trucoCh.length - 1];
+      if (lastCall) {
+        setCallBubbles(prev => ({ ...prev, [lastCall.alias]: { text: 'No Quiero', color: '#fca5a5', id: Date.now() } }));
+        changed = true;
+      }
+    }
+    prevTrucoAcceptedRef.current = trucoAcc;
+    prevBubbleEnvidoStatusRef.current = envidoSt;
+    prevBubbleTrucoStatusRef.current = trucoSt;
+
+    // Clear bubbles after 2.5s
+    if (changed) {
+      const t = setTimeout(() => setCallBubbles({}), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [view]);
+
+  // Persistent call history (who called, who answered, points)
+  useEffect(() => {
+    if (!view) return;
+    const envidoCh  = (view.envidoChain ?? []) as { type: string; alias: string }[];
+    const trucoCh   = (view.trucoChain  ?? []) as { type: string; alias: string }[];
+    const envidoSt  = view.envidoStatus as string;
+    const trucoSt   = view.trucoStatus as string;
+    const envidoRes = view.envidoResult as { winnerAlias?: string; pts?: number } | null;
+    const lastEnvido = envidoCh[envidoCh.length - 1];
+    const lastTruco = trucoCh[trucoCh.length - 1];
+
+    const append = (line: string) => {
+      setCallHistory((prev) => {
+        if (prev[prev.length - 1] === line) return prev;
+        return [...prev.slice(-19), line];
+      });
+    };
+
+    if (envidoCh.length > prevHistEnvidoLenRef.current && lastEnvido) {
+      const n = lastEnvido.type === 'realenvido' ? 'Real Envido' : lastEnvido.type === 'faltaenvido' ? 'Falta Envido' : 'Envido';
+      append(`${lastEnvido.alias}: ${n}`);
+    }
+    if (trucoCh.length > prevHistTrucoLenRef.current && lastTruco) {
+      const n = lastTruco.type === 'retruco' ? 'Retruco' : lastTruco.type === 'valecuatro' ? 'Vale Cuatro' : 'Truco';
+      append(`${lastTruco.alias}: ${n}`);
+    }
+    if (prevHistEnvidoStatusRef.current === 'pending' && envidoSt === 'resolved') {
+      if (envidoRes) {
+        append(`Envido cerrado: ${envidoRes.winnerAlias ?? 'equipo'} (${envidoRes.pts ?? 0})`);
+      } else {
+        append('Envido cerrado');
+      }
+    }
+    if (prevHistTrucoStatusRef.current === 'pending' && trucoSt === 'resolved') {
+      append(`Truco: ${view.trucoAccepted ? 'Quiero' : 'No Quiero'}`);
+    }
+    prevHistEnvidoLenRef.current = envidoCh.length;
+    prevHistTrucoLenRef.current = trucoCh.length;
+    prevHistEnvidoStatusRef.current = envidoSt;
+    prevHistTrucoStatusRef.current = trucoSt;
+  }, [view]);
+
   if (!view) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>
@@ -1133,6 +1450,8 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
   const needShowEnvido = view.phase === 'show_envido' &&
     Array.isArray(view.pendingShowEnvido) &&
     (view.pendingShowEnvido as string[]).includes(myAlias);
+  const envidoChain = (view.envidoChain ?? []) as Array<{ alias: string; type: string }>;
+  const trucoChain = (view.trucoChain ?? []) as Array<{ alias: string; type: string }>;
 
   const myScore = myTeam === 'A' ? view.teamAScore : view.teamBScore;
 
@@ -1175,20 +1494,31 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
         {/* Felt oval */}
         <div style={{
           position: 'absolute',
-          top: '8%', left: '6%', right: '6%', bottom: '16%',
+          top: '6%', left: '4%', right: '4%', bottom: '12%',
           borderRadius: '50%',
           background: th.felt,
-          boxShadow: `inset 0 0 60px rgba(0,0,0,0.4), 0 0 0 12px ${th.border}, 0 0 0 16px rgba(0,0,0,0.3)`,
+          boxShadow: `inset 0 0 72px rgba(0,0,0,0.48), 0 0 0 10px ${th.border}, 0 0 0 16px rgba(0,0,0,0.28)`,
         }} />
 
         {/* Felt texture overlay */}
         <div style={{
           position: 'absolute',
-          top: '8%', left: '6%', right: '6%', bottom: '16%',
+          top: '6%', left: '4%', right: '4%', bottom: '12%',
           borderRadius: '50%',
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")`,
           opacity: 0.5,
           pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute',
+          top: '44%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 180,
+          height: 180,
+          borderRadius: '50%',
+          border: '1px dashed rgba(255,255,255,0.15)',
+          pointerEvents: 'none',
+          zIndex: 1,
         }} />
 
         {/* ── Drop zone (entire felt area — shown while dragging) ── */}
@@ -1204,7 +1534,7 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
             onDrop={(e) => { e.preventDefault(); handleDrop(); }}
             style={{
               position: 'absolute',
-              top: '8%', left: '6%', right: '6%', bottom: '16%',
+              top: '6%', left: '4%', right: '4%', bottom: '12%',
               borderRadius: '50%',
               zIndex: 13,
               border: dropActive
@@ -1244,14 +1574,14 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           const isCurrent = round === currentRoundNum && !!currentRound[alias];
           return (
             <PlayedCardOnFelt
-              key={`hist-${alias}-${round}`}
+              key={`hist-${alias}-${round}-${card.suit}-${card.value}`}
               card={card}
               x={x} y={y}
               rot={pos.rot}
               alias={alias}
               isMe={alias === myAlias}
               dimmed={!isCurrent}
-              roundIdx={round - 1}
+              roundIdx={round}
             />
           );
         })}
@@ -1275,7 +1605,7 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
               alias={alias}
               isMe={alias === myAlias}
               dimmed={false}
-              roundIdx={(view.round as number) - 1}
+              roundIdx={view.round as number}
             />
           );
         })}
@@ -1336,9 +1666,16 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
         }}>
           <span>Mano Nº {view.handNum}</span>
-          <span>Ronda {view.round}/3</span>
+          <span>Ronda {(view.round ?? 0) + 1}/3</span>
           <span style={{ color: 'rgba(255,255,255,0.25)' }}>Dealer: {view.dealerAlias}</span>
         </div>
+
+        {/* ── Turn timer ── */}
+        {view.phase === 'playing' && (
+          <div style={{ position: 'absolute', top: isHost ? 52 : 10, right: 10, zIndex: 20 }}>
+            <TurnTimer seconds={turnTimer} />
+          </div>
+        )}
 
         {/* ── Envido result chip ── */}
         {view.envidoStatus !== 'available' && view.envidoResult && (
@@ -1353,6 +1690,18 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           </div>
         )}
 
+        <CallLogPanel
+          envidoChain={envidoChain}
+          trucoChain={trucoChain}
+          envidoStatus={view.envidoStatus}
+          envidoResult={view.envidoResult}
+          trucoStatus={view.trucoStatus}
+          trucoAccepted={view.trucoAccepted}
+          logLines={callHistory}
+          envidoLastResponse={view.envidoLastResponse}
+          trucoLastResponse={view.trucoLastResponse}
+        />
+
         {/* ── Opponents around the table ── */}
         {opponentSeats.map((alias, i) => {
           const pos = positions[i + 1];
@@ -1362,6 +1711,7 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           const count   = cardCounts[alias] ?? 0;
           const isCurr  = view.currentTurnAlias === alias;
 
+          const bubble = callBubbles[alias];
           return (
             <div key={alias} style={{
               position: 'absolute',
@@ -1369,14 +1719,17 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
               transform: 'translate(-50%, -50%)',
               zIndex: 10,
             }}>
-              <PlayerSlot
-                alias={alias}
-                cardCount={count}
-                isMyTeam={isMine}
-                isCurrentTurn={isCurr}
-                rot={pos.rot}
-                themeText={th.text}
-              />
+              <div style={{ position: 'relative' }}>
+                {bubble && <PlayerCallBubble key={bubble.id} text={bubble.text} color={bubble.color} />}
+                <PlayerSlot
+                  alias={alias}
+                  cardCount={count}
+                  isMyTeam={isMine}
+                  isCurrentTurn={isCurr}
+                  rot={pos.rot}
+                  themeText={th.text}
+                />
+              </div>
             </div>
           );
         })}
@@ -1458,21 +1811,13 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-          padding: '0 20px 14px',
+          padding: '0 20px 12px',
           zIndex: 20,
         }}>
-          {/* Action panel */}
-          <ActionPanel
-            view={view}
-            myAlias={myAlias}
-            myTeam={myTeam}
-            onAction={sendTrucoAction}
-          />
-
           {/* My cards */}
           <div style={{
             display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-            gap: 12, padding: '8px 0 0',
+            gap: 14, padding: '8px 0 0',
           }}>
             {myHand.length === 0 ? (
               <div style={{
@@ -1532,6 +1877,14 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
                 : 'Arrastrá una carta al tapete, o hacé clic para seleccionar'}
             </div>
           )}
+
+          {/* Action panel — BELOW the cards */}
+          <ActionPanel
+            view={view}
+            myAlias={myAlias}
+            myTeam={myTeam}
+            onAction={sendTrucoAction}
+          />
         </div>
 
         {/* Animations */}
@@ -1542,17 +1895,17 @@ export function TrucoScreen({ sendTrucoAction, onSendReaction, onSendChat }: Pro
           @keyframes fadeIn     { from{opacity:0} to{opacity:1} }
           @keyframes cardLand   { from{opacity:0;transform:translate(-50%,-50%) scale(0.7)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
           @keyframes callBounce { 0%{opacity:0;transform:translateX(-50%) scale(0.7)} 60%{transform:translateX(-50%) scale(1.06)} 100%{opacity:1;transform:translateX(-50%) scale(1)} }
+          @keyframes bubblePop  { 0%{opacity:0;transform:translateX(-50%) scale(0.6)} 70%{transform:translateX(-50%) scale(1.08)} 100%{opacity:1;transform:translateX(-50%) scale(1)} }
         `}</style>
       </div>
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (no reactions in Truco — they distract from the game) ── */}
       <GameSidebar
         myScore={myScore}
         myAlias={myAlias}
         players={players}
         roomChat={roomChat}
         onSendChat={onSendChat}
-        onSendReaction={onSendReaction}
         showScores
       />
     </div>

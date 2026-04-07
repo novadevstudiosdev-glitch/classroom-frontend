@@ -74,6 +74,7 @@ export interface TrucoPlayerView {
   envidoChain: TrucoEnvidoCall[];
   envidoResponderTeam: 'A' | 'B' | null;
   envidoResult: TrucoEnvidoResult | null;
+  envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | string } | null;
   pendingShowEnvido: string[];
   myEnvidoValue: number;
   florStatus: 'none' | 'pending' | 'resolved';
@@ -85,6 +86,7 @@ export interface TrucoPlayerView {
   trucoResponderTeam: 'A' | 'B' | null;
   trucoPtsIfWon: number;
   trucoAccepted: boolean;
+  trucoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | string } | null;
   mazoTeam: 'A' | 'B' | null;
   myHand: TrucoCard[];
   opponentCardCounts: Record<string, number>;
