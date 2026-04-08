@@ -1,7 +1,5 @@
 ﻿
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        html{scroll-behavior:smooth}
-        body{overflow-x:hidden}
+        
         #starfield{position:fixed;inset:0;z-index:0;pointer-events:none}
         #hero-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
         .landing-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.9rem 5%;background:rgba(7,6,26,.5);backdrop-filter:blur(24px);transition:transform .35s ease,opacity .3s ease}

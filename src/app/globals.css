@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
 /* 🌌 VARIABLES GLOBALES */
 :root {
   --color-primary: #3054FF;
@@ -140,3 +157,4 @@ p {
     @apply inline-flex items-center gap-1 text-sm font-semibold text-red-300 transition-colors hover:text-red-200;
   }
 }
+
