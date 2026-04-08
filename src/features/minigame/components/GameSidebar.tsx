@@ -1,7 +1,9 @@
 'use client';
+import { useState, useRef } from 'react';
 import { CircularTimer } from './CircularTimer';
 import { ReactionBar } from './ReactionBar';
 import { ChatPanel } from './ChatPanel';
+import { useAudioEngine } from '../hooks/useAudioEngine';
 import type { PlayerInfo, ChatMessage } from '../types/game.types';
 
 interface Props {
@@ -29,6 +31,27 @@ export function GameSidebar({
   onSendChat, onSendReaction,
   timer, showAnswered = false, showScores = false,
 }: Props) {
+  const audio = useAudioEngine();
+  const [volume, setVolume] = useState<number>(() => audio.getVolume());
+  const [muted, setMuted] = useState(false);
+  const savedVol = useRef(volume);
+
+  const applyVolume = (v: number) => {
+    setVolume(v);
+    setMuted(v === 0);
+    audio.setVolume(v);
+    if (v > 0) savedVol.current = v;
+  };
+
+  const toggleMute = () => {
+    if (muted) {
+      applyVolume(savedVol.current > 0 ? savedVol.current : 70);
+    } else {
+      savedVol.current = volume;
+      applyVolume(0);
+    }
+  };
+
   return (
     <div style={{
       width: 256, flexShrink: 0,
@@ -76,6 +99,34 @@ export function GameSidebar({
             />
           </div>
         )}
+      </div>
+
+      {/* ── Volume control ── */}
+      <div style={{
+        flexShrink: 0, padding: '10px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.045)',
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <button
+          onClick={toggleMute}
+          style={{
+            flexShrink: 0, width: 28, height: 28, borderRadius: 8,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+            color: muted ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)',
+            cursor: 'pointer', fontSize: 14, display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          {muted || volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}
+        </button>
+        <input
+          type="range" min={0} max={100} step={5} value={volume}
+          onChange={(e) => applyVolume(Number(e.target.value))}
+          style={{ flex: 1, accentColor: '#6366f1', cursor: 'pointer', height: 4 }}
+        />
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.25)', width: 24, textAlign: 'right' }}>
+          {Math.round(volume)}
+        </span>
       </div>
 
       {/* ── Players ── */}

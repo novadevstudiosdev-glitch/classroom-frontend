@@ -7,15 +7,10 @@ import { useMinigameStore } from '../store/minigame.store';
 import { useAudioEngine } from './useAudioEngine';
 import type { GameType, PlayerInfo, ScoreboardEntry } from '../types/game.types';
 
-// WebSocket base URL — mirrors lobby.html logic
+// WebSocket base URL
 function getWsBase(): string {
-  if (typeof window === 'undefined') return 'http://localhost:3000';
-  const { hostname, protocol } = window.location;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `${protocol}//${hostname}:3000`;
-  }
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-  return apiUrl.replace('/api', '') || 'https://classroom-backend.up.railway.app';
+  return apiUrl.replace(/\/api$/, '') || 'https://classroom-backend.up.railway.app';
 }
 
 const OPT_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4'];
@@ -70,7 +65,7 @@ export function useGameSocket() {
     const token = tokenStorage.getAccessToken() ?? '';
     const socket = io(`${getWsBase()}/game`, {
       path: '/socket.io',
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnectionAttempts: 5,
       forceNew: true,
       auth: { token },
@@ -377,7 +372,6 @@ export function useGameSocket() {
     socket.on('round-end', (d: { correctOptionId: string; scoreboard: ScoreboardEntry[] }) => {
       getStore().setQuiz({ correctOptionId: d.correctOptionId, answered: true });
       getStore().setRoundScoreboard(d.scoreboard);
-      setTimeout(() => getStore().setScreen('round-end'), 800);
     });
 
     socket.on('game-over', (d: { scoreboard: ScoreboardEntry[] }) => {
