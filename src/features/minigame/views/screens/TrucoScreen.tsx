@@ -11,6 +11,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTrucoAction: (action: { type: string; [k: string]: any }) => void;
   onSendChat: (text: string) => void;
+  onExitGame: () => void;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1146,7 +1147,7 @@ function CallNotification({
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN TRUCO SCREEN
 ═══════════════════════════════════════════════════════════════════════════ */
-export function TrucoScreen({ sendTrucoAction, onSendChat }: Props) {
+export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) {
   const myAlias  = useMinigameStore(s => s.myAlias);
   const isHost   = useMinigameStore(s => s.isHost);
   const players  = useMinigameStore(s => s.players);
@@ -1491,6 +1492,19 @@ export function TrucoScreen({ sendTrucoAction, onSendChat }: Props) {
         flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden',
         background: th.bg,
       }}>
+        {/* ── Exit button ── */}
+        <button
+          onClick={onExitGame}
+          style={{
+            position: 'absolute', top: 10, right: 10, zIndex: 30,
+            padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
+            background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.12)',
+            color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+          }}
+        >
+          Salir
+        </button>
+
         {/* Felt oval */}
         <div style={{
           position: 'absolute',
