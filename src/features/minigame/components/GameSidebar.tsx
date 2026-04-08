@@ -10,13 +10,11 @@ interface Props {
   players: PlayerInfo[];
   roomChat: ChatMessage[];
   onSendChat: (t: string) => void;
-  onSendReaction?: (emoji: string) => void; // optional — omit to hide the reaction bar
-  /** If provided, renders the circular timer at the top of the sidebar */
+  onSendReaction?: (emoji: string) => void;
   timer?: { key: string | number; durationMs: number; onExpire?: () => void };
-  /** Show the green dot per player when they've answered */
   showAnswered?: boolean;
-  /** Show each player's score instead of answered status */
   showScores?: boolean;
+  variant?: 'default' | 'truco';
 }
 
 const AVATAR_PALETTE = [
@@ -28,43 +26,86 @@ export function GameSidebar({
   myScore, myAlias, players, roomChat,
   onSendChat, onSendReaction,
   timer, showAnswered = false, showScores = false,
+  variant = 'default',
 }: Props) {
+  const isTruco = variant === 'truco';
+
   return (
     <div style={{
-      width: 256, flexShrink: 0,
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      borderLeft: '1px solid rgba(255,255,255,0.045)',
-      background: 'rgba(0,0,0,0.25)',
+      width: isTruco ? 300 : 256,
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      borderLeft: isTruco ? '1px solid rgba(115,140,185,0.2)' : '1px solid rgba(255,255,255,0.045)',
+      background: isTruco
+        ? 'linear-gradient(180deg, #0d182b 0%, #0a1324 45%, #060d1a 100%)'
+        : 'rgba(0,0,0,0.25)',
+      boxShadow: isTruco ? 'inset 0 0 0 1px rgba(30,54,92,0.28)' : undefined,
     }}>
-
-      {/* ── Score + Timer block ── */}
       <div style={{
-        flexShrink: 0, padding: '14px 16px',
-        borderBottom: '1px solid rgba(255,255,255,0.045)',
-        display: 'flex', flexDirection: 'column', gap: 12,
+        flexShrink: 0,
+        padding: '14px 16px',
+        borderBottom: isTruco ? '1px solid rgba(130,163,212,0.12)' : '1px solid rgba(255,255,255,0.045)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
       }}>
-        {/* My score */}
+        {isTruco && (
+          <div style={{
+            fontSize: 36,
+            lineHeight: 1,
+            fontWeight: 800,
+            color: 'rgba(255,255,255,0.95)',
+            letterSpacing: '-0.03em',
+            marginBottom: 2,
+          }}>
+            Chat mesa
+          </div>
+        )}
+
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.06))',
-          border: '1px solid rgba(99,102,241,0.2)',
-          borderRadius: 12, padding: '10px 14px',
+          background: isTruco
+            ? 'linear-gradient(135deg, rgba(29,53,97,0.75), rgba(20,38,72,0.72))'
+            : 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.06))',
+          border: isTruco ? '1px solid rgba(126,166,226,0.4)' : '1px solid rgba(99,102,241,0.2)',
+          borderRadius: 12,
+          padding: '10px 14px',
         }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(99,102,241,0.6)', marginBottom: 3 }}>
+            <div style={{
+              fontSize: 10,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: isTruco ? 'rgba(156,190,246,0.72)' : 'rgba(99,102,241,0.6)',
+              marginBottom: 3,
+            }}>
               Mi puntaje
             </div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#f8fafc', lineHeight: 1, letterSpacing: '-0.03em' }}>
+            <div style={{
+              fontSize: 26,
+              fontWeight: 900,
+              color: '#f8fafc',
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+            }}>
               {myScore.toLocaleString()}
             </div>
           </div>
-          <div style={{ fontSize: 28, opacity: 0.6 }}>🏆</div>
+          <div style={{ fontSize: 28, opacity: isTruco ? 0.8 : 0.6 }}>{'\uD83C\uDFC6'}</div>
         </div>
 
-        {/* Timer */}
         {timer && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.2)' }}>
+            <div style={{
+              fontSize: 10,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: isTruco ? 'rgba(176,205,248,0.45)' : 'rgba(255,255,255,0.2)',
+            }}>
               Tiempo
             </div>
             <CircularTimer
@@ -78,53 +119,89 @@ export function GameSidebar({
         )}
       </div>
 
-      {/* ── Players ── */}
       <div style={{
-        flexShrink: 0, padding: '12px 16px',
-        borderBottom: '1px solid rgba(255,255,255,0.045)',
-        maxHeight: 200, overflowY: 'auto',
+        flexShrink: 0,
+        padding: '12px 16px',
+        borderBottom: isTruco ? '1px solid rgba(130,163,212,0.12)' : '1px solid rgba(255,255,255,0.045)',
+        maxHeight: 200,
+        overflowY: 'auto',
       }}>
-        <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.18)', marginBottom: 8 }}>
-          Jugadores · {players.length}
+        <div style={{
+          fontSize: 10,
+          fontWeight: 800,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          color: isTruco ? 'rgba(176,205,248,0.45)' : 'rgba(255,255,255,0.18)',
+          marginBottom: 8,
+        }}>
+          Jugadores - {players.length}
         </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {players.map((p, i) => {
             const isMe = p.alias === myAlias;
             const color = AVATAR_PALETTE[i % AVATAR_PALETTE.length];
+
             return (
               <div key={`${p.alias}-${i}`} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '5px 8px', borderRadius: 8,
-                background: isMe ? 'rgba(99,102,241,0.08)' : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '5px 8px',
+                borderRadius: 8,
+                background: isMe
+                  ? (isTruco ? 'rgba(86,125,193,0.22)' : 'rgba(99,102,241,0.08)')
+                  : 'transparent',
               }}>
-                {/* Avatar */}
                 <div style={{
-                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  width: 26,
+                  height: 26,
+                  borderRadius: 8,
+                  flexShrink: 0,
                   background: color + '28',
                   border: `1px solid ${color}44`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 900, color: color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  fontWeight: 900,
+                  color,
                 }}>
                   {p.alias[0]?.toUpperCase()}
                 </div>
-                {/* Name */}
+
                 <div style={{
-                  flex: 1, minWidth: 0,
-                  fontSize: 12, fontWeight: isMe ? 700 : 600,
-                  color: isMe ? '#a5b4fc' : 'rgba(255,255,255,0.55)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 12,
+                  fontWeight: isMe ? 700 : 600,
+                  color: isMe
+                    ? (isTruco ? '#d7e7ff' : '#a5b4fc')
+                    : (isTruco ? 'rgba(214,229,255,0.72)' : 'rgba(255,255,255,0.55)'),
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}>
                   {p.alias}
                 </div>
-                {/* Score or answered */}
+
                 {showScores && (
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
+                  <div style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: isTruco ? 'rgba(181,206,245,0.55)' : 'rgba(255,255,255,0.3)',
+                    flexShrink: 0,
+                  }}>
                     {(p.score ?? 0).toLocaleString()}
                   </div>
                 )}
+
                 {showAnswered && (
                   <div style={{
-                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    flexShrink: 0,
                     background: p.answered ? '#10b981' : 'rgba(255,255,255,0.12)',
                     boxShadow: p.answered ? '0 0 6px rgba(16,185,129,0.6)' : 'none',
                     transition: 'all .3s',
@@ -136,19 +213,39 @@ export function GameSidebar({
         </div>
       </div>
 
-      {/* ── Chat (flex-1) ── */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '12px 16px 10px', gap: 8, overflow: 'hidden' }}>
-        <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.18)', flexShrink: 0 }}>
-          Chat
-        </div>
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '12px 16px 10px',
+        gap: 8,
+        overflow: 'hidden',
+      }}>
+        {!isTruco && (
+          <div style={{
+            fontSize: 10,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: 'rgba(255,255,255,0.18)',
+            flexShrink: 0,
+          }}>
+            Chat
+          </div>
+        )}
+
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <ChatPanel messages={roomChat} onSend={onSendChat} placeholder="Mensaje..." grow />
         </div>
       </div>
 
-      {/* ── Reactions (only when handler is provided) ── */}
       {onSendReaction && (
-        <div style={{ flexShrink: 0, padding: '8px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.045)' }}>
+        <div style={{
+          flexShrink: 0,
+          padding: '8px 16px 14px',
+          borderTop: isTruco ? '1px solid rgba(130,163,212,0.12)' : '1px solid rgba(255,255,255,0.045)',
+        }}>
           <ReactionBar onReact={onSendReaction} />
         </div>
       )}
