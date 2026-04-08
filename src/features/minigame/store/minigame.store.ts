@@ -7,8 +7,11 @@ const defaultQuiz: QuizState = {
   currentIndex: 0,
   totalQuestions: 0,
   answered: false,
+  answerCorrect: null,
   selectedOptionId: null,
+  submittedAnswer: null,
   correctOptionId: null,
+  correctAnswer: null,
   timeLimitMs: 20000,
   myScore: 0,
 };
@@ -25,6 +28,8 @@ const defaultWordSearch: WordSearchState = {
 };
 
 const defaultAnagram: AnagramState = {
+  words: [],
+  currentWordIndex: 0,
   word: '',
   hint: '',
   scrambled: [],
@@ -104,7 +109,21 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   setRoomInfo: (roomCode, roomName) => set({ roomCode, roomName }),
 
   setPlayers: (players: PlayerInfo[], hostAlias: string) =>
-    set({ players, hostAlias }),
+    set((s) => {
+      const prevByAlias = new Map(s.players.map((p) => [p.alias, p]));
+      const merged = players.map((p) => {
+        const prev = prevByAlias.get(p.alias);
+        return {
+          ...prev,
+          ...p,
+          answered: p.answered ?? prev?.answered,
+          finished: p.finished ?? prev?.finished,
+          correct: p.correct ?? prev?.correct,
+          rank: p.rank ?? prev?.rank,
+        };
+      });
+      return { players: merged, hostAlias };
+    }),
 
   setRooms: (rooms: RoomInfo[]) => set({ rooms }),
   setOnlineUsers: (users) => set({ onlineUsers: users }),

@@ -369,83 +369,6 @@ function buildSeating(
   return [...order.slice(myIdx), ...order.slice(0, myIdx)];
 }
 
-function CallLogPanel({
-  envidoChain,
-  trucoChain,
-  envidoStatus,
-  envidoResult,
-  trucoStatus,
-  trucoAccepted,
-  logLines,
-  envidoLastResponse,
-  trucoLastResponse,
-}: {
-  envidoChain: Array<{ alias: string; type: string }>;
-  trucoChain: Array<{ alias: string; type: string }>;
-  envidoStatus: string;
-  envidoResult: { winnerAlias?: string; winnerTeam?: 'A' | 'B'; pts?: number } | null;
-  trucoStatus: string;
-  trucoAccepted: boolean;
-  logLines: string[];
-  envidoLastResponse: { alias: string; response: string } | null;
-  trucoLastResponse: { alias: string; response: string } | null;
-}) {
-  const lastEnvido = envidoChain[envidoChain.length - 1];
-  const lastTruco = trucoChain[trucoChain.length - 1];
-  const envidoName = (t: string) => t === 'realenvido' ? 'Real Envido' : t === 'faltaenvido' ? 'Falta Envido' : 'Envido';
-  const trucoName = (t: string) => t === 'retruco' ? 'Retruco' : t === 'valecuatro' ? 'Vale Cuatro' : 'Truco';
-
-  return (
-    <div style={{
-      position: 'absolute', top: 56, left: 16, zIndex: 24,
-      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 10, padding: '8px 10px',
-      minWidth: 280,
-      maxWidth: 340,
-      display: 'flex', flexDirection: 'column', gap: 5,
-    }}>
-      <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em' }}>
-        CANTOS
-      </div>
-      <div style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700 }}>
-        Envido: {lastEnvido ? `${lastEnvido.alias} cantó ${envidoName(lastEnvido.type)}` : '—'}
-      </div>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
-        {envidoStatus === 'pending' ? 'Respuesta: pendiente'
-          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoLastResponse.response === 'noquiero' ? 'No Quiero' : envidoLastResponse.response === 'quiero' ? 'Quiero' : envidoLastResponse.response}`
-          : envidoResult ? `Resultado: ${envidoResult.winnerAlias ?? 'equipo ganador'} (${envidoResult.pts ?? 0} pts)`
-          : 'Resultado: —'}
-      </div>
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
-      <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
-        Truco: {lastTruco ? `${lastTruco.alias} cantó ${trucoName(lastTruco.type)}` : '—'}
-      </div>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
-        {trucoStatus === 'pending' ? 'Respuesta: pendiente'
-          : trucoLastResponse ? `Respuesta: ${trucoLastResponse.alias} dijo ${trucoLastResponse.response === 'noquiero' ? 'No Quiero' : trucoLastResponse.response === 'quiero' ? 'Quiero' : trucoLastResponse.response}`
-          : lastTruco ? (trucoAccepted ? 'Respuesta: Quiero' : 'Respuesta: No Quiero')
-          : 'Respuesta: —'}
-      </div>
-      {logLines.length > 0 && (
-        <>
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em' }}>
-            HISTORIAL
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 112, overflowY: 'auto' }}>
-            {logLines.slice(-6).reverse().map((line, i) => (
-              <div key={`${line}-${i}`} style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)' }}>
-                {line}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    ACTION BUTTON STYLE HELPERS
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -1703,18 +1626,6 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
             Envido: {view.envidoResult.winnerTeam === myTeam ? '+' : '-'}{view.envidoResult.pts} pts
           </div>
         )}
-
-        <CallLogPanel
-          envidoChain={envidoChain}
-          trucoChain={trucoChain}
-          envidoStatus={view.envidoStatus}
-          envidoResult={view.envidoResult}
-          trucoStatus={view.trucoStatus}
-          trucoAccepted={view.trucoAccepted}
-          logLines={callHistory}
-          envidoLastResponse={view.envidoLastResponse}
-          trucoLastResponse={view.trucoLastResponse}
-        />
 
         {/* ── Opponents around the table ── */}
         {opponentSeats.map((alias, i) => {

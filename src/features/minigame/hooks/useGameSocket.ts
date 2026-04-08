@@ -5,7 +5,7 @@ import { tokenStorage } from '@/lib/axios/token-storage';
 import { useAuthStore } from '@/store/auth/auth.store';
 import { useMinigameStore } from '../store/minigame.store';
 import { useAudioEngine } from './useAudioEngine';
-import type { GameType, PlayerInfo, ScoreboardEntry } from '../types/game.types';
+import type { GameType, PlayerInfo, ScoreboardEntry, QuizQuestion } from '../types/game.types';
 
 // WebSocket base URL
 function getWsBase(): string {
@@ -251,6 +251,15 @@ export function useGameSocket() {
 
     socket.on('game-started', (d: { gameType: string; totalQuestions?: number; gameData?: unknown; timeLimitMs?: number; players?: PlayerInfo[]; turnAlias?: string }) => {
       getStore().resetGame();
+      // Reset per-round/per-game UI flags
+      const s0 = getStore();
+      s0.setRoundScoreboard([]);
+      if (s0.players.length) {
+        s0.setPlayers(
+          s0.players.map((p) => ({ ...p, answered: false, finished: false })),
+          s0.hostAlias,
+        );
+      }
       const type = d.gameType as GameType;
 
       if (type === 'quiz') {
@@ -272,10 +281,19 @@ export function useGameSocket() {
         startCountdown(() => getStore().setScreen('wordsearch'));
         audio.start();
       } else if (type === 'anagram') {
-        const gd = d.gameData as { word: string; hint?: string };
-        const word = (gd.word ?? '').toUpperCase();
+        const gd = d.gameData as { word?: string; words?: string[]; hint?: string };
+        const normalize = (w: string) => w.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑÜ]/g, '');
+        const pool = Array.isArray(gd.words) ? gd.words.map((w) => normalize(String(w ?? ''))).filter(Boolean) : [];
+        const direct = normalize(String(gd.word ?? ''));
+        const words = [
+          ...(direct ? [direct] : []),
+          ...pool.filter((w) => w !== direct),
+        ];
+        const word = words[0] ?? '';
         const scrambled = shuffleArray(word.split(''));
         getStore().setAnagram({
+          words,
+          currentWordIndex: 0,
           word,
           hint: gd.hint ?? '',
           scrambled,
@@ -344,33 +362,55 @@ export function useGameSocket() {
       }
     });
 
-    socket.on('question', (d: { index: number; total: number; question: { text: string; options: { id: string; text: string }[]; time_limit_ms?: number }; timeLimitMs: number }) => {
+    socket.on('question', (d: { index: number; total: number; question: QuizQuestion; timeLimitMs: number }) => {
+      const s = getStore();
+      if (s.players.length) {
+        s.setPlayers(
+          s.players.map((p) => ({ ...p, answered: false })),
+          s.hostAlias,
+        );
+      }
       getStore().setQuiz({
         currentQuestion: d.question,
         currentIndex: d.index,
         totalQuestions: d.total,
         answered: false,
+        answerCorrect: null,
         selectedOptionId: null,
+        submittedAnswer: null,
         correctOptionId: null,
+        correctAnswer: null,
         timeLimitMs: d.timeLimitMs,
       });
     });
 
-    socket.on('answer-result', (d: { correct: boolean; correctOptionId: string; score: number }) => {
+    socket.on('answer-result', (d: { questionType?: string; correct: boolean; correctOptionId?: string; correctAnswer?: unknown; score: number }) => {
       if (d.correct) audio.correct(); else audio.wrong();
       getStore().setQuiz({
         answered: true,
-        correctOptionId: d.correctOptionId,
+        answerCorrect: d.correct,
+        correctOptionId: d.correctOptionId ? d.correctOptionId : null,
+        correctAnswer: typeof d.correctAnswer === 'undefined' ? null : d.correctAnswer,
         myScore: d.score,
       });
     });
 
     socket.on('player-answered', (_d: { alias: string }) => {
-      // UI handles this via players list
+      const s = getStore();
+      const alias = _d.alias;
+      if (!alias) return;
+      s.setPlayers(
+        s.players.map((p) => (p.alias === alias ? { ...p, answered: true } : p)),
+        s.hostAlias,
+      );
     });
 
-    socket.on('round-end', (d: { correctOptionId: string; scoreboard: ScoreboardEntry[] }) => {
-      getStore().setQuiz({ correctOptionId: d.correctOptionId, answered: true });
+    socket.on('round-end', (d: { questionType?: string; correctOptionId?: string; correctAnswer?: unknown; scoreboard: ScoreboardEntry[] }) => {
+      getStore().setQuiz({
+        correctOptionId: d.correctOptionId ? d.correctOptionId : null,
+        correctAnswer: typeof d.correctAnswer === 'undefined' ? null : d.correctAnswer,
+        answered: true,
+      });
       getStore().setRoundScoreboard(d.scoreboard);
     });
 
@@ -383,19 +423,69 @@ export function useGameSocket() {
     // ── Wordsearch events ──
 
     socket.on('word-found', (d: { word: string; alias: string; cells: { r: number; c: number }[]; colorIndex: number; points: number; scoreboard?: ScoreboardEntry[] }) => {
-      const ws = getStore().wordSearch;
-      getStore().setWordSearch({
+      const s = getStore();
+      const ws = s.wordSearch;
+      const sb = d.scoreboard ?? ws.scoreboard;
+      const myEntry = sb.find((e) => e.alias === s.myAlias);
+
+      s.setWordSearch({
         foundWords: {
           ...ws.foundWords,
           [d.word]: { alias: d.alias, cells: d.cells, colorIndex: d.colorIndex },
         },
-        scoreboard: d.scoreboard ?? ws.scoreboard,
+        scoreboard: sb,
+        myScore: myEntry?.score ?? ws.myScore,
       });
+
+      if (sb.length) {
+        const byAlias = new Map(sb.map((e) => [e.alias, e]));
+        s.setPlayers(
+          s.players.map((p) => {
+            const e = byAlias.get(p.alias);
+            return e ? { ...p, score: e.score, rank: e.rank } : p;
+          }),
+          s.hostAlias,
+        );
+        s.setRoundScoreboard(sb);
+      }
     });
 
     socket.on('player-finished', (d: { alias: string; score: number; scoreboard: ScoreboardEntry[] }) => {
-      getStore().setWordSearch({ scoreboard: d.scoreboard });
-      getStore().setAnagram({ myScore: getStore().anagram.myScore });
+      const s = getStore();
+      const sb = d.scoreboard ?? [];
+
+      if (sb.length) {
+        const byAlias = new Map(sb.map((e) => [e.alias, e]));
+        s.setPlayers(
+          s.players.map((p) => {
+            const e = byAlias.get(p.alias);
+            const isFin = p.alias === d.alias;
+            return {
+              ...p,
+              score: e?.score ?? p.score,
+              rank: e?.rank ?? p.rank,
+              answered: isFin ? true : p.answered,
+              finished: isFin ? true : p.finished,
+            };
+          }),
+          s.hostAlias,
+        );
+        s.setRoundScoreboard(sb);
+
+        const myEntry = sb.find((e) => e.alias === s.myAlias);
+        if (myEntry) {
+          if (s.currentGameType === 'wordsearch') {
+            s.setWordSearch({ scoreboard: sb, myScore: myEntry.score });
+          } else if (s.currentGameType === 'anagram') {
+            s.setAnagram({ myScore: myEntry.score });
+          }
+        }
+      } else {
+        s.setPlayers(
+          s.players.map((p) => (p.alias === d.alias ? { ...p, answered: true, finished: true } : p)),
+          s.hostAlias,
+        );
+      }
     });
 
     // ── Preguntados events ──
@@ -529,9 +619,14 @@ export function useGameSocket() {
     emit('react', { emoji });
   }, [emit]);
 
-  const submitAnswer = useCallback((optionId: string) => {
-    getStore().setQuiz({ answered: true, selectedOptionId: optionId });
-    emit('submit-answer', { optionId });
+  const submitAnswer = useCallback((answer: string | Record<string, unknown>) => {
+    if (typeof answer === 'string') {
+      getStore().setQuiz({ answered: true, selectedOptionId: answer, submittedAnswer: null });
+      emit('submit-answer', { optionId: answer });
+      return;
+    }
+    getStore().setQuiz({ answered: true, selectedOptionId: null, submittedAnswer: answer });
+    emit('submit-answer', answer);
   }, [emit, getStore]);
 
   const findWord = useCallback((word: string, cells: { r: number; c: number }[]) => {

@@ -4,10 +4,10 @@ import { GameSidebar } from '../../components/GameSidebar';
 
 interface Props {
   onSendChat: (text: string) => void;
-  onSendReaction: (emoji: string) => void;
+  onExitGame?: () => void;
 }
 
-export function WaitingScreen({ onSendChat, onSendReaction }: Props) {
+export function WaitingScreen({ onSendChat, onExitGame }: Props) {
   const myAlias  = useMinigameStore((s) => s.myAlias);
   const players  = useMinigameStore((s) => s.players);
   const roomChat = useMinigameStore((s) => s.roomChat);
@@ -129,7 +129,7 @@ export function WaitingScreen({ onSendChat, onSendReaction }: Props) {
           players={players}
           roomChat={roomChat}
           onSendChat={onSendChat}
-          onSendReaction={onSendReaction}
+          onExitGame={onExitGame}
           showAnswered
         />
       </div>
