@@ -117,12 +117,47 @@ export interface QuizOption {
   text: string;
 }
 
-export interface QuizQuestion {
+export type QuizQuestionType = 'mcq' | 'true_false' | 'fill_blank' | 'match' | 'order';
+
+export interface QuizQuestionBase {
+  type?: QuizQuestionType;
   text: string;
-  options: QuizOption[];
   image_url?: string;
   time_limit_ms?: number;
 }
+
+export interface QuizQuestionMCQ extends QuizQuestionBase {
+  type?: 'mcq';
+  options: QuizOption[];
+}
+
+export interface QuizQuestionTrueFalse extends QuizQuestionBase {
+  type: 'true_false';
+  options: QuizOption[];
+}
+
+export interface QuizQuestionFillBlank extends QuizQuestionBase {
+  type: 'fill_blank';
+  placeholder?: string;
+}
+
+export interface QuizQuestionOrder extends QuizQuestionBase {
+  type: 'order';
+  items: string[];
+}
+
+export interface QuizQuestionMatch extends QuizQuestionBase {
+  type: 'match';
+  left: string[];
+  right: string[];
+}
+
+export type QuizQuestion =
+  | QuizQuestionMCQ
+  | QuizQuestionTrueFalse
+  | QuizQuestionFillBlank
+  | QuizQuestionOrder
+  | QuizQuestionMatch;
 
 export interface ScoreboardEntry {
   alias: string;
@@ -144,7 +179,8 @@ export interface WSGameData {
 }
 
 export interface AnagramGameData {
-  word: string;
+  word?: string;
+  words?: string[];
   hint?: string;
 }
 

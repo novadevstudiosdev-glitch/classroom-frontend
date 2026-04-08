@@ -1,15 +1,15 @@
 'use client';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMinigameStore } from '../../store/minigame.store';
 import { GameSidebar } from '../../components/GameSidebar';
 
 interface Props {
   onSubmitComplete: (score: number) => void;
-  onSendReaction: (emoji: string) => void;
   onSendChat: (text: string) => void;
+  onExitGame?: () => void;
 }
 
-export function AnagramScreen({ onSubmitComplete, onSendReaction, onSendChat }: Props) {
+export function AnagramScreen({ onSubmitComplete, onSendChat, onExitGame }: Props) {
   const myAlias  = useMinigameStore((s) => s.myAlias);
   const players  = useMinigameStore((s) => s.players);
   const roomChat = useMinigameStore((s) => s.roomChat);
@@ -17,11 +17,60 @@ export function AnagramScreen({ onSubmitComplete, onSendReaction, onSendChat }: 
   const setAnagram = useMinigameStore((s) => s.setAnagram);
   const submittedRef = useRef(false);
 
-  const { word, hint, scrambled, placed, tileToSlot, slotToTile, solved, timeLimitMs, myScore } = anagram;
+  const nextWordTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const {
+    words,
+    currentWordIndex,
+    word,
+    hint,
+    scrambled,
+    placed,
+    tileToSlot,
+    slotToTile,
+    solved,
+    timeLimitMs,
+    myScore,
+  } = anagram;
+
+  useEffect(() => {
+    return () => {
+      if (nextWordTimeoutRef.current) clearTimeout(nextWordTimeoutRef.current);
+      nextWordTimeoutRef.current = null;
+    };
+  }, []);
+
+  const shuffleLetters = (w: string) => {
+    const a = w.split('');
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const goToWord = (idx: number, score: number) => {
+    const list = words.length ? words : (word ? [word] : []);
+    const w = list[idx] ?? '';
+    if (!w) return;
+    setAnagram({
+      words: list,
+      currentWordIndex: idx,
+      word: w,
+      scrambled: shuffleLetters(w),
+      placed: Array(w.length).fill(null),
+      tileToSlot: {},
+      slotToTile: {},
+      solved: false,
+      myScore: score,
+    });
+  };
 
   const handleTimeExpire = () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
+    if (nextWordTimeoutRef.current) clearTimeout(nextWordTimeoutRef.current);
+    nextWordTimeoutRef.current = null;
     onSubmitComplete(myScore);
   };
 
@@ -49,11 +98,23 @@ export function AnagramScreen({ onSubmitComplete, onSendReaction, onSendChat }: 
     if (!filled.includes(null)) {
       const guess = filled.join('');
       if (guess === word) {
-        setAnagram({ solved: true });
-        if (!submittedRef.current) {
-          submittedRef.current = true;
-          onSubmitComplete(myScore + 100);
-        }
+        const nextScore = myScore + 100;
+        setAnagram({ solved: true, myScore: nextScore });
+
+        const list = words.length ? words : (word ? [word] : []);
+        const nextIdx = currentWordIndex + 1;
+        const isLast = nextIdx >= list.length;
+
+        if (nextWordTimeoutRef.current) clearTimeout(nextWordTimeoutRef.current);
+        nextWordTimeoutRef.current = setTimeout(() => {
+          if (submittedRef.current) return;
+          if (isLast) {
+            submittedRef.current = true;
+            onSubmitComplete(nextScore);
+            return;
+          }
+          goToWord(nextIdx, nextScore);
+        }, 650);
       }
     }
   };
@@ -86,6 +147,11 @@ export function AnagramScreen({ onSubmitComplete, onSendReaction, onSendChat }: 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🔀</span>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.7)' }}>Anagrama</span>
+          {(words.length > 0) && (
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.28)' }}>
+              {Math.min(currentWordIndex + 1, words.length)}/{words.length}
+            </span>
+          )}
         </div>
         {/* Progress */}
         <div style={{ flex: 1, maxWidth: 300, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -206,8 +272,8 @@ export function AnagramScreen({ onSubmitComplete, onSendReaction, onSendChat }: 
           players={players}
           roomChat={roomChat}
           onSendChat={onSendChat}
-          onSendReaction={onSendReaction}
-          timer={!solved ? { key: timeLimitMs, durationMs: timeLimitMs, onExpire: handleTimeExpire } : undefined}
+          onExitGame={onExitGame}
+          timer={{ key: timeLimitMs, durationMs: timeLimitMs, onExpire: handleTimeExpire }}
           showAnswered
         />
       </div>

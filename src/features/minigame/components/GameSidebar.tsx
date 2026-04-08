@@ -1,7 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
 import { CircularTimer } from './CircularTimer';
-import { ReactionBar } from './ReactionBar';
 import { ChatPanel } from './ChatPanel';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 import type { PlayerInfo, ChatMessage } from '../types/game.types';
@@ -12,7 +11,8 @@ interface Props {
   players: PlayerInfo[];
   roomChat: ChatMessage[];
   onSendChat: (t: string) => void;
-  onSendReaction?: (emoji: string) => void;
+  onExitGame?: () => void;
+  /** If provided, renders the circular timer at the top of the sidebar */
   timer?: { key: string | number; durationMs: number; onExpire?: () => void };
   showAnswered?: boolean;
   showScores?: boolean;
@@ -26,7 +26,7 @@ const AVATAR_PALETTE = [
 
 export function GameSidebar({
   myScore, myAlias, players, roomChat,
-  onSendChat, onSendReaction,
+  onSendChat, onExitGame,
   timer, showAnswered = false, showScores = false,
   variant = 'default',
 }: Props) {
@@ -291,13 +291,23 @@ export function GameSidebar({
         </div>
       </div>
 
-      {onSendReaction && (
-        <div style={{
-          flexShrink: 0,
-          padding: '8px 16px 14px',
-          borderTop: isTruco ? '1px solid rgba(130,163,212,0.12)' : '1px solid rgba(255,255,255,0.045)',
-        }}>
-          <ReactionBar onReact={onSendReaction} />
+      {/* ── Exit button ── */}
+      {onExitGame && (
+        <div style={{ flexShrink: 0, padding: '10px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.045)' }}>
+          <button
+            onClick={onExitGame}
+            style={{
+              width: '100%', padding: '8px 0', borderRadius: 10,
+              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+              color: '#f87171', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.02em',
+              transition: 'all .15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'; }}
+          >
+            Salir de la sala
+          </button>
         </div>
       )}
     </div>

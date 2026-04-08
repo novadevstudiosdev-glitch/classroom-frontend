@@ -140,21 +140,20 @@ export function MinigameLobbyView() {
                 onKickPlayer={socket.kickPlayer}
                 onPromotePlayer={socket.promotePlayer}
                 onSendChat={socket.sendChat}
-                onSendReaction={socket.sendReaction}
                 onDeleteGame={handleDeleteGame}
                 onRefreshGames={socket.getQuizzes}
               />
             )}
 
             {screen === 'countdown'  && <CountdownScreen />}
-            {screen === 'quiz'       && <QuizGameScreen onSubmitAnswer={socket.submitAnswer} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
-            {screen === 'wordsearch' && <WordSearchScreen onFindWord={socket.findWord} onSubmitComplete={socket.submitGameComplete} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
-            {screen === 'anagram'    && <AnagramScreen onSubmitComplete={socket.submitGameComplete} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
-            {screen === 'preguntados'&& <PreguntadosScreen onSpinWheel={socket.spinWheel} onSubmitPQAnswer={socket.submitPQAnswer} onSendReaction={socket.sendReaction} onSendChat={socket.sendChat} />}
+            {screen === 'quiz'       && <QuizGameScreen onSubmitAnswer={socket.submitAnswer} onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
+            {screen === 'wordsearch' && <WordSearchScreen onFindWord={socket.findWord} onSubmitComplete={socket.submitGameComplete} onSendChat={socket.sendChat} />}
+            {screen === 'anagram'    && <AnagramScreen onSubmitComplete={socket.submitGameComplete} onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
+            {screen === 'preguntados'&& <PreguntadosScreen onSpinWheel={socket.spinWheel} onSubmitPQAnswer={socket.submitPQAnswer} onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
             {screen === 'truco'      && <TrucoScreen sendTrucoAction={socket.sendTrucoAction} onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
-            {screen === 'waiting'    && <WaitingScreen onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}
-            {screen === 'round-end'  && <RoundEndScreen onContinue={() => socket.getRooms()} onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}
-            {screen === 'scoreboard' && <ScoreboardScreen onRestart={socket.restartRoom} onExit={socket.exitGame} onSendChat={socket.sendChat} onSendReaction={socket.sendReaction} />}
+            {screen === 'waiting'    && <WaitingScreen onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
+            {screen === 'round-end'  && <RoundEndScreen onContinue={() => socket.getRooms()} onSendChat={socket.sendChat} onExitGame={socket.exitGame} />}
+            {screen === 'scoreboard' && <ScoreboardScreen onRestart={socket.restartRoom} onExit={socket.exitGame} onSendChat={socket.sendChat} />}
           </motion.div>
         </AnimatePresence>
       </div>
