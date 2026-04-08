@@ -12,6 +12,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTrucoAction: (action: { type: string; [k: string]: any }) => void;
   onSendChat: (text: string) => void;
+  onExitGame: () => void;
 }
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -425,7 +426,7 @@ function ScorePanel({
   teamAScore, teamBScore, myTeam, maxPoints,
 }: {
   teamAScore: number; teamBScore: number; myTeam: 'A' | 'B'; maxPoints: number;
-}) {
+})
   const nosotros = myTeam === 'A' ? teamAScore : teamBScore;
   const ellos    = myTeam === 'A' ? teamBScore : teamAScore;
 
@@ -1017,8 +1018,8 @@ function CallNotification({
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN TRUCO SCREEN
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-export function TrucoScreen({ sendTrucoAction, onSendChat }: Props) {
+═══════════════════════════════════════════════════════════════════════════ */
+export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) {
   const myAlias  = useMinigameStore(s => s.myAlias);
   const isHost   = useMinigameStore(s => s.isHost);
   const players  = useMinigameStore(s => s.players);

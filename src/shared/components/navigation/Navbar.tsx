@@ -18,18 +18,34 @@ export default function Navbar() {
   };
 
   return (
-    <header className="top-0 left-0 w-full z-50">
-      <nav className="flex items-center justify-between px-6 md:px-12 py-3 bg-transparent">
+    <header style={{ position: 'relative', zIndex: 50 }}>
+      <nav className="flex items-center justify-between px-6 md:px-12 py-3">
         {/* LOGO */}
         <div className="flex items-center">
-          <Image src="/NOVI.png" alt="Logo Novi" width={150} height={150} loading="eager" className="object-contain cursor-pointer h-10 w-auto" onClick={() => router.push('/')} />
+          <Image
+            src="/NOVI.png"
+            alt="Logo Novi"
+            width={150}
+            height={150}
+            loading="eager"
+            className="object-contain cursor-pointer h-10 w-auto"
+            onClick={() => router.push('/')}
+          />
         </div>
 
         {/* DERECHA */}
-        <div className="relative">
+        <div style={{ position: 'relative' }}>
           {!isAuthenticated || !user ? (
             <Link href="/login">
-              <button className="px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300 text-sm">
+              <button
+                className="px-5 py-2 rounded-2xl text-white text-sm font-medium transition-all duration-300 hover:opacity-80"
+                style={{
+                  background: 'rgba(255,255,255,0.10)',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+              >
                 Iniciar sesión
               </button>
             </Link>
@@ -38,27 +54,63 @@ export default function Navbar() {
               <span className="text-white/70 text-sm hidden sm:block">{user.name}</span>
 
               {/* Avatar */}
-              <button onClick={() => setOpen(!open)} className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition">
+              <button
+                onClick={() => setOpen(!open)}
+                className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition"
+              >
                 {user.name?.[0]?.toUpperCase() ?? '?'}
               </button>
 
               {/* Dropdown */}
               {open && (
-                <div className="absolute right-0 top-11 w-44 bg-[#0d1117] border border-white/10 rounded-xl shadow-2xl py-1.5 z-50">
-                  <button
-                    onClick={() => {
-                      router.push('/perfil');
-                      setOpen(false);
+                <>
+                  {/* Overlay para cerrar al hacer clic afuera */}
+                  <div
+                    style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                    onClick={() => setOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute', right: 0, top: '2.75rem',
+                      width: 176, zIndex: 50,
+                      background: '#0d1117',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+                      padding: '6px 0',
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
                   >
-                    Mi perfil
-                  </button>
-                  <div className="my-1 border-t border-white/10" />
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
-                    Cerrar sesión
-                  </button>
-                </div>
+                    <button
+                      onClick={() => { router.push('/perfil'); setOpen(false); }}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '8px 16px', fontSize: 14,
+                        color: 'rgba(255,255,255,0.7)',
+                        background: 'none', border: 'none',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Mi perfil
+                    </button>
+                    <div style={{ margin: '4px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '8px 16px', fontSize: 14,
+                        color: '#f87171',
+                        background: 'none', border: 'none',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}

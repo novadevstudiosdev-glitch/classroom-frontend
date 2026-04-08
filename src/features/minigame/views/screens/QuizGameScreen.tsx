@@ -6,7 +6,6 @@ interface Props {
   onSubmitAnswer: (optionId: string) => void;
   onSendReaction: (emoji: string) => void;
   onSendChat: (text: string) => void;
-  onExitGame: () => void;
 }
 
 const OPT_COLORS = [
@@ -16,7 +15,7 @@ const OPT_COLORS = [
   { bg: 'rgba(16,185,129,0.14)',  border: 'rgba(16,185,129,0.4)',  solid: '#10b981', label: 'D' },
 ];
 
-export function QuizGameScreen({ onSubmitAnswer, onSendReaction, onSendChat, onExitGame }: Props) {
+export function QuizGameScreen({ onSubmitAnswer, onSendReaction, onSendChat }: Props) {
   const myAlias  = useMinigameStore((s) => s.myAlias);
   const isHost   = useMinigameStore((s) => s.isHost);
   const players  = useMinigameStore((s) => s.players);
@@ -69,13 +68,6 @@ export function QuizGameScreen({ onSubmitAnswer, onSendReaction, onSendChat, onE
             }}>
               {selectedOptionId === correctOptionId ? '✓ Correcto' : '✗ Incorrecto'}
             </div>
-          )}
-          {isHost && (
-            <button onClick={onExitGame} style={{
-              padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-              color: 'rgba(255,255,255,0.28)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-            }}>Salir</button>
           )}
         </div>
       </div>

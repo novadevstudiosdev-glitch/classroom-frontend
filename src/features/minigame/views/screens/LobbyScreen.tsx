@@ -59,7 +59,7 @@ export function LobbyScreen({
   const requiredPlayers = trucoConfig
     ? (trucoConfig.mode === '1v1' ? 2 : trucoConfig.mode === '2v2' ? 4 : 6)
     : 1;
-  const canStartTruco = isTrucoRoom && players.length === requiredPlayers;
+  const canStartTruco = isTrucoRoom && players.length >= 1;
 
   const filtered     = filter === 'all' ? availableGames : availableGames.filter((g) => g.type === filter);
   const canStart     = isTrucoRoom ? canStartTruco : (!!selectedId && players.length >= 1);
