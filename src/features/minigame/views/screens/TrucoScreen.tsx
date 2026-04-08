@@ -426,7 +426,7 @@ function ScorePanel({
   teamAScore, teamBScore, myTeam, maxPoints,
 }: {
   teamAScore: number; teamBScore: number; myTeam: 'A' | 'B'; maxPoints: number;
-})
+}) {
   const nosotros = myTeam === 'A' ? teamAScore : teamBScore;
   const ellos    = myTeam === 'A' ? teamBScore : teamAScore;
 

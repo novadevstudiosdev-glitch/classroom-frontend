@@ -10,7 +10,12 @@ import type { GameType, PlayerInfo, ScoreboardEntry } from '../types/game.types'
 // WebSocket base URL
 function getWsBase(): string {
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-  return apiUrl.replace(/\/api$/, '') || 'https://classroom-backend.up.railway.app';
+  return (
+    apiUrl
+      .replace(/\/api\/?$/, '')
+      .replace(/\/+$/, '') ||
+    'https://classroom-backend.up.railway.app'
+  );
 }
 
 const OPT_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4'];
