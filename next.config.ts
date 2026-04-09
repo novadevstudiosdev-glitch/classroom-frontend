@@ -1,12 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
+  async redirects() {
     return [
-      // Clean URL for solo mode
+      // Redirect all old static minigame HTML pages to the new React lobby
+      {
+        source: '/minigame/:file*.html',
+        destination: '/minigame/lobby',
+        permanent: false,
+      },
       {
         source: '/minigame/solo',
-        destination: '/minigame/index.html',
+        destination: '/minigame/lobby',
+        permanent: false,
       },
     ];
   },

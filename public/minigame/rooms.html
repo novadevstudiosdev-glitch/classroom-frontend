@@ -257,7 +257,8 @@ function enterLobby(){
 }
 
 function connectSocket(){
-  socket = io(SOCKET_URL+'/game',{transports:['websocket'],reconnection:false});
+  const token = localStorage.getItem('access_token') ?? '';
+  socket = io(SOCKET_URL+'/game',{transports:['websocket'],reconnection:false,auth:{token}});
 
   socket.on('connect',()=>{
     socket.emit('join-lobby',{alias:myAlias});
@@ -359,6 +360,9 @@ function goToLobby(roomCode, alias, isHost){
   sessionStorage.setItem('novi_room',roomCode);
   sessionStorage.setItem('novi_alias',alias);
   sessionStorage.setItem('novi_isHost',isHost?'1':'0');
+  // Pass JWT so lobby.html can authenticate the WebSocket
+  const token = localStorage.getItem('access_token') || '';
+  if(token) sessionStorage.setItem('novi_jwt', token);
   window.location.href = '/minigame/lobby.html';
 }
 

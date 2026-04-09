@@ -130,12 +130,16 @@ export async function registerParent(payload: RegisterParentRequest) {
 export async function refreshAccessToken(refreshToken: string) {
   const apiBaseUrl = getApiBaseUrl();
 
-  const response = await axios.post<RefreshApiResponse>(
+  const response = await axios.post<RefreshApiResponse | { data: RefreshApiResponse }>(
     `${apiBaseUrl}/auth/refresh`,
     { refresh_token: refreshToken }
   );
 
-  return normalizeTokens(response.data);
+  // The backend wraps all responses in { statusCode, message, data: {...} }
+  const payload =
+    (response.data as { data?: RefreshApiResponse }).data ?? (response.data as RefreshApiResponse);
+
+  return normalizeTokens(payload);
 }
 
 export function getGoogleAuthUrl() {

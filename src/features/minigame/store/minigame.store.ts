@@ -1,14 +1,17 @@
 import { create } from 'zustand';
 import type { MinigameStore, QuizState, WordSearchState, AnagramState, PreguntadosState } from '../types/store.types';
-import type { GameInstance, GameType, PlayerInfo, RoomInfo, ScoreboardEntry, ChatMessage } from '../types/game.types';
+import type { GameInstance, GameType, PlayerInfo, RoomInfo, ScoreboardEntry, ChatMessage, TrucoPlayerView, TrucoConfig } from '../types/game.types';
 
 const defaultQuiz: QuizState = {
   currentQuestion: null,
   currentIndex: 0,
   totalQuestions: 0,
   answered: false,
+  answerCorrect: null,
   selectedOptionId: null,
+  submittedAnswer: null,
   correctOptionId: null,
+  correctAnswer: null,
   timeLimitMs: 20000,
   myScore: 0,
 };
@@ -25,6 +28,8 @@ const defaultWordSearch: WordSearchState = {
 };
 
 const defaultAnagram: AnagramState = {
+  words: [],
+  currentWordIndex: 0,
   word: '',
   hint: '',
   scrambled: [],
@@ -71,6 +76,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   players: [],
   hostAlias: '',
   roomChat: [],
+  roomTrucoConfig: null,
 
   // ── Game selection ──
   availableGames: [],
@@ -84,6 +90,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   wordSearch: defaultWordSearch,
   anagram: defaultAnagram,
   preguntados: defaultPreguntados,
+  truco: null,
 
   // ── Shared ──
   roundScoreboard: [],
@@ -102,7 +109,21 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   setRoomInfo: (roomCode, roomName) => set({ roomCode, roomName }),
 
   setPlayers: (players: PlayerInfo[], hostAlias: string) =>
-    set({ players, hostAlias }),
+    set((s) => {
+      const prevByAlias = new Map(s.players.map((p) => [p.alias, p]));
+      const merged = players.map((p) => {
+        const prev = prevByAlias.get(p.alias);
+        return {
+          ...prev,
+          ...p,
+          answered: p.answered ?? prev?.answered,
+          finished: p.finished ?? prev?.finished,
+          correct: p.correct ?? prev?.correct,
+          rank: p.rank ?? prev?.rank,
+        };
+      });
+      return { players: merged, hostAlias };
+    }),
 
   setRooms: (rooms: RoomInfo[]) => set({ rooms }),
   setOnlineUsers: (users) => set({ onlineUsers: users }),
@@ -132,6 +153,9 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
   setPreguntados: (partial) =>
     set((s) => ({ preguntados: { ...s.preguntados, ...partial } })),
 
+  setRoomTrucoConfig: (config: TrucoConfig | null) => set({ roomTrucoConfig: config }),
+  setTruco: (view: TrucoPlayerView | null) => set({ truco: view }),
+
   setRoundScoreboard: (sb: ScoreboardEntry[]) => set({ roundScoreboard: sb }),
   setFinalScoreboard: (sb: ScoreboardEntry[]) => set({ finalScoreboard: sb }),
 
@@ -147,6 +171,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
       players: [],
       hostAlias: '',
       roomChat: [],
+      roomTrucoConfig: null,
       selectedInstanceId: null,
       selectedGameTitle: '',
       currentGameType: 'quiz',
@@ -161,6 +186,7 @@ export const useMinigameStore = create<MinigameStore>((set) => ({
       wordSearch: defaultWordSearch,
       anagram: defaultAnagram,
       preguntados: defaultPreguntados,
+      truco: null,
       roundScoreboard: [],
       finalScoreboard: [],
     }),

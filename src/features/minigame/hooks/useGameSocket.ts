@@ -5,17 +5,17 @@ import { tokenStorage } from '@/lib/axios/token-storage';
 import { useAuthStore } from '@/store/auth/auth.store';
 import { useMinigameStore } from '../store/minigame.store';
 import { useAudioEngine } from './useAudioEngine';
-import type { GameType, PlayerInfo, ScoreboardEntry } from '../types/game.types';
+import type { GameType, PlayerInfo, ScoreboardEntry, QuizQuestion } from '../types/game.types';
 
-// WebSocket base URL — mirrors lobby.html logic
+// WebSocket base URL
 function getWsBase(): string {
-  if (typeof window === 'undefined') return 'http://localhost:3000';
-  const { hostname, protocol } = window.location;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `${protocol}//${hostname}:3000`;
-  }
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-  return apiUrl.replace('/api', '') || 'https://classroom-backend.up.railway.app';
+  return (
+    apiUrl
+      .replace(/\/api\/?$/, '')
+      .replace(/\/+$/, '') ||
+    'https://classroom-backend.up.railway.app'
+  );
 }
 
 const OPT_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4'];
@@ -37,12 +37,32 @@ export function useGameSocket() {
 
   // ── Connect ───────────────────────────────────────────────────────────────
 
-  const connect = useCallback(() => {
-    if (socketRef.current?.connected) return;
+  const pendingRoomRef = useRef<string | null>(null);
+
+  const connect = useCallback(async (autoJoinRoom?: string) => {
+    if (autoJoinRoom) pendingRoomRef.current = autoJoinRoom;
+    if (socketRef.current?.connected) {
+      // Already connected — just join the room now
+      if (autoJoinRoom) {
+        const s = getStore();
+        emit('join-room', { roomCode: autoJoinRoom.toUpperCase(), alias: s.myAlias });
+        pendingRoomRef.current = null;
+      }
+      return;
+    }
+    // Already connecting (socket exists but handshake not done yet) — wait for connect event
+    if (socketRef.current && !socketRef.current.connected) return;
 
     const s = getStore();
-    const user = useAuthStore.getState().user;
-    const alias = (user?.name ?? 'Jugador').slice(0, 24);
+
+    const auth = useAuthStore.getState();
+    let displayName = auth.user?.name?.trim();
+    if (!displayName) {
+      await auth.refreshUser();
+      displayName = useAuthStore.getState().user?.name?.trim();
+    }
+
+    const alias = (displayName || 'Jugador').slice(0, 48);
     s.setAlias(alias);
     s.setScreen('loading');
     s.setLoadingText('Conectando...');
@@ -50,7 +70,7 @@ export function useGameSocket() {
     const token = tokenStorage.getAccessToken() ?? '';
     const socket = io(`${getWsBase()}/game`, {
       path: '/socket.io',
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnectionAttempts: 5,
       forceNew: true,
       auth: { token },
@@ -60,21 +80,46 @@ export function useGameSocket() {
     // ── Connection events ──
 
     socket.on('connect', () => {
-      emit('join-lobby', { alias });
-      const navAlias = getStore().myAlias;
-      getStore().setLoadingText(`Conectado como ${navAlias}`);
+      const s = getStore();
+      const pending = pendingRoomRef.current;
+      pendingRoomRef.current = null;
+      // Priority: pending URL room > existing store room > lobby
+      if (pending) {
+        emit('join-room', { roomCode: pending.toUpperCase(), alias });
+      } else if (s.roomCode) {
+        emit('join-room', { roomCode: s.roomCode, alias: s.myAlias });
+      } else {
+        emit('join-lobby', { alias });
+      }
+      s.setLoadingText(`Conectado como ${s.myAlias}`);
     });
 
     socket.on('connect_error', () => {
       getStore().setError('No se pudo conectar al servidor.');
-      getStore().setScreen('rooms'); // show rooms with error
+      getStore().setScreen('rooms');
+    });
+
+    socket.on('disconnect', (reason: string) => {
+      // El servidor cerró la conexión activamente (token inválido, etc.)
+      if (reason === 'io server disconnect') {
+        getStore().setError('Conexión cerrada por el servidor. Intentá recargar la página.');
+        getStore().setScreen('rooms');
+      }
+      // Para desconexiones de red, socket.io reconecta automáticamente
     });
 
     // ── Lobby browser events ──
 
     socket.on('rooms-list', ({ rooms }) => {
       getStore().setRooms(rooms);
-      getStore().setScreen('rooms');
+      // Solo ir a la pantalla de salas si el usuario no está ya en una sala
+      if (!getStore().roomCode) {
+        getStore().setScreen('rooms');
+      }
+    });
+
+    socket.on('lobby-joined', ({ alias: a }: { alias: string }) => {
+      getStore().setAlias(a);
     });
 
     socket.on('lobby-update', ({ users }) => {
@@ -87,24 +132,38 @@ export function useGameSocket() {
 
     // ── Room events ──
 
-    socket.on('room-created', (d: { roomCode: string; roomName: string; alias: string }) => {
-      getStore().setRoomInfo(d.roomCode, d.roomName);
-      getStore().setIsHost(true);
-      getStore().setScreen('lobby');
-      emit('get-quizzes');
+    socket.on('room-created', (d: {
+      roomCode: string; roomName: string; alias: string;
+      trucoConfig?: import('../types/game.types').TrucoConfig | null;
+    }) => {
+      const s = getStore();
+      s.setError(null);
+      s.setAlias(d.alias);
+      s.setRoomInfo(d.roomCode, d.roomName);
+      s.setIsHost(true);
+      s.setRoomTrucoConfig(d.trucoConfig ?? null);
+      s.setScreen('lobby');
+      // Only load quizzes for non-Truco rooms
+      if (!d.trucoConfig) emit('get-quizzes');
     });
 
     socket.on('joined', (d: {
       roomCode: string; roomName: string; alias: string;
       isHost: boolean; selectedInstanceId?: string; selectedTitle?: string; gameType?: string;
+      trucoConfig?: import('../types/game.types').TrucoConfig | null;
     }) => {
-      getStore().setRoomInfo(d.roomCode, d.roomName);
-      getStore().setIsHost(d.isHost);
+      const s = getStore();
+      s.setError(null);
+      s.setAlias(d.alias);
+      s.setRoomInfo(d.roomCode, d.roomName);
+      s.setIsHost(d.isHost);
+      s.setRoomTrucoConfig(d.trucoConfig ?? null);
       if (d.selectedInstanceId && d.selectedTitle) {
-        getStore().setSelectedGame(d.selectedInstanceId, d.selectedTitle, (d.gameType ?? 'quiz') as GameType);
+        s.setSelectedGame(d.selectedInstanceId, d.selectedTitle, (d.gameType ?? 'quiz') as GameType);
       }
-      getStore().setScreen('lobby');
-      emit('get-quizzes');
+      s.setScreen('lobby');
+      // Only load quizzes for non-Truco rooms
+      if (!d.trucoConfig) emit('get-quizzes');
     });
 
     socket.on('room-update', (d: { players: PlayerInfo[]; hostAlias: string; gameType?: string }) => {
@@ -146,6 +205,15 @@ export function useGameSocket() {
 
     socket.on('error', (d: { message: string }) => {
       getStore().setError(d.message ?? 'Error desconocido.');
+      // Only kick back to rooms if we're stuck in a pre-game connection state.
+      // Never kick during active gameplay — errors can be valid feedback (invalid move, etc.)
+      const s = getStore();
+      const gameScreens = ['quiz', 'wordsearch', 'anagram', 'preguntados', 'truco', 'round-end', 'scoreboard'];
+      const isInGame = gameScreens.includes(s.currentScreen);
+      if (!isInGame && s.roomCode && s.currentScreen !== 'lobby') {
+        s.resetRoom();
+        s.setScreen('rooms');
+      }
     });
 
     socket.on('kicked', (d: { message?: string }) => {
@@ -156,17 +224,47 @@ export function useGameSocket() {
       getStore().setScreen('rooms');
     });
 
-    socket.on('reconnected', (d: { alias: string; score: number; isHost: boolean; roomCode: string; gameType: string }) => {
-      getStore().setAlias(d.alias);
-      getStore().setIsHost(d.isHost);
-      getStore().setRoomInfo(d.roomCode, getStore().roomName);
-      getStore().setError('🔄 Reconectado a la partida.');
+    socket.on('reconnected', (d: { alias: string; score: number; isHost: boolean; roomCode: string; roomName?: string; gameType: string }) => {
+      const s = getStore();
+      s.setAlias(d.alias);
+      s.setIsHost(d.isHost);
+      s.setRoomInfo(d.roomCode, d.roomName ?? s.roomName);
+      // Restore score and navigate to the correct game screen
+      const type = d.gameType as GameType;
+      if (type === 'quiz') {
+        s.setQuiz({ myScore: d.score });
+        s.setScreen('quiz');
+      } else if (type === 'wordsearch') {
+        s.setWordSearch({ myScore: d.score });
+        s.setScreen('wordsearch');
+      } else if (type === 'anagram') {
+        s.setAnagram({ myScore: d.score });
+        s.setScreen('anagram');
+      } else if (type === 'preguntados') {
+        s.setScreen('preguntados');
+      } else if (type === 'truco') {
+        // Truco: el estado completo de la mano vendrá vía evento 'truco-state'
+        s.resetGame();
+        s.setScreen('truco');
+      } else {
+        s.setScreen('waiting');
+      }
+      s.setError('🔄 Reconectado a la partida en curso.');
     });
 
     // ── Quiz game events ──
 
     socket.on('game-started', (d: { gameType: string; totalQuestions?: number; gameData?: unknown; timeLimitMs?: number; players?: PlayerInfo[]; turnAlias?: string }) => {
       getStore().resetGame();
+      // Reset per-round/per-game UI flags
+      const s0 = getStore();
+      s0.setRoundScoreboard([]);
+      if (s0.players.length) {
+        s0.setPlayers(
+          s0.players.map((p) => ({ ...p, answered: false, finished: false })),
+          s0.hostAlias,
+        );
+      }
       const type = d.gameType as GameType;
 
       if (type === 'quiz') {
@@ -188,10 +286,19 @@ export function useGameSocket() {
         startCountdown(() => getStore().setScreen('wordsearch'));
         audio.start();
       } else if (type === 'anagram') {
-        const gd = d.gameData as { word: string; hint?: string };
-        const word = (gd.word ?? '').toUpperCase();
+        const gd = d.gameData as { word?: string; words?: string[]; hint?: string };
+        const normalize = (w: string) => w.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑÜ]/g, '');
+        const pool = Array.isArray(gd.words) ? gd.words.map((w) => normalize(String(w ?? ''))).filter(Boolean) : [];
+        const direct = normalize(String(gd.word ?? ''));
+        const words = [
+          ...(direct ? [direct] : []),
+          ...pool.filter((w) => w !== direct),
+        ];
+        const word = words[0] ?? '';
         const scrambled = shuffleArray(word.split(''));
         getStore().setAnagram({
+          words,
+          currentWordIndex: 0,
           word,
           hint: gd.hint ?? '',
           scrambled,
@@ -228,38 +335,88 @@ export function useGameSocket() {
           getStore().setScreen('preguntados');
           audio.startPq();
         });
+      } else if (type === 'truco') {
+        // State will arrive via truco-state event
+        startCountdown(() => getStore().setScreen('truco'));
       }
     });
 
-    socket.on('question', (d: { index: number; total: number; question: { text: string; options: { id: string; text: string }[]; time_limit_ms?: number }; timeLimitMs: number }) => {
+    // ── Truco events ──────────────────────────────────────────────────────────
+
+    socket.on('truco-state', (view: import('../types/game.types').TrucoPlayerView) => {
+      getStore().setTruco(view);
+      // If game over, show scoreboard
+      if (view.phase === 'game_over') {
+        const isA = view.myTeam === 'A';
+        const winnerScore = Math.max(view.teamAScore, view.teamBScore);
+        const winnerTeam = view.teamAScore >= view.teamBScore ? 'A' : 'B';
+        const sb = [
+          ...view.teamAMembers.map((m) => ({
+            alias: m.alias,
+            score: view.teamAScore,
+            rank: winnerTeam === 'A' ? 1 : 2,
+          })),
+          ...view.teamBMembers.map((m) => ({
+            alias: m.alias,
+            score: view.teamBScore,
+            rank: winnerTeam === 'B' ? 1 : 2,
+          })),
+        ].sort((a, b) => a.rank - b.rank);
+        getStore().setFinalScoreboard(sb);
+        setTimeout(() => getStore().setScreen('scoreboard'), 3000);
+      }
+    });
+
+    socket.on('question', (d: { index: number; total: number; question: QuizQuestion; timeLimitMs: number }) => {
+      const s = getStore();
+      if (s.players.length) {
+        s.setPlayers(
+          s.players.map((p) => ({ ...p, answered: false })),
+          s.hostAlias,
+        );
+      }
       getStore().setQuiz({
         currentQuestion: d.question,
         currentIndex: d.index,
         totalQuestions: d.total,
         answered: false,
+        answerCorrect: null,
         selectedOptionId: null,
+        submittedAnswer: null,
         correctOptionId: null,
+        correctAnswer: null,
         timeLimitMs: d.timeLimitMs,
       });
     });
 
-    socket.on('answer-result', (d: { correct: boolean; correctOptionId: string; score: number }) => {
+    socket.on('answer-result', (d: { questionType?: string; correct: boolean; correctOptionId?: string; correctAnswer?: unknown; score: number }) => {
       if (d.correct) audio.correct(); else audio.wrong();
       getStore().setQuiz({
         answered: true,
-        correctOptionId: d.correctOptionId,
+        answerCorrect: d.correct,
+        correctOptionId: d.correctOptionId ? d.correctOptionId : null,
+        correctAnswer: typeof d.correctAnswer === 'undefined' ? null : d.correctAnswer,
         myScore: d.score,
       });
     });
 
     socket.on('player-answered', (_d: { alias: string }) => {
-      // UI handles this via players list
+      const s = getStore();
+      const alias = _d.alias;
+      if (!alias) return;
+      s.setPlayers(
+        s.players.map((p) => (p.alias === alias ? { ...p, answered: true } : p)),
+        s.hostAlias,
+      );
     });
 
-    socket.on('round-end', (d: { correctOptionId: string; scoreboard: ScoreboardEntry[] }) => {
-      getStore().setQuiz({ correctOptionId: d.correctOptionId, answered: true });
+    socket.on('round-end', (d: { questionType?: string; correctOptionId?: string; correctAnswer?: unknown; scoreboard: ScoreboardEntry[] }) => {
+      getStore().setQuiz({
+        correctOptionId: d.correctOptionId ? d.correctOptionId : null,
+        correctAnswer: typeof d.correctAnswer === 'undefined' ? null : d.correctAnswer,
+        answered: true,
+      });
       getStore().setRoundScoreboard(d.scoreboard);
-      setTimeout(() => getStore().setScreen('round-end'), 800);
     });
 
     socket.on('game-over', (d: { scoreboard: ScoreboardEntry[] }) => {
@@ -271,19 +428,69 @@ export function useGameSocket() {
     // ── Wordsearch events ──
 
     socket.on('word-found', (d: { word: string; alias: string; cells: { r: number; c: number }[]; colorIndex: number; points: number; scoreboard?: ScoreboardEntry[] }) => {
-      const ws = getStore().wordSearch;
-      getStore().setWordSearch({
+      const s = getStore();
+      const ws = s.wordSearch;
+      const sb = d.scoreboard ?? ws.scoreboard;
+      const myEntry = sb.find((e) => e.alias === s.myAlias);
+
+      s.setWordSearch({
         foundWords: {
           ...ws.foundWords,
           [d.word]: { alias: d.alias, cells: d.cells, colorIndex: d.colorIndex },
         },
-        scoreboard: d.scoreboard ?? ws.scoreboard,
+        scoreboard: sb,
+        myScore: myEntry?.score ?? ws.myScore,
       });
+
+      if (sb.length) {
+        const byAlias = new Map(sb.map((e) => [e.alias, e]));
+        s.setPlayers(
+          s.players.map((p) => {
+            const e = byAlias.get(p.alias);
+            return e ? { ...p, score: e.score, rank: e.rank } : p;
+          }),
+          s.hostAlias,
+        );
+        s.setRoundScoreboard(sb);
+      }
     });
 
     socket.on('player-finished', (d: { alias: string; score: number; scoreboard: ScoreboardEntry[] }) => {
-      getStore().setWordSearch({ scoreboard: d.scoreboard });
-      getStore().setAnagram({ myScore: getStore().anagram.myScore });
+      const s = getStore();
+      const sb = d.scoreboard ?? [];
+
+      if (sb.length) {
+        const byAlias = new Map(sb.map((e) => [e.alias, e]));
+        s.setPlayers(
+          s.players.map((p) => {
+            const e = byAlias.get(p.alias);
+            const isFin = p.alias === d.alias;
+            return {
+              ...p,
+              score: e?.score ?? p.score,
+              rank: e?.rank ?? p.rank,
+              answered: isFin ? true : p.answered,
+              finished: isFin ? true : p.finished,
+            };
+          }),
+          s.hostAlias,
+        );
+        s.setRoundScoreboard(sb);
+
+        const myEntry = sb.find((e) => e.alias === s.myAlias);
+        if (myEntry) {
+          if (s.currentGameType === 'wordsearch') {
+            s.setWordSearch({ scoreboard: sb, myScore: myEntry.score });
+          } else if (s.currentGameType === 'anagram') {
+            s.setAnagram({ myScore: myEntry.score });
+          }
+        }
+      } else {
+        s.setPlayers(
+          s.players.map((p) => (p.alias === d.alias ? { ...p, answered: true, finished: true } : p)),
+          s.hostAlias,
+        );
+      }
     });
 
     // ── Preguntados events ──
@@ -301,7 +508,7 @@ export function useGameSocket() {
 
     socket.on('pq-question', (d: { question: { text: string; options: { id: string; text: string }[] }; categoryName: string; categoryColor: string; categoryIcon: string; turnAlias: string; timeLimitMs: number }) => {
       getStore().setPreguntados({
-        currentQuestion: d.question as any,
+        currentQuestion: d.question,
         panel: 'question',
         categoryInfo: { icon: d.categoryIcon, name: d.categoryName, color: d.categoryColor },
         currentTurnAlias: d.turnAlias,
@@ -357,15 +564,29 @@ export function useGameSocket() {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const createRoom = useCallback((roomName: string) => {
+  const createRoom = useCallback((payload: {
+    roomName: string; maxPlayers: number; password?: string;
+    trucoConfig?: import('../types/game.types').TrucoConfig;
+  }) => {
     const alias = getStore().myAlias;
-    emit('create-room', { alias, roomName });
+    emit('create-room', {
+      alias,
+      roomName: payload.roomName,
+      maxPlayers: payload.maxPlayers,
+      password: payload.password,
+      trucoConfig: payload.trucoConfig,
+    });
   }, [emit, getStore]);
 
-  const joinRoom = useCallback((roomCode: string) => {
+  const joinRoom = useCallback((roomCode: string, password?: string) => {
+    if (!socketRef.current?.connected) {
+      // Socket lost — reconnect first, then join
+      connect(roomCode);
+      return;
+    }
     const alias = getStore().myAlias;
-    emit('join-room', { roomCode: roomCode.toUpperCase(), alias });
-  }, [emit, getStore]);
+    emit('join-room', { roomCode: roomCode.toUpperCase(), alias, password });
+  }, [connect, emit, getStore]);
 
   const sendLobbyChat = useCallback((text: string) => {
     emit('lobby-chat', { text });
@@ -403,9 +624,14 @@ export function useGameSocket() {
     emit('react', { emoji });
   }, [emit]);
 
-  const submitAnswer = useCallback((optionId: string) => {
-    getStore().setQuiz({ answered: true, selectedOptionId: optionId });
-    emit('submit-answer', { optionId });
+  const submitAnswer = useCallback((answer: string | Record<string, unknown>) => {
+    if (typeof answer === 'string') {
+      getStore().setQuiz({ answered: true, selectedOptionId: answer, submittedAnswer: null });
+      emit('submit-answer', { optionId: answer });
+      return;
+    }
+    getStore().setQuiz({ answered: true, selectedOptionId: null, submittedAnswer: answer });
+    emit('submit-answer', answer);
   }, [emit, getStore]);
 
   const findWord = useCallback((word: string, cells: { r: number; c: number }[]) => {
@@ -434,6 +660,10 @@ export function useGameSocket() {
     emit('get-rooms');
   }, [emit]);
 
+  const getQuizzes = useCallback(() => {
+    emit('get-quizzes');
+  }, [emit]);
+
   const exitGame = useCallback(() => {
     audio.stop();
     disconnect();
@@ -441,6 +671,11 @@ export function useGameSocket() {
     getStore().resetGame();
     connect();
   }, [audio, disconnect, connect, getStore]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sendTrucoAction = useCallback((action: { type: string; [key: string]: any }) => {
+    emit('truco-action', action);
+  }, [emit]);
 
   return {
     connect,
@@ -457,9 +692,11 @@ export function useGameSocket() {
     promotePlayer,
     sendChat,
     sendReaction,
+    sendTrucoAction,
     submitAnswer,
     findWord,
     submitGameComplete,
+    getQuizzes,
     spinWheel,
     submitPQAnswer,
     restartRoom,

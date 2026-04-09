@@ -1,7 +1,7 @@
 import type {
   GameType, PlayerInfo, RoomInfo, GameInstance,
   QuizQuestion, ScoreboardEntry, PQCategory,
-  ChatMessage, WordCell,
+  ChatMessage, WordCell, TrucoPlayerView, TrucoConfig,
 } from './game.types';
 
 export type MinigameScreen =
@@ -13,9 +13,13 @@ export type MinigameScreen =
   | 'wordsearch'
   | 'anagram'
   | 'preguntados'
+  | 'truco'
   | 'waiting'
   | 'round-end'
   | 'scoreboard';
+
+// Re-export for convenience
+export type { TrucoPlayerView };
 
 // ── Partial game states ────────────────────────────────────────────────────
 
@@ -24,8 +28,15 @@ export interface QuizState {
   currentIndex: number;
   totalQuestions: number;
   answered: boolean;
+  /** Result of my last submitted answer for this question. */
+  answerCorrect: boolean | null;
+  /** For MCQ / True-False */
   selectedOptionId: string | null;
+  /** Generic last submitted answer payload (for non-MCQ types). */
+  submittedAnswer: unknown | null;
   correctOptionId: string | null;
+  /** Generic correct answer payload (for non-MCQ types). */
+  correctAnswer: unknown | null;
   timeLimitMs: number;
   myScore: number;
 }
@@ -42,6 +53,10 @@ export interface WordSearchState {
 }
 
 export interface AnagramState {
+  /** Full word list for this game (multi-round). */
+  words: string[];
+  /** Index into `words` for the currently active word. */
+  currentWordIndex: number;
   word: string;
   hint: string;
   scrambled: string[];
@@ -81,7 +96,7 @@ export interface MinigameStore {
 
   // ── Room browser ──
   rooms: RoomInfo[];
-  onlineUsers: { alias: string }[];
+  onlineUsers: { socketId?: string; alias: string }[];
   lobbyChat: ChatMessage[];
 
   // ── Room ──
@@ -90,6 +105,8 @@ export interface MinigameStore {
   players: PlayerInfo[];
   hostAlias: string;
   roomChat: ChatMessage[];
+  /** Set when in a Truco room (before game starts). Null for regular minigame rooms. */
+  roomTrucoConfig: TrucoConfig | null;
 
   // ── Game selection ──
   availableGames: GameInstance[];
@@ -103,6 +120,7 @@ export interface MinigameStore {
   wordSearch: WordSearchState;
   anagram: AnagramState;
   preguntados: PreguntadosState;
+  truco: TrucoPlayerView | null;
 
   // ── Shared ──
   roundScoreboard: ScoreboardEntry[];
@@ -121,7 +139,7 @@ export interface MinigameStore {
   setRoomInfo: (roomCode: string, roomName: string) => void;
   setPlayers: (players: PlayerInfo[], hostAlias: string) => void;
   setRooms: (rooms: RoomInfo[]) => void;
-  setOnlineUsers: (users: { alias: string }[]) => void;
+  setOnlineUsers: (users: { socketId?: string; alias: string }[]) => void;
   addLobbyChat: (msg: ChatMessage) => void;
   addRoomChat: (msg: ChatMessage) => void;
   setAvailableGames: (games: GameInstance[]) => void;
@@ -131,6 +149,8 @@ export interface MinigameStore {
   setWordSearch: (partial: Partial<WordSearchState>) => void;
   setAnagram: (partial: Partial<AnagramState>) => void;
   setPreguntados: (partial: Partial<PreguntadosState>) => void;
+  setRoomTrucoConfig: (config: TrucoConfig | null) => void;
+  setTruco: (view: TrucoPlayerView | null) => void;
   setRoundScoreboard: (sb: ScoreboardEntry[]) => void;
   setFinalScoreboard: (sb: ScoreboardEntry[]) => void;
   setFloatReaction: (r: { emoji: string; alias: string; id: number } | null) => void;

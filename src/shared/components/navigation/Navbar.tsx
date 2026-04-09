@@ -1,83 +1,117 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth/auth.store';
 
 export default function Navbar() {
   const router = useRouter();
-
-  // null = no logueado
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
-    setUser(null);
+    logout();
     setOpen(false);
-    router.push("/"); // redirige a la landing
+    router.push('/');
   };
 
   return (
-    <header className="top-0 left-0 w-full z-50">
-      <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-transparent">
-        
+    <header style={{ position: 'relative', zIndex: 50 }}>
+      <nav className="flex items-center justify-between px-6 md:px-12 py-3">
         {/* LOGO */}
         <div className="flex items-center">
           <Image
             src="/NOVI.png"
-            alt="Logo Novi - classroom"
+            alt="Logo Novi"
             width={150}
             height={150}
-            className="object-contain cursor-pointer"
-            onClick={() => router.push("/")}
+            loading="eager"
+            className="object-contain cursor-pointer h-10 w-auto"
+            onClick={() => router.push('/')}
           />
         </div>
 
         {/* DERECHA */}
-        <div className="relative">
-          {!user ? (
-            <Link href="/register">
-              <button className="px-5 py-2 rounded-2xl border border-white/30 text-white backdrop-blur-md hover:bg-white/10 transition-all duration-300">
+        <div style={{ position: 'relative' }}>
+          {!isAuthenticated || !user ? (
+            <Link href="/login">
+              <button
+                className="px-5 py-2 rounded-2xl text-white text-sm font-medium transition-all duration-300 hover:opacity-80"
+                style={{
+                  background: 'rgba(255,255,255,0.10)',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+              >
                 Iniciar sesión
               </button>
             </Link>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-white">
-                Hola, {user.name}
-              </span>
+              <span className="text-white/70 text-sm hidden sm:block">{user.name}</span>
 
               {/* Avatar */}
               <button
                 onClick={() => setOpen(!open)}
-                className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold hover:scale-105 transition"
+                className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition"
               >
-                {user.name[0]}
+                {user.name?.[0]?.toUpperCase() ?? '?'}
               </button>
 
-              {/* DROPDOWN */}
-              {open && (
-                <div className="absolute right-0 top-12 w-48 bg-white rounded-xl shadow-lg py-2 text-black">
-                  
-                  <button
-                    onClick={() => {
-                      router.push("/perfil");
-                      setOpen(false);
+              {/* Dropdown — rendered via portal to escape backdrop-filter stacking context */}
+              {open && typeof window !== 'undefined' && createPortal(
+                <>
+                  <div
+                    style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                    onClick={() => setOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'fixed', right: 16, top: 52,
+                      width: 176, zIndex: 9999,
+                      background: '#0d1117',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+                      padding: '6px 0',
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
                   >
-                    Mi perfil
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Cerrar sesión
-                  </button>
-
-                </div>
+                    <button
+                      onClick={() => { router.push('/perfil'); setOpen(false); }}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '8px 16px', fontSize: 14,
+                        color: 'rgba(255,255,255,0.7)',
+                        background: 'none', border: 'none',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Mi perfil
+                    </button>
+                    <div style={{ margin: '4px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '8px 16px', fontSize: 14,
+                        color: '#f87171',
+                        background: 'none', border: 'none',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </>,
+                document.body
               )}
             </div>
           )}
