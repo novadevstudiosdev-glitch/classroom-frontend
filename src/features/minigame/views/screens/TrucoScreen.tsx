@@ -178,15 +178,7 @@ export function TrucoScreen(props: Props) {
   const opponentCardCount = view?.allPlayerCardCounts?.[opponentAlias] ?? Math.max(myHand.length, 3);
 
   const handleCanto = (type: CantoType) => {
-    if (type === 'envido') {
-      props.sendTrucoAction({ type: 'envido' });
-      return;
-    }
-    if (type === 'falta') {
-      props.sendTrucoAction({ type: 'falta-envido' });
-      return;
-    }
-    props.sendTrucoAction({ type: 'truco' });
+    props.sendTrucoAction({ type });
   };
 
   const handlePlayCard = (card: TrucoCard) => {

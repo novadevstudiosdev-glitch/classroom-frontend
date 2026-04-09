@@ -480,7 +480,17 @@
   text-shadow: 0 0 30px #60c0f044;
 }
 
+.canto-word.real-envido {
+  color: #60c0f0;
+  text-shadow: 0 0 30px #60c0f044;
+}
+
 .canto-word.falta {
+  color: #f08040;
+  text-shadow: 0 0 30px #f0804044;
+}
+
+.canto-word.falta-envido {
   color: #f08040;
   text-shadow: 0 0 30px #f0804044;
 }

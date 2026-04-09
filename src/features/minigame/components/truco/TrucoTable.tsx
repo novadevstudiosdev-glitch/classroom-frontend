@@ -26,6 +26,18 @@ interface Props {
 }
 
 const VALID_VALUES = new Set<CardValue>([1, 2, 3, 4, 5, 6, 7, 10, 11, 12]);
+const CARD_W = 96;
+const CARD_H = 144;
+const HAND_SPACING = 94;
+const TABLE_SPACING = 96;
+const DEAL_FROM_X = 300;
+const SELECTED_LIFT = 24;
+const OPPONENT_HAND_W = CARD_W + HAND_SPACING * 2 + 40;
+const OPPONENT_HAND_H = CARD_H + 24;
+const TABLE_CARDS_W = CARD_W + TABLE_SPACING * 2;
+const TABLE_CARDS_H = CARD_H + 16;
+const PLAYER_HAND_W = CARD_W + HAND_SPACING * 2 + 40;
+const PLAYER_HAND_H = CARD_H + 42;
 
 function toCardValue(value: number): CardValue {
   return VALID_VALUES.has(value as CardValue) ? (value as CardValue) : 1;
@@ -162,8 +174,8 @@ export default function TrucoTable({
             top: "50%",
             right: 32,
             transform: "translateY(-50%)",
-            width: 90,
-            height: 130,
+            width: 78,
+            height: 114,
             borderRadius: 12,
             background: "linear-gradient(135deg, #ececec, #cfcfcf)",
             border: "2px solid #1f1f1f",
@@ -194,14 +206,14 @@ export default function TrucoTable({
             top: 70,
             left: "50%",
             transform: "translateX(-50%)",
-            width: 430,
-            height: 190,
+            width: OPPONENT_HAND_W,
+            height: OPPONENT_HAND_H,
             zIndex: 12,
           }}
         >
           <AnimatePresence>
             {opponentHand.map((card, index) => {
-              const finalX = index * 108;
+              const finalX = index * HAND_SPACING;
               const finalRotate = index === 0 ? -10 : index === 1 ? 0 : 10;
               return (
                 <motion.div
@@ -209,7 +221,7 @@ export default function TrucoTable({
                   initial={
                     dealt
                       ? {
-                          x: 350,
+                          x: DEAL_FROM_X,
                           y: 170,
                           rotate: 0,
                           scale: 0.82,
@@ -240,8 +252,8 @@ export default function TrucoTable({
                     position: "absolute",
                     left: 0,
                     top: 0,
-                    width: 110,
-                    height: 164,
+                    width: CARD_W,
+                    height: CARD_H,
                     borderRadius: 12,
                     overflow: "hidden",
                     border: "2px solid #f2f2f2",
@@ -267,8 +279,8 @@ export default function TrucoTable({
             top: "33%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: 350,
-            height: 180,
+            width: TABLE_CARDS_W,
+            height: TABLE_CARDS_H,
             zIndex: 14,
             pointerEvents: "none",
           }}
@@ -285,7 +297,7 @@ export default function TrucoTable({
                   opacity: 0.95,
                 }}
                 animate={{
-                  x: index * 112,
+                  x: index * TABLE_SPACING,
                   y: 0,
                   rotate: index === 0 ? -7 : index === 1 ? 3 : 8,
                   scale: 1,
@@ -297,8 +309,8 @@ export default function TrucoTable({
                 }}
                 style={{
                   position: "absolute",
-                  width: 110,
-                  height: 164,
+                  width: CARD_W,
+                  height: CARD_H,
                   borderRadius: 12,
                   overflow: "hidden",
                   border: "2px solid #1d1d1d",
@@ -323,8 +335,8 @@ export default function TrucoTable({
             top: "53%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: 350,
-            height: 180,
+            width: TABLE_CARDS_W,
+            height: TABLE_CARDS_H,
             zIndex: 15,
             pointerEvents: "none",
           }}
@@ -335,13 +347,13 @@ export default function TrucoTable({
                 key={`player-table-${card.uid}`}
                 initial={{
                   x: -24 + index * 14,
-                  y: 180,
+                  y: 150,
                   rotate: 0,
                   scale: 1.07,
                   opacity: 0.95,
                 }}
                 animate={{
-                  x: index * 112,
+                  x: index * TABLE_SPACING,
                   y: 0,
                   rotate: index === 0 ? -8 : index === 1 ? 4 : 10,
                   scale: 1,
@@ -353,8 +365,8 @@ export default function TrucoTable({
                 }}
                 style={{
                   position: "absolute",
-                  width: 110,
-                  height: 164,
+                  width: CARD_W,
+                  height: CARD_H,
                   borderRadius: 12,
                   overflow: "hidden",
                   border: "2px solid #1d1d1d",
@@ -376,17 +388,17 @@ export default function TrucoTable({
         <div
           style={{
             position: "absolute",
-            bottom: 212,
+            bottom: 204,
             left: "50%",
             transform: "translateX(-50%)",
-            width: 430,
-            height: 204,
+            width: PLAYER_HAND_W,
+            height: PLAYER_HAND_H,
             zIndex: 20,
           }}
         >
           <AnimatePresence>
             {playerHand.map((card, index) => {
-              const finalX = index * 108;
+              const finalX = index * HAND_SPACING;
               const finalRotate = index === 0 ? -12 : index === 1 ? 0 : 12;
               const isSelected = selectedCardId === card.uid;
 
@@ -398,8 +410,8 @@ export default function TrucoTable({
                   initial={
                     dealt
                       ? {
-                          x: 350,
-                          y: -320,
+                          x: DEAL_FROM_X,
+                          y: -300,
                           rotate: 0,
                           scale: 0.82,
                           opacity: 0,
@@ -408,7 +420,7 @@ export default function TrucoTable({
                   }
                   animate={{
                     x: finalX,
-                    y: isSelected ? -28 : 0,
+                    y: isSelected ? -SELECTED_LIFT : 0,
                     rotate: finalRotate,
                     scale: isSelected ? 1.06 : 1,
                     opacity: 1,
@@ -422,7 +434,7 @@ export default function TrucoTable({
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   whileHover={{
-                    y: isSelected ? -28 : -16,
+                    y: isSelected ? -SELECTED_LIFT : -14,
                     scale: 1.04,
                   }}
                   whileTap={{ scale: 0.98 }}
@@ -431,8 +443,8 @@ export default function TrucoTable({
                     position: "absolute",
                     left: 0,
                     top: 0,
-                    width: 110,
-                    height: 164,
+                    width: CARD_W,
+                    height: CARD_H,
                     borderRadius: 12,
                     overflow: "hidden",
                     border: isSelected ? "3px solid #f4c542" : "2px solid #1d1d1d",
