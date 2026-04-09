@@ -4,7 +4,6 @@ import { useMinigameStore } from '../../store/minigame.store';
 import { GameSidebar } from '../../components/GameSidebar';
 import { BACK_URL, getCardImageUrl } from '../../components/SpanishCard';
 import type { TrucoCard, TableTheme } from '../../types/game.types';
-import type { CantoType } from '../../types/truco';
 import TrucoTable from '../../components/truco/TrucoTable';
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -178,7 +177,7 @@ export function TrucoScreen(props: Props) {
   const opponentAlias = allAliases.find((alias) => alias !== myAlias) ?? "Rival";
   const opponentCardCount = view?.allPlayerCardCounts?.[opponentAlias] ?? Math.max(myHand.length, 3);
 
-  const handleCanto = (type: CantoType) => {
+  const handleAction = (type: string) => {
     props.sendTrucoAction({ type });
   };
 
@@ -203,11 +202,20 @@ export function TrucoScreen(props: Props) {
         round={view?.round}
         dealerAlias={view?.dealerAlias}
         currentRoundCards={view?.currentRoundCards}
+        myTeam={view?.myTeam}
+        teamAMembers={view?.teamAMembers}
+        teamBMembers={view?.teamBMembers}
+        envidoStatus={view?.envidoStatus}
         envidoChain={view?.envidoChain}
+        envidoResponderTeam={view?.envidoResponderTeam}
+        envidoLastResponse={view?.envidoLastResponse}
+        trucoStatus={view?.trucoStatus}
         trucoChain={view?.trucoChain}
+        trucoResponderTeam={view?.trucoResponderTeam}
+        trucoLastResponse={view?.trucoLastResponse}
         chatMessages={roomChat}
         onSendChat={props.onSendChat}
-        onCanto={handleCanto}
+        onAction={handleAction}
         onPlayCard={handlePlayCard}
       />
     </div>

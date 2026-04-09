@@ -203,6 +203,63 @@
   color: #f3d4ad;
 }
 
+.canto-banner {
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(86%, 760px);
+  z-index: 24;
+  border-radius: 16px;
+  padding: 14px 20px 12px;
+  background: rgba(14, 11, 8, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.canto-banner-main {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.canto-banner-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(243, 226, 193, 0.86);
+}
+
+.canto-envido .canto-banner-main {
+  color: #7ad0ff;
+  text-shadow: 0 0 24px rgba(122, 208, 255, 0.36);
+}
+
+.canto-truco .canto-banner-main,
+.canto-raise .canto-banner-main {
+  color: #ffb069;
+  text-shadow: 0 0 24px rgba(255, 176, 105, 0.36);
+}
+
+.canto-accept .canto-banner-main {
+  color: #92f0b8;
+  text-shadow: 0 0 24px rgba(146, 240, 184, 0.34);
+}
+
+.canto-reject .canto-banner-main {
+  color: #ff8e8e;
+  text-shadow: 0 0 24px rgba(255, 142, 142, 0.34);
+}
+
+.canto-neutral .canto-banner-main {
+  color: #f0d080;
+  text-shadow: 0 0 20px rgba(240, 208, 128, 0.3);
+}
+
 .timer {
   position: absolute;
   top: 14px;
@@ -378,6 +435,74 @@
 .btn-row {
   display: flex;
   gap: 8px;
+}
+
+.player-actions {
+  width: min(760px, 88vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-actions-title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8d7249;
+}
+
+.player-actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-chip {
+  border-radius: 999px;
+  padding: 8px 14px;
+  border: 1px solid;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s, filter 0.12s, opacity 0.12s;
+}
+
+.action-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.action-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-primary {
+  background: #1d396f;
+  border-color: #4c89da;
+  color: #b9d8ff;
+}
+
+.action-danger {
+  background: #5f1b13;
+  border-color: #cf5e50;
+  color: #ffc1b9;
+}
+
+.action-accent {
+  background: #4a2a12;
+  border-color: #c48645;
+  color: #f5d8b5;
+}
+
+.action-neutral {
+  background: #cab063;
+  border-color: #f0d080;
+  color: #2c1704;
 }
 
 .btn {

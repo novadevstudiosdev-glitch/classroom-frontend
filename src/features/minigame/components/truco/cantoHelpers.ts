@@ -1,0 +1,156 @@
+import type { TrucoEnvidoCall, TrucoTrucoCall } from "../../types/game.types";
+
+export type CantoSource = "envido" | "truco";
+export type ActionVariant = "primary" | "danger" | "accent" | "neutral";
+
+export interface PlayerActionOption {
+  actionType: string;
+  label: string;
+  variant: ActionVariant;
+}
+
+export interface CantoFlowState {
+  isActive: boolean;
+  source: CantoSource | null;
+  callType: string | null;
+  callLabel: string | null;
+  callerAlias: string | null;
+  responderAlias: string | null;
+  waitingResponse: boolean;
+}
+
+interface BuildStateParams {
+  envidoStatus?: "available" | "pending" | "resolved" | "expired";
+  envidoChain?: TrucoEnvidoCall[];
+  envidoResponderTeam?: "A" | "B" | null;
+  trucoStatus?: "available" | "pending" | "resolved";
+  trucoChain?: TrucoTrucoCall[];
+  trucoResponderTeam?: "A" | "B" | null;
+  teamAMembers?: { alias: string }[];
+  teamBMembers?: { alias: string }[];
+}
+
+function getResponderAlias(
+  team: "A" | "B" | null | undefined,
+  teamAMembers: { alias: string }[],
+  teamBMembers: { alias: string }[],
+): string | null {
+  if (!team) return null;
+  const members = team === "A" ? teamAMembers : teamBMembers;
+  return members[0]?.alias ?? null;
+}
+
+export function getEnvidoLabel(type: string): string {
+  if (type === "realenvido") return "REAL ENVIDO";
+  if (type === "faltaenvido") return "FALTA ENVIDO";
+  return "ENVIDO";
+}
+
+export function getTrucoLabel(type: string): string {
+  if (type === "retruco") return "RETRUCO";
+  if (type === "valecuatro") return "VALE CUATRO";
+  return "TRUCO";
+}
+
+export function getResponseLabel(response: string): string {
+  if (response === "noquiero") return "NO QUIERO";
+  if (response === "quiero") return "QUIERO";
+  if (response === "realenvido") return "REAL ENVIDO";
+  if (response === "faltaenvido") return "FALTA ENVIDO";
+  if (response === "retruco") return "RETRUCO";
+  if (response === "valecuatro") return "VALE CUATRO";
+  return response.toUpperCase();
+}
+
+export function buildCantoFlowState({
+  envidoStatus,
+  envidoChain = [],
+  envidoResponderTeam,
+  trucoStatus,
+  trucoChain = [],
+  trucoResponderTeam,
+  teamAMembers = [],
+  teamBMembers = [],
+}: BuildStateParams): CantoFlowState {
+  if (envidoStatus === "pending" && envidoChain.length > 0) {
+    const last = envidoChain[envidoChain.length - 1];
+    return {
+      isActive: true,
+      source: "envido",
+      callType: last.type,
+      callLabel: getEnvidoLabel(last.type),
+      callerAlias: last.alias,
+      responderAlias: getResponderAlias(envidoResponderTeam, teamAMembers, teamBMembers),
+      waitingResponse: true,
+    };
+  }
+
+  if (trucoStatus === "pending" && trucoChain.length > 0) {
+    const last = trucoChain[trucoChain.length - 1];
+    return {
+      isActive: true,
+      source: "truco",
+      callType: last.type,
+      callLabel: getTrucoLabel(last.type),
+      callerAlias: last.alias,
+      responderAlias: getResponderAlias(trucoResponderTeam, teamAMembers, teamBMembers),
+      waitingResponse: true,
+    };
+  }
+
+  return {
+    isActive: false,
+    source: null,
+    callType: null,
+    callLabel: null,
+    callerAlias: null,
+    responderAlias: null,
+    waitingResponse: false,
+  };
+}
+
+export function getResponseOptions(state: CantoFlowState): PlayerActionOption[] {
+  if (!state.waitingResponse || !state.source || !state.callType) return [];
+
+  if (state.source === "envido") {
+    const base: PlayerActionOption[] = [
+      { actionType: "quiero", label: "QUIERO", variant: "primary" },
+      { actionType: "no-quiero", label: "NO QUIERO", variant: "danger" },
+    ];
+
+    if (state.callType === "envido") {
+      return [
+        ...base,
+        { actionType: "real-envido", label: "REDOBLAR: REAL ENVIDO", variant: "accent" },
+        { actionType: "falta-envido", label: "REDOBLAR: FALTA ENVIDO", variant: "accent" },
+      ];
+    }
+    if (state.callType === "realenvido") {
+      return [...base, { actionType: "falta-envido", label: "REDOBLAR: FALTA ENVIDO", variant: "accent" }];
+    }
+    return base;
+  }
+
+  const base: PlayerActionOption[] = [
+    { actionType: "quiero", label: "QUIERO", variant: "primary" },
+    { actionType: "no-quiero", label: "NO QUIERO", variant: "danger" },
+  ];
+
+  if (state.callType === "truco") {
+    return [...base, { actionType: "retruco", label: "REDOBLAR: RETRUCO", variant: "accent" }];
+  }
+  if (state.callType === "retruco") {
+    return [...base, { actionType: "vale-cuatro", label: "REDOBLAR: VALE CUATRO", variant: "accent" }];
+  }
+  return base;
+}
+
+export function getDefaultCallOptions(): PlayerActionOption[] {
+  return [
+    { actionType: "envido", label: "ENVIDO", variant: "primary" },
+    { actionType: "real-envido", label: "REAL ENVIDO", variant: "primary" },
+    { actionType: "falta-envido", label: "FALTA ENVIDO", variant: "accent" },
+    { actionType: "truco", label: "TRUCO", variant: "neutral" },
+    { actionType: "ir-al-mazo", label: "IR AL MAZO", variant: "danger" },
+  ];
+}

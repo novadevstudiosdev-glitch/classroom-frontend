@@ -2,17 +2,30 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ActionButtons from "./ActionButtons";
-import CantoOverlay from "./CantoOverlay";
+import AnimatedCard from "./AnimatedCard";
 import ChatPanel from "./ChatPanel";
+import GameCantoBanner from "./GameCantoBanner";
+import PlayerActionButtons from "./PlayerActionButtons";
 import ScorePanel from "./ScorePanel";
+import {
+  buildCantoFlowState,
+  getDefaultCallOptions,
+  getEnvidoLabel,
+  getResponseLabel,
+  getResponseOptions,
+  getTrucoLabel,
+  type PlayerActionOption,
+} from "./cantoHelpers";
 import type { ChatMessage, TrucoCard, TrucoEnvidoCall, TrucoTrucoCall } from "../../types/game.types";
-import type { Canto, CantoType } from "../../types/truco";
-import { BACK_URL, getCardImageUrl } from "../SpanishCard";
-import type { CardValue } from "../SpanishCard";
 
 type HandCard = TrucoCard & { uid: string };
 type OpponentCard = { id: number };
+type BannerTone = "envido" | "truco" | "accept" | "reject" | "raise" | "neutral";
+
+interface TeamMember {
+  alias: string;
+  socketId?: string;
+}
 
 interface Props {
   playerName: string;
@@ -28,43 +41,65 @@ interface Props {
   round?: number;
   dealerAlias?: string;
   currentRoundCards?: Record<string, TrucoCard | null>;
+  myTeam?: "A" | "B";
+  teamAMembers?: TeamMember[];
+  teamBMembers?: TeamMember[];
+  envidoStatus?: "available" | "pending" | "resolved" | "expired";
   envidoChain?: TrucoEnvidoCall[];
+  envidoResponderTeam?: "A" | "B" | null;
+  envidoLastResponse?: { alias: string; response: "quiero" | "noquiero" | string } | null;
+  trucoStatus?: "available" | "pending" | "resolved";
   trucoChain?: TrucoTrucoCall[];
+  trucoResponderTeam?: "A" | "B" | null;
+  trucoLastResponse?: { alias: string; response: "quiero" | "noquiero" | string } | null;
   chatMessages?: ChatMessage[];
   onSendChat?: (text: string) => void;
-  onCanto?: (type: CantoType) => void;
+  onAction?: (actionType: string) => void;
   onPlayCard?: (card: TrucoCard) => void;
 }
 
-const VALID_VALUES = new Set<CardValue>([1, 2, 3, 4, 5, 6, 7, 10, 11, 12]);
 const CARD_W = 96;
 const CARD_H = 144;
-const HAND_SPACING = 94;
-const DEAL_FROM_X = 300;
+const HAND_SPACING = 84;
+const DEAL_FROM_X = 302;
+const DEAL_FROM_Y_OPP = 172;
+const DEAL_FROM_Y_ME = -302;
 const SELECTED_LIFT = 24;
-const OPPONENT_HAND_W = CARD_W + HAND_SPACING * 2 + 40;
-const OPPONENT_HAND_H = CARD_H + 24;
-const PLAYER_HAND_W = CARD_W + HAND_SPACING * 2 + 40;
-const PLAYER_HAND_H = CARD_H + 42;
-
-function toCardValue(value: number): CardValue {
-  return VALID_VALUES.has(value as CardValue) ? (value as CardValue) : 1;
-}
-
-function formatEnvidoCall(type: string): string {
-  if (type === "realenvido") return "Real Envido";
-  if (type === "faltaenvido") return "Falta Envido";
-  return "Envido";
-}
-
-function formatTrucoCall(type: string): string {
-  if (type === "retruco") return "Retruco";
-  if (type === "valecuatro") return "Vale Cuatro";
-  return "Truco";
-}
 
 function normalizeAlias(alias: string): string {
   return alias.trim().toLowerCase();
+}
+
+function actionLabel(actionType: string): string {
+  if (actionType === "real-envido") return "REAL ENVIDO";
+  if (actionType === "falta-envido") return "FALTA ENVIDO";
+  if (actionType === "no-quiero") return "NO QUIERO";
+  if (actionType === "vale-cuatro") return "VALE CUATRO";
+  if (actionType === "retruco") return "RETRUCO";
+  if (actionType === "quiero") return "QUIERO";
+  if (actionType === "truco") return "TRUCO";
+  if (actionType === "envido") return "ENVIDO";
+  if (actionType === "ir-al-mazo") return "AL MAZO";
+  return actionType.toUpperCase();
+}
+
+function actionTone(actionType: string): BannerTone {
+  if (actionType === "quiero") return "accept";
+  if (actionType === "no-quiero") return "reject";
+  if (actionType === "retruco" || actionType === "vale-cuatro" || actionType === "real-envido" || actionType === "falta-envido") return "raise";
+  if (actionType === "envido") return "envido";
+  if (actionType === "truco") return "truco";
+  return "neutral";
+}
+
+function responseKey(r: { alias: string; response: string } | null | undefined): string {
+  return r ? `${r.alias}-${r.response}` : "";
+}
+
+function fanRotate(index: number, count: number): number {
+  if (count <= 1) return 0;
+  const middle = (count - 1) / 2;
+  return (index - middle) * 12;
 }
 
 export default function TrucoTable({
@@ -81,40 +116,51 @@ export default function TrucoTable({
   round = 0,
   dealerAlias,
   currentRoundCards,
+  myTeam,
+  teamAMembers = [],
+  teamBMembers = [],
+  envidoStatus,
   envidoChain = [],
+  envidoResponderTeam,
+  envidoLastResponse,
+  trucoStatus,
   trucoChain = [],
+  trucoResponderTeam,
+  trucoLastResponse,
   chatMessages = [],
   onSendChat,
-  onCanto,
+  onAction,
   onPlayCard,
 }: Props) {
-  const [canto, setCanto] = useState<Canto | null>(null);
   const [playerHand, setPlayerHand] = useState<HandCard[]>([]);
   const [opponentHand, setOpponentHand] = useState<OpponentCard[]>([]);
   const [dealt, setDealt] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [pendingPlayedCard, setPendingPlayedCard] = useState<TrucoCard | null>(null);
+  const [transientBanner, setTransientBanner] = useState<{
+    text: string;
+    actor: string | null;
+    tone: BannerTone;
+  } | null>(null);
 
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevEnvidoLenRef = useRef(0);
   const prevTrucoLenRef = useRef(0);
+  const prevEnvidoRespKeyRef = useRef("");
+  const prevTrucoRespKeyRef = useRef("");
   const prevHandCountRef = useRef(0);
+  const eventsReadyRef = useRef(false);
 
   const handSignature = useMemo(
     () => (hand ?? []).map((card) => `${card.suit}-${card.value}`).join("|"),
     [hand],
   );
 
-  const showCanto = (nextCanto: Canto) => {
-    setCanto(nextCanto);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setCanto(null), 3200);
-  };
-
-  const handleCanto = (type: CantoType, word: string, who = playerName) => {
-    showCanto({ type, word, who });
-    onCanto?.(type);
+  const pushTransientBanner = (text: string, actor: string | null, tone: BannerTone) => {
+    setTransientBanner({ text, actor, tone });
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    bannerTimer.current = setTimeout(() => setTransientBanner(null), 2200);
   };
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -136,9 +182,7 @@ export default function TrucoTable({
       const stillInHand = normalizedHand.some(
         (card) => card.suit === pendingPlayedCard.suit && card.value === pendingPlayedCard.value,
       );
-      if (myServerCard || !stillInHand) {
-        setPendingPlayedCard(null);
-      }
+      if (myServerCard || !stillInHand) setPendingPlayedCard(null);
     }
 
     if (normalizedHand.length === 3 && prevHandCountRef.current !== 3) {
@@ -146,7 +190,7 @@ export default function TrucoTable({
       setPendingPlayedCard(null);
       setDealt(false);
       if (dealTimer.current) clearTimeout(dealTimer.current);
-      dealTimer.current = setTimeout(() => setDealt(true), 50);
+      dealTimer.current = setTimeout(() => setDealt(true), 40);
     }
 
     prevHandCountRef.current = normalizedHand.length;
@@ -154,43 +198,45 @@ export default function TrucoTable({
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    const incoming = envidoChain ?? [];
-    if (incoming.length > prevEnvidoLenRef.current) {
-      const last = incoming[incoming.length - 1];
-      if (last?.alias && normalizeAlias(last.alias) !== normalizeAlias(playerName)) {
-        const overlayType: CantoType =
-          last.type === "realenvido" ? "real-envido" : last.type === "faltaenvido" ? "falta-envido" : "envido";
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        showCanto({
-          type: overlayType,
-          word: formatEnvidoCall(last.type),
-          who: last.alias,
-        });
-      }
+    if (!eventsReadyRef.current) {
+      prevEnvidoLenRef.current = envidoChain.length;
+      prevTrucoLenRef.current = trucoChain.length;
+      prevEnvidoRespKeyRef.current = responseKey(envidoLastResponse);
+      prevTrucoRespKeyRef.current = responseKey(trucoLastResponse);
+      eventsReadyRef.current = true;
+      return;
     }
-    prevEnvidoLenRef.current = incoming.length;
-  }, [envidoChain, playerName]);
 
-  useEffect(() => {
-    const incoming = trucoChain ?? [];
-    if (incoming.length > prevTrucoLenRef.current) {
-      const last = incoming[incoming.length - 1];
-      if (last?.alias && normalizeAlias(last.alias) !== normalizeAlias(playerName)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        showCanto({
-          type: "truco",
-          word: formatTrucoCall(last.type),
-          who: last.alias,
-        });
-      }
+    if (envidoChain.length > prevEnvidoLenRef.current) {
+      const last = envidoChain[envidoChain.length - 1];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (last) pushTransientBanner(getEnvidoLabel(last.type), last.alias, "envido");
     }
-    prevTrucoLenRef.current = incoming.length;
-  }, [trucoChain, playerName]);
+    if (trucoChain.length > prevTrucoLenRef.current) {
+      const last = trucoChain[trucoChain.length - 1];
+      if (last) pushTransientBanner(getTrucoLabel(last.type), last.alias, "truco");
+    }
+
+    const envidoRespKey = responseKey(envidoLastResponse);
+    const trucoRespKey = responseKey(trucoLastResponse);
+
+    if (envidoRespKey && envidoRespKey !== prevEnvidoRespKeyRef.current && envidoLastResponse) {
+      pushTransientBanner(getResponseLabel(envidoLastResponse.response), envidoLastResponse.alias, envidoLastResponse.response === "quiero" ? "accept" : "reject");
+    }
+    if (trucoRespKey && trucoRespKey !== prevTrucoRespKeyRef.current && trucoLastResponse) {
+      pushTransientBanner(getResponseLabel(trucoLastResponse.response), trucoLastResponse.alias, trucoLastResponse.response === "quiero" ? "accept" : "reject");
+    }
+
+    prevEnvidoLenRef.current = envidoChain.length;
+    prevTrucoLenRef.current = trucoChain.length;
+    prevEnvidoRespKeyRef.current = envidoRespKey;
+    prevTrucoRespKeyRef.current = trucoRespKey;
+  }, [envidoChain, trucoChain, envidoLastResponse, trucoLastResponse]);
 
   useEffect(
     () => () => {
-      if (hideTimer.current) clearTimeout(hideTimer.current);
       if (dealTimer.current) clearTimeout(dealTimer.current);
+      if (bannerTimer.current) clearTimeout(bannerTimer.current);
     },
     [],
   );
@@ -208,7 +254,21 @@ export default function TrucoTable({
     });
   }, [playerHand, pendingPlayedCard]);
 
-  const canInteract = canPlay && phase === "playing" && !pendingPlayedCard;
+  const cantoFlow = buildCantoFlowState({
+    envidoStatus,
+    envidoChain,
+    envidoResponderTeam,
+    trucoStatus,
+    trucoChain,
+    trucoResponderTeam,
+    teamAMembers,
+    teamBMembers,
+  });
+
+  const isMyTurn = normalizeAlias(currentTurnAlias ?? "") === normalizeAlias(playerName);
+  const isMyResponseTurn = normalizeAlias(cantoFlow.responderAlias ?? "") === normalizeAlias(playerName);
+
+  const canInteract = canPlay && phase === "playing" && !pendingPlayedCard && !cantoFlow.waitingResponse;
 
   const myRoundCard = currentRoundCards?.[playerName] ?? pendingPlayedCard;
   const opponentRoundCard = currentRoundCards?.[opponentName] ?? null;
@@ -221,14 +281,27 @@ export default function TrucoTable({
         : phase === "hand_end"
           ? "Fin de Mano"
           : "Partida Terminada"
-      : currentTurnAlias
-        ? normalizeAlias(currentTurnAlias) === normalizeAlias(playerName)
-          ? "Te toca a vos"
-          : `Turno de ${currentTurnAlias}`
-        : "Esperando turno";
+      : isMyTurn
+        ? "Te toca a vos"
+        : `Turno de ${currentTurnAlias ?? "rival"}`;
 
-  const lastEnvidoCall = envidoChain[envidoChain.length - 1];
-  const lastTrucoCall = trucoChain[trucoChain.length - 1];
+  const playerCardCount = Math.max(1, displayedPlayerHand.length);
+  const opponentCardFanCount = Math.max(1, opponentHand.length);
+  const playerHandWidth = CARD_W + HAND_SPACING * Math.max(0, playerCardCount - 1) + 34;
+  const opponentHandWidth = CARD_W + HAND_SPACING * Math.max(0, opponentCardFanCount - 1) + 34;
+
+  const responseOptions = isMyResponseTurn ? getResponseOptions(cantoFlow) : [];
+  const callOptions = getDefaultCallOptions();
+
+  const actionOptions: PlayerActionOption[] =
+    cantoFlow.waitingResponse ? responseOptions : phase === "playing" ? callOptions : [];
+
+  const actionTitle =
+    cantoFlow.waitingResponse && isMyResponseTurn
+      ? "Responder canto"
+      : cantoFlow.waitingResponse
+        ? "Esperando respuesta rival"
+        : "Cantar";
 
   const handleSelectOrPlay = (card: HandCard) => {
     if (!canInteract) return;
@@ -241,20 +314,55 @@ export default function TrucoTable({
     setSelectedCardId(card.uid);
   };
 
+  const handleAction = (actionType: string) => {
+    onAction?.(actionType);
+    if (actionType !== "ir-al-mazo") {
+      pushTransientBanner(actionLabel(actionType), playerName, actionTone(actionType));
+    }
+  };
+
+  const activeBanner = transientBanner
+    ? {
+        text: transientBanner.text,
+        actor: transientBanner.actor,
+        responder: null,
+        waitingResponse: false,
+        tone: transientBanner.tone,
+      }
+    : cantoFlow.isActive
+      ? {
+          text: cantoFlow.callLabel ?? "CANTO",
+          actor: cantoFlow.callerAlias,
+          responder: cantoFlow.responderAlias,
+          waitingResponse: cantoFlow.waitingResponse,
+          tone: cantoFlow.source === "envido" ? ("envido" as BannerTone) : ("truco" as BannerTone),
+        }
+      : null;
+
+  const lastEnvidoCall = envidoChain[envidoChain.length - 1];
+  const lastTrucoCall = trucoChain[trucoChain.length - 1];
+
   return (
     <div className="truco-root">
       <ScorePanel
         scoreUs={scoreUs}
         scoreThem={scoreThem}
-        lastEnvido={lastEnvidoCall ? `${lastEnvidoCall.alias}: ${formatEnvidoCall(lastEnvidoCall.type)}` : "-"}
-        lastTruco={lastTrucoCall ? `${lastTrucoCall.alias}: ${formatTrucoCall(lastTrucoCall.type)}` : "-"}
+        lastEnvido={lastEnvidoCall ? `${lastEnvidoCall.alias}: ${getEnvidoLabel(lastEnvidoCall.type)}` : "-"}
+        lastTruco={lastTrucoCall ? `${lastTrucoCall.alias}: ${getTrucoLabel(lastTrucoCall.type)}` : "-"}
       />
 
       <div className="panel-center">
         <span className="brand">? T R U C O ?</span>
-        <div className={`turn-pill ${normalizeAlias(currentTurnAlias ?? "") === normalizeAlias(playerName) ? "mine" : "other"}`}>
-          {turnText}
-        </div>
+        <div className={`turn-pill ${isMyTurn ? "mine" : "other"}`}>{turnText}</div>
+
+        <GameCantoBanner
+          visible={!!activeBanner}
+          text={activeBanner?.text ?? ""}
+          actor={activeBanner?.actor}
+          responder={activeBanner?.responder}
+          waitingResponse={activeBanner?.waitingResponse}
+          tone={activeBanner?.tone ?? "neutral"}
+        />
 
         <div
           style={{
@@ -294,61 +402,30 @@ export default function TrucoTable({
             top: 76,
             left: "50%",
             transform: "translateX(-50%)",
-            width: OPPONENT_HAND_W,
-            height: OPPONENT_HAND_H,
+            width: opponentHandWidth,
+            height: CARD_H + 26,
             zIndex: 12,
           }}
         >
           <AnimatePresence>
             {opponentHand.map((card, index) => {
-              const finalX = index * HAND_SPACING;
-              const finalRotate = index === 0 ? -10 : index === 1 ? 0 : 10;
+              const toX = index * HAND_SPACING;
+              const rot = fanRotate(index, opponentHand.length);
               return (
-                <motion.div
-                  key={card.id}
-                  initial={
-                    dealt
-                      ? {
-                          x: DEAL_FROM_X,
-                          y: 170,
-                          rotate: 0,
-                          scale: 0.82,
-                          opacity: 0,
-                        }
-                      : false
-                  }
-                  animate={{
-                    x: finalX,
-                    y: 0,
-                    rotate: finalRotate,
-                    scale: 1,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    duration: 0.55,
-                    delay: dealt ? index * 0.2 + 0.15 : 0,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: CARD_W,
-                    height: CARD_H,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: "2px solid #f2f2f2",
-                    boxShadow: "0 10px 20px rgba(0,0,0,0.25)",
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={BACK_URL}
-                    alt={`Carta rival ${card.id}`}
-                    draggable={false}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                </motion.div>
+                <AnimatedCard
+                  key={`opp-${card.id}`}
+                  id={`opp-${card.id}`}
+                  back
+                  alt={`Carta rival ${card.id}`}
+                  width={CARD_W}
+                  height={CARD_H}
+                  dealt={dealt}
+                  dealFrom={{ x: DEAL_FROM_X, y: DEAL_FROM_Y_OPP, rotate: 0, scale: 0.82 }}
+                  to={{ x: toX, y: 0, rotate: rot }}
+                  delay={dealt ? index * 0.24 : 0}
+                  border="2px solid #f2f2f2"
+                  zIndex={6 + index}
+                />
               );
             })}
           </AnimatePresence>
@@ -370,37 +447,21 @@ export default function TrucoTable({
             {opponentRoundCard && (
               <motion.div
                 key={`opponent-round-${opponentRoundCard.suit}-${opponentRoundCard.value}`}
-                initial={{
-                  x: 40,
-                  y: -132,
-                  rotate: 0,
-                  scale: 0.82,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: 40,
-                  y: bothCardsOnTable ? -42 : 8,
-                  rotate: bothCardsOnTable ? -7 : 0,
-                  scale: 1,
-                  opacity: 1,
-                }}
+                initial={{ x: 40, y: -132, rotate: 0, scale: 0.82, opacity: 0 }}
+                animate={{ x: 40, y: bothCardsOnTable ? -42 : 8, rotate: bothCardsOnTable ? -7 : 0, scale: 1, opacity: 1 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  position: "absolute",
-                  width: CARD_W,
-                  height: CARD_H,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: "2px solid #1d1d1d",
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.25)",
-                }}
+                style={{ position: "absolute", width: CARD_W, height: CARD_H }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getCardImageUrl(opponentRoundCard.suit, toCardValue(opponentRoundCard.value))}
+                <AnimatedCard
+                  id={`opp-round-${opponentRoundCard.suit}-${opponentRoundCard.value}`}
+                  card={opponentRoundCard}
                   alt={`Carta en mesa de ${opponentName}`}
-                  draggable={false}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  width={CARD_W}
+                  height={CARD_H}
+                  dealt={false}
+                  dealFrom={{ x: 0, y: 0 }}
+                  to={{ x: 0, y: 0 }}
+                  border="2px solid #1d1d1d"
                 />
               </motion.div>
             )}
@@ -410,37 +471,21 @@ export default function TrucoTable({
             {myRoundCard && (
               <motion.div
                 key={`my-round-${myRoundCard.suit}-${myRoundCard.value}`}
-                initial={{
-                  x: 40,
-                  y: 146,
-                  rotate: 0,
-                  scale: 0.82,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: 40,
-                  y: bothCardsOnTable ? 42 : 8,
-                  rotate: bothCardsOnTable ? 8 : 0,
-                  scale: 1,
-                  opacity: 1,
-                }}
+                initial={{ x: 40, y: 146, rotate: 0, scale: 0.82, opacity: 0 }}
+                animate={{ x: 40, y: bothCardsOnTable ? 42 : 8, rotate: bothCardsOnTable ? 8 : 0, scale: 1, opacity: 1 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  position: "absolute",
-                  width: CARD_W,
-                  height: CARD_H,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: "2px solid #1d1d1d",
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.25)",
-                }}
+                style={{ position: "absolute", width: CARD_W, height: CARD_H }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getCardImageUrl(myRoundCard.suit, toCardValue(myRoundCard.value))}
+                <AnimatedCard
+                  id={`my-round-${myRoundCard.suit}-${myRoundCard.value}`}
+                  card={myRoundCard}
                   alt={`${myRoundCard.value} de ${myRoundCard.suit}`}
-                  draggable={false}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  width={CARD_W}
+                  height={CARD_H}
+                  dealt={false}
+                  dealFrom={{ x: 0, y: 0 }}
+                  to={{ x: 0, y: 0 }}
+                  border="2px solid #1d1d1d"
                 />
               </motion.div>
             )}
@@ -450,111 +495,70 @@ export default function TrucoTable({
         <div
           style={{
             position: "absolute",
-            bottom: 206,
+            bottom: 214,
             left: "50%",
             transform: "translateX(-50%)",
-            width: PLAYER_HAND_W,
-            height: PLAYER_HAND_H,
+            width: playerHandWidth,
+            height: CARD_H + 36,
             zIndex: 20,
           }}
         >
           <AnimatePresence>
             {displayedPlayerHand.map((card, index) => {
-              const finalX = index * HAND_SPACING;
-              const finalRotate = index === 0 ? -12 : index === 1 ? 0 : 12;
+              const toX = index * HAND_SPACING;
+              const rot = fanRotate(index, displayedPlayerHand.length);
               const isSelected = selectedCardId === card.uid;
 
               return (
-                <motion.button
+                <AnimatedCard
                   key={card.uid}
-                  type="button"
-                  layout
-                  initial={
-                    dealt
-                      ? {
-                          x: DEAL_FROM_X,
-                          y: -300,
-                          rotate: 0,
-                          scale: 0.82,
-                          opacity: 0,
-                        }
-                      : false
-                  }
-                  animate={{
-                    x: finalX,
-                    y: isSelected ? -SELECTED_LIFT : 0,
-                    rotate: finalRotate,
-                    scale: isSelected ? 1.06 : 1,
-                    opacity: 1,
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 0.55,
-                    delay: dealt ? index * 0.2 + 0.8 : 0,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  whileHover={
-                    canInteract
-                      ? {
-                          y: isSelected ? -SELECTED_LIFT : -14,
-                          scale: 1.04,
-                        }
-                      : undefined
-                  }
-                  whileTap={canInteract ? { scale: 0.98 } : undefined}
+                  id={card.uid}
+                  card={card}
+                  alt={`${card.value} de ${card.suit}`}
+                  width={CARD_W}
+                  height={CARD_H}
+                  dealt={dealt}
+                  dealFrom={{ x: DEAL_FROM_X, y: DEAL_FROM_Y_ME, rotate: 0, scale: 0.82 }}
+                  to={{ x: toX, y: isSelected ? -SELECTED_LIFT : 0, rotate: rot }}
+                  delay={dealt ? index * 0.24 + 0.12 : 0}
+                  selected={isSelected}
+                  interactive
+                  disabled={!canInteract}
                   onClick={() => handleSelectOrPlay(card)}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: CARD_W,
-                    height: CARD_H,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: isSelected ? "3px solid #f4c542" : "2px solid #1d1d1d",
-                    boxShadow: isSelected
-                      ? "0 14px 28px rgba(0,0,0,0.3)"
-                      : "0 10px 20px rgba(0,0,0,0.22)",
-                    cursor: canInteract ? "pointer" : "default",
-                    zIndex: 20 + index,
-                    userSelect: "none",
-                    padding: 0,
-                    background: "#fff",
-                    opacity: canInteract || !!isSelected ? 1 : 0.75,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={getCardImageUrl(card.suit, toCardValue(card.value))}
-                    alt={`${card.value} de ${card.suit}`}
-                    draggable={false}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                </motion.button>
+                  zIndex={20 + index}
+                  opacity={canInteract || isSelected ? 1 : 0.75}
+                />
               );
             })}
           </AnimatePresence>
         </div>
 
-        <p className="card-hint" style={{ position: "absolute", bottom: 188, marginBottom: 0 }}>
+        <p className="card-hint" style={{ position: "absolute", bottom: 194, marginBottom: 0 }}>
           {canInteract
-            ? "Toca una carta para seleccionarla y volve a tocar para tirarla a la mesa"
-            : normalizeAlias(currentTurnAlias ?? "") === normalizeAlias(playerName)
-              ? "Esperando confirmacion del servidor..."
-              : `Esperando jugada de ${currentTurnAlias ?? "rival"}`}
+            ? "Toca una carta para seleccionarla y volve a tocar para tirarla"
+            : cantoFlow.waitingResponse
+              ? "Hay un canto pendiente de respuesta"
+              : isMyTurn
+                ? "Esperando confirmacion del servidor..."
+                : `Esperando jugada de ${currentTurnAlias ?? "rival"}`}
         </p>
 
-        <div style={{ position: "absolute", bottom: 56, left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
-          <ActionButtons onCanto={handleCanto} />
+        <div style={{ position: "absolute", bottom: 56, left: "50%", transform: "translateX(-50%)", zIndex: 28 }}>
+          <PlayerActionButtons
+            title={actionTitle}
+            options={actionOptions}
+            disabled={phase !== "playing" || (cantoFlow.waitingResponse && !isMyResponseTurn)}
+            onAction={handleAction}
+          />
         </div>
 
         <div className="mano-info">
           Mano Nro {handNum} - Ronda {(round ?? 0) + 1}/3
           <br />
           Dealer: {dealerAlias ?? playerName}
+          <br />
+          {myTeam ? `Equipo ${myTeam}` : ""}
         </div>
-
-        {canto && <CantoOverlay canto={canto} onDismiss={() => setCanto(null)} />}
       </div>
 
       <ChatPanel playerName={playerName} playerScore={scoreUs} messages={chatMessages} onSend={(text) => onSendChat?.(text)} />
