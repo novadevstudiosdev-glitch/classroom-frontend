@@ -28,7 +28,7 @@
   background: var(--wood-dark);
   border-radius: 0;
   display: grid;
-  grid-template-columns: 170px 1fr 210px;
+  grid-template-columns: 230px 1fr 290px;
   overflow: hidden;
   font-family: 'Playfair Display', Georgia, serif;
   position: relative;
@@ -40,14 +40,14 @@
 .panel-left {
   background: var(--wood-mid);
   border-right: 1px solid #6a4a1822;
-  padding: 14px 12px;
+  padding: 18px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sec-title {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--gold);
@@ -70,7 +70,7 @@
 }
 
 .team-name {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -95,7 +95,7 @@
 }
 
 .score-total {
-  font-size: 22px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--gold-light);
   text-align: center;
@@ -130,15 +130,20 @@
 }
 
 .canto-lbl {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: #6a5030;
 }
 
 .canto-val {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gold);
+  line-height: 1.3;
+}
+
+.canto-val-truco {
+  color: #e87040;
 }
 
 .canto-val.off {
@@ -160,7 +165,7 @@
 
 .brand {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 10px;
@@ -168,6 +173,34 @@
   letter-spacing: 2px;
   z-index: 5;
   white-space: nowrap;
+}
+
+.turn-pill {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  z-index: 8;
+  white-space: nowrap;
+  border: 1px solid;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+}
+
+.turn-pill.mine {
+  background: #1f4d2d;
+  border-color: #4fa867;
+  color: #e7ffef;
+}
+
+.turn-pill.other {
+  background: #2a1a10;
+  border-color: #7b4d2a;
+  color: #f3d4ad;
 }
 
 .timer {
@@ -518,112 +551,130 @@
    PANEL DERECHO - Chat
    ======================= */
 .panel-right {
-  background: #130e06;
-  border-left: 1px solid #6a4a1822;
+  background: linear-gradient(180deg, #1b130a 0%, #120d06 100%);
+  border-left: 1px solid #7b5a2a55;
   display: flex;
   flex-direction: column;
+  box-shadow: inset 8px 0 18px #00000055;
 }
 
 .chat-hdr {
-  padding: 12px 14px 8px;
-  border-bottom: 1px solid #6a4a1822;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #6a4a1840;
+  background: #24170b;
 }
 
 .chat-title {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--gold);
+  color: #f1d48a;
+  font-weight: 700;
 }
 
 .player-chip {
-  margin: 8px 10px 0;
-  background: #1e1208;
-  border: 1px solid #6a4a1833;
-  border-radius: 8px;
-  padding: 8px 10px;
+  margin: 10px 12px 0;
+  background: #211408;
+  border: 1px solid #8f6a2e55;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--gold);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #1a0e04;
   flex-shrink: 0;
 }
 
 .pname {
-  font-size: 12px;
+  font-size: 13px;
   color: #d4a840;
+  font-weight: 700;
 }
 
 .ppts {
-  font-size: 10px;
+  font-size: 11px;
   color: #6a5030;
 }
 
 .sbadge {
   margin-left: auto;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--gold-light);
 }
 
 .chat-msgs {
   flex: 1;
-  padding: 10px 12px;
+  margin: 10px 12px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid #6a4a1835;
+  background: #1a1108;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   overflow-y: auto;
 }
 
 .msg-empty {
-  font-size: 10px;
-  color: #3a2e18;
+  font-size: 12px;
+  color: #6a5030;
   text-align: center;
   margin-top: 12px;
   letter-spacing: 0.5px;
 }
 
 .msg-item {
-  font-size: 11px;
-  color: #a08040;
-  line-height: 1.4;
+  font-size: 12px;
+  color: #d7b776;
+  line-height: 1.45;
+  background: #2a1a0c;
+  border: 1px solid #6e4d1f55;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.msg-system {
+  background: #1d2632;
+  border-color: #2d456355;
 }
 
 .msg-who {
-  color: var(--gold);
-  margin-right: 4px;
+  color: #f0d080;
+  margin-right: 6px;
+  font-weight: 700;
 }
 
 .msg-txt {
-  color: #a08040;
+  color: #eed9ad;
 }
 
 .chat-in-row {
-  border-top: 1px solid #6a4a1822;
-  padding: 7px 9px;
+  border-top: 1px solid #6a4a1840;
+  padding: 10px 12px 12px;
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .chat-in {
   flex: 1;
-  background: #1e1208;
-  border: 1px solid #6a4a1833;
-  border-radius: 5px;
-  padding: 6px 9px;
-  font-size: 11px;
+  background: #25170a;
+  border: 1px solid #7b5a2a55;
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 12px;
   color: #d4a840;
   font-family: 'Playfair Display', Georgia, serif;
   outline: none;
@@ -634,16 +685,18 @@
 }
 
 .chat-send {
-  background: #c8a44a22;
-  border: 1px solid #6a4a1855;
-  border-radius: 5px;
-  padding: 6px 10px;
-  color: var(--gold);
+  background: #3a2a12;
+  border: 1px solid #9a7538;
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: #f0d080;
   cursor: pointer;
-  font-size: 13px;
-  transition: background 0.15s;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.15s, transform 0.15s;
 }
 
 .chat-send:hover {
-  background: #c8a44a33;
+  background: #4a3415;
+  transform: translateY(-1px);
 }

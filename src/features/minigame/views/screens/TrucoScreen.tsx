@@ -158,6 +158,7 @@ export function TrucoScreen(props: Props) {
   const useRetroUi = (process.env.NEXT_PUBLIC_TRUCO_UI ?? '').toLowerCase() === 'retro';
   const myAlias = useMinigameStore((s) => s.myAlias);
   const view = useMinigameStore((s) => s.truco);
+  const roomChat = useMinigameStore((s) => s.roomChat);
 
   if (!useRetroUi) {
     return <LiveTrucoScreen {...props} />;
@@ -195,6 +196,17 @@ export function TrucoScreen(props: Props) {
         hand={myHand}
         opponentName={opponentAlias}
         opponentCardCount={opponentCardCount}
+        currentTurnAlias={view?.currentTurnAlias}
+        canPlay={canPlay}
+        phase={view?.phase}
+        handNum={view?.handNum}
+        round={view?.round}
+        dealerAlias={view?.dealerAlias}
+        currentRoundCards={view?.currentRoundCards}
+        envidoChain={view?.envidoChain}
+        trucoChain={view?.trucoChain}
+        chatMessages={roomChat}
+        onSendChat={props.onSendChat}
         onCanto={handleCanto}
         onPlayCard={handlePlayCard}
       />
