@@ -4,6 +4,8 @@ import { useMinigameStore } from '../../store/minigame.store';
 import { GameSidebar } from '../../components/GameSidebar';
 import { BACK_URL, getCardImageUrl } from '../../components/SpanishCard';
 import type { TrucoCard, TableTheme } from '../../types/game.types';
+import type { CantoType } from '../../types/truco';
+import TrucoTable from '../../components/truco/TrucoTable';
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PROPS
@@ -147,6 +149,62 @@ function PlayingCard({
           display: 'block',
           pointerEvents: 'none',
         }}
+      />
+    </div>
+  );
+}
+
+export function TrucoScreen(props: Props) {
+  const useRetroUi = (process.env.NEXT_PUBLIC_TRUCO_UI ?? '').toLowerCase() === 'retro';
+  const myAlias = useMinigameStore((s) => s.myAlias);
+  const view = useMinigameStore((s) => s.truco);
+
+  if (!useRetroUi) {
+    return <LiveTrucoScreen {...props} />;
+  }
+
+  const myTeam = view?.myTeam;
+  const scoreUs =
+    myTeam === 'A' ? (view?.teamAScore ?? 0) : myTeam === 'B' ? (view?.teamBScore ?? 0) : 0;
+  const scoreThem =
+    myTeam === 'A' ? (view?.teamBScore ?? 0) : myTeam === 'B' ? (view?.teamAScore ?? 0) : 0;
+  const myHand = view?.myHand ?? [];
+  const alreadyPlayed = !!view?.currentRoundCards?.[myAlias];
+  const canPlay = view?.phase === 'playing' && view?.currentTurnAlias === myAlias && !alreadyPlayed;
+  const teamAView = view?.teamAMembers ?? [];
+  const teamBView = view?.teamBMembers ?? [];
+  const allAliases = [...teamAView, ...teamBView].map((p) => p.alias);
+  const opponentAlias = allAliases.find((alias) => alias !== myAlias) ?? "Rival";
+  const opponentCardCount = view?.allPlayerCardCounts?.[opponentAlias] ?? Math.max(myHand.length, 3);
+
+  const handleCanto = (type: CantoType) => {
+    if (type === 'envido') {
+      props.sendTrucoAction({ type: 'envido' });
+      return;
+    }
+    if (type === 'falta') {
+      props.sendTrucoAction({ type: 'falta-envido' });
+      return;
+    }
+    props.sendTrucoAction({ type: 'truco' });
+  };
+
+  const handlePlayCard = (card: TrucoCard) => {
+    if (!canPlay) return;
+    props.sendTrucoAction({ type: 'play-card', card });
+  };
+
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+      <TrucoTable
+        playerName={myAlias || 'Jugador'}
+        scoreUs={scoreUs}
+        scoreThem={scoreThem}
+        hand={myHand}
+        opponentName={opponentAlias}
+        opponentCardCount={opponentCardCount}
+        onCanto={handleCanto}
+        onPlayCard={handlePlayCard}
       />
     </div>
   );
@@ -1019,7 +1077,8 @@ function CallNotification({
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN TRUCO SCREEN
 ═══════════════════════════════════════════════════════════════════════════ */
-export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) {
+function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame }: Props) {
+  void _onExitGame;
   const myAlias  = useMinigameStore(s => s.myAlias);
   const isHost   = useMinigameStore(s => s.isHost);
   const players  = useMinigameStore(s => s.players);
