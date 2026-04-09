@@ -203,13 +203,20 @@
   color: #f3d4ad;
 }
 
-.canto-banner {
+.canto-banner-layer {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(74%, 620px);
-  z-index: 24;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.canto-banner {
+  width: 68%;
+  max-width: 900px;
+  min-width: 420px;
   border-radius: 16px;
   padding: 14px 20px 12px;
   background: rgba(14, 11, 8, 0.7);

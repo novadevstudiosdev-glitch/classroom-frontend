@@ -160,7 +160,7 @@ export default function TrucoTable({
   const pushTransientBanner = (text: string, actor: string | null, tone: BannerTone) => {
     setTransientBanner({ text, actor, tone });
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
-    bannerTimer.current = setTimeout(() => setTransientBanner(null), 2000);
+    bannerTimer.current = setTimeout(() => setTransientBanner(null), 3000);
   };
 
   /* eslint-disable react-hooks/set-state-in-effect */
