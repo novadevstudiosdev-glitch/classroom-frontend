@@ -160,7 +160,7 @@ export default function TrucoTable({
   const pushTransientBanner = (text: string, actor: string | null, tone: BannerTone) => {
     setTransientBanner({ text, actor, tone });
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
-    bannerTimer.current = setTimeout(() => setTransientBanner(null), 2200);
+    bannerTimer.current = setTimeout(() => setTransientBanner(null), 2000);
   };
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -329,15 +329,7 @@ export default function TrucoTable({
         waitingResponse: false,
         tone: transientBanner.tone,
       }
-    : cantoFlow.isActive
-      ? {
-          text: cantoFlow.callLabel ?? "CANTO",
-          actor: cantoFlow.callerAlias,
-          responder: cantoFlow.responderAlias,
-          waitingResponse: cantoFlow.waitingResponse,
-          tone: cantoFlow.source === "envido" ? ("envido" as BannerTone) : ("truco" as BannerTone),
-        }
-      : null;
+    : null;
 
   const lastEnvidoCall = envidoChain[envidoChain.length - 1];
   const lastTrucoCall = trucoChain[trucoChain.length - 1];
