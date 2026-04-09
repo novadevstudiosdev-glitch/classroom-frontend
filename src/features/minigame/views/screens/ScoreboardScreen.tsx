@@ -7,12 +7,11 @@ interface Props {
   onRestart: () => void;
   onExit: () => void;
   onSendChat: (text: string) => void;
-  onSendReaction: (emoji: string) => void;
 }
 
 const RANK_MEDALS = ['🥇', '🥈', '🥉'];
 
-export function ScoreboardScreen({ onRestart, onExit, onSendChat, onSendReaction }: Props) {
+export function ScoreboardScreen({ onRestart, onExit, onSendChat }: Props) {
   const myAlias = useMinigameStore((s) => s.myAlias);
   const isHost  = useMinigameStore((s) => s.isHost);
   const players  = useMinigameStore((s) => s.players);
@@ -204,7 +203,6 @@ export function ScoreboardScreen({ onRestart, onExit, onSendChat, onSendReaction
           players={players}
           roomChat={roomChat}
           onSendChat={onSendChat}
-          onSendReaction={onSendReaction}
           showScores
         />
       </div>

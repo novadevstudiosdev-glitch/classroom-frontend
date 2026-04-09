@@ -1,12 +1,15 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useMinigameStore } from '../../store/minigame.store';
 import { GameSidebar } from '../../components/GameSidebar';
+import { BACK_URL, getCardImageUrl } from '../../components/SpanishCard';
 import type { TrucoCard, TableTheme } from '../../types/game.types';
+import type { CantoType } from '../../types/truco';
+import TrucoTable from '../../components/truco/TrucoTable';
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PROPS
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTrucoAction: (action: { type: string; [k: string]: any }) => void;
@@ -14,9 +17,9 @@ interface Props {
   onExitGame: () => void;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TABLE THEMES
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 type ThemeDef = {
   felt: string;
   feltInner: string;
@@ -29,116 +32,56 @@ type ThemeDef = {
 
 const THEMES: Record<TableTheme, ThemeDef> = {
   green: {
-    felt: 'radial-gradient(ellipse 80% 70% at 50% 50%, #1f7a4a 0%, #155a35 55%, #0f3d26 100%)',
-    feltInner: '#1a6640',
-    border: '#0b2e1c',
-    text: '#d4f5e2',
-    bg: 'radial-gradient(ellipse at center, #0d2b18 0%, #07160c 100%)',
+    felt: 'radial-gradient(ellipse 78% 70% at 50% 45%, #39a96a 0%, #238855 42%, #1b6d45 70%, #11442d 100%)',
+    feltInner: '#2f8d5b',
+    border: '#081e15',
+    text: '#d9ffe8',
+    bg: 'radial-gradient(ellipse 110% 60% at 50% 18%, rgba(92,127,179,0.2) 0%, rgba(20,25,35,0.9) 56%, #090c13 100%)',
     label: 'Tapete verde',
-    icon: '🟢',
+    icon: '\u25C9',
   },
   wood: {
-    felt: 'radial-gradient(ellipse 80% 70% at 50% 50%, #9a6a45 0%, #7a4e28 55%, #5a3418 100%)',
-    feltInner: '#8b5e3a',
-    border: '#3a2010',
-    text: '#fff0d8',
-    bg: 'radial-gradient(ellipse at center, #2d1a0a 0%, #180d04 100%)',
+    felt: 'radial-gradient(ellipse 78% 70% at 50% 45%, #9d714f 0%, #7f5a3e 48%, #5f3f2a 78%, #3d2619 100%)',
+    feltInner: '#8a6448',
+    border: '#20130d',
+    text: '#ffe9d1',
+    bg: 'radial-gradient(ellipse 120% 58% at 50% 16%, rgba(217,147,94,0.18) 0%, rgba(41,24,16,0.92) 54%, #130b07 100%)',
     label: 'Mesa de madera',
-    icon: '🪵',
+    icon: '\u25C9',
   },
   plastic: {
-    felt: 'radial-gradient(ellipse 80% 70% at 50% 50%, #2a4f80 0%, #1a3860 55%, #102845 100%)',
-    feltInner: '#1e4070',
-    border: '#0a1e38',
-    text: '#c8e8ff',
-    bg: 'radial-gradient(ellipse at center, #0a1a30 0%, #050e1a 100%)',
-    label: 'Mesa de plástico',
-    icon: '🔵',
+    felt: 'radial-gradient(ellipse 78% 70% at 50% 45%, #3d6299 0%, #2a4f85 45%, #1c3f72 70%, #112b4f 100%)',
+    feltInner: '#315786',
+    border: '#08182f',
+    text: '#d8edff',
+    bg: 'radial-gradient(ellipse 120% 58% at 50% 16%, rgba(94,138,214,0.2) 0%, rgba(17,30,56,0.9) 55%, #070d18 100%)',
+    label: 'Mesa de plastico',
+    icon: '\u25C9',
   },
   night: {
-    felt: 'radial-gradient(ellipse 80% 70% at 50% 50%, #252540 0%, #16163a 55%, #0d0d25 100%)',
-    feltInner: '#1e1e38',
-    border: '#080818',
-    text: '#c0c0ff',
-    bg: 'radial-gradient(ellipse at center, #05050f 0%, #020209 100%)',
+    felt: 'radial-gradient(ellipse 78% 70% at 50% 45%, #3a3f66 0%, #2f3355 42%, #202442 70%, #12162c 100%)',
+    feltInner: '#34385d',
+    border: '#07090f',
+    text: '#dde2ff',
+    bg: 'radial-gradient(ellipse 120% 58% at 50% 14%, rgba(117,118,184,0.22) 0%, rgba(21,23,42,0.92) 52%, #05060d 100%)',
     label: 'Modo noche',
-    icon: '🌙',
+    icon: '\u25C9',
   },
 };
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SUIT COLORS & SVG ICONS
-═══════════════════════════════════════════════════════════════════════════ */
-const SUIT_COLOR: Record<string, string> = {
-  espadas: '#1a237e',
-  bastos:  '#1b5e20',
-  copas:   '#c62828',
-  oros:    '#e65100',
-};
-
-function SuitIcon({ suit, size = 14 }: { suit: string; size?: number }) {
-  const c = SUIT_COLOR[suit] ?? '#333';
-  const s = size;
-  if (suit === 'espadas') return (
-    <svg width={s} height={s} viewBox="0 0 20 24" fill="none">
-      <polygon points="10,1 12.5,18 10,16 7.5,18" fill={c} />
-      <rect x="4" y="17" width="12" height="2.5" rx="1.2" fill={c} />
-      <rect x="9" y="19.5" width="2" height="4" rx="1" fill={c} />
-    </svg>
-  );
-  if (suit === 'bastos') return (
-    <svg width={s} height={s} viewBox="0 0 22 24" fill="none">
-      <circle cx="11" cy="4"  r="3.8" fill={c} />
-      <circle cx="4.5" cy="17" r="3.8" fill={c} />
-      <circle cx="17.5" cy="17" r="3.8" fill={c} />
-      <polygon points="10,4 12,4 14,17 8,17" fill={c} opacity="0.7" />
-      <rect x="9" y="19.5" width="4" height="3.5" rx="1" fill={c} />
-    </svg>
-  );
-  if (suit === 'copas') return (
-    <svg width={s} height={s} viewBox="0 0 22 26" fill="none">
-      <path d="M4 2 H18 Q18 14 11 18 Q4 14 4 2 Z" fill={c} />
-      <path d="M6 3 H16" stroke="white" strokeWidth="1" strokeOpacity="0.3" strokeLinecap="round" />
-      <rect x="9.5" y="18" width="3" height="5" rx="1" fill={c} />
-      <rect x="5" y="22.5" width="12" height="2.5" rx="1.2" fill={c} />
-    </svg>
-  );
-  return (
-    <svg width={s} height={s} viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="9.5" fill={c} />
-      <circle cx="11" cy="11" r="7"   fill={c} stroke="rgba(255,200,100,0.35)" strokeWidth="1.5" />
-      <circle cx="11" cy="11" r="4.5" fill="none" stroke="rgba(255,230,150,0.4)" strokeWidth="1.5" />
-      <circle cx="11" cy="11" r="2"   fill="rgba(255,220,130,0.35)" />
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   PIP POSITIONS (% of card width/height for suit symbols)
-═══════════════════════════════════════════════════════════════════════════ */
-const PIPS: Record<number, [number, number][]> = {
-  1: [[50, 50]],
-  2: [[50, 22], [50, 78]],
-  3: [[50, 18], [30, 65], [70, 65]],
-  4: [[28, 25], [72, 25], [28, 75], [72, 75]],
-  5: [[28, 22], [72, 22], [50, 50], [28, 78], [72, 78]],
-  6: [[28, 18], [72, 18], [28, 50], [72, 50], [28, 82], [72, 82]],
-  7: [[28, 15], [72, 15], [50, 32], [28, 55], [72, 55], [28, 82], [72, 82]],
-};
-
-const COURT: Record<number, string> = { 10: 'S', 11: 'C', 12: 'R' };
-const COURT_FULL: Record<number, string> = { 10: 'SOTA', 11: 'CABALLO', 12: 'REY' };
-
-/* ═══════════════════════════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PLAYING CARD COMPONENT
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 type CardSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-const CSIZES: Record<CardSize, { w: number; h: number; fs: number; pip: number; cornerFs: number }> = {
-  xs: { w: 36,  h: 52,  fs: 7,  pip: 9,  cornerFs: 7  },
-  sm: { w: 50,  h: 72,  fs: 10, pip: 12, cornerFs: 9  },
-  md: { w: 66,  h: 94,  fs: 13, pip: 16, cornerFs: 11 },
-  lg: { w: 82,  h: 116, fs: 16, pip: 20, cornerFs: 13 },
-  xl: { w: 112, h: 156, fs: 20, pip: 26, cornerFs: 16 },
+const CSIZES: Record<CardSize, { w: number; h: number }> = {
+  xs: { w: 36, h: 52 },
+  sm: { w: 50, h: 72 },
+  md: { w: 66, h: 94 },
+  lg: { w: 82, h: 116 },
+  xl: { w: 112, h: 156 },
 };
 
 interface CardProps {
@@ -159,10 +102,7 @@ function PlayingCard({
   draggable: isDraggable, isDragging, onDragStart, onDragEnd,
 }: CardProps) {
   const d = CSIZES[size];
-  const color = SUIT_COLOR[card.suit] ?? '#333';
-  const isCourt = card.value >= 10;
-  const label = COURT[card.value] ?? String(card.value);
-  const pips = PIPS[card.value] ?? [];
+  const imageUrl = getCardImageUrl(card.suit, card.value as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 10 | 11 | 12);
 
   return (
     <div
@@ -173,7 +113,7 @@ function PlayingCard({
       style={{
         width: d.w, height: d.h,
         borderRadius: size === 'xs' ? 4 : size === 'sm' ? 5 : 7,
-        background: 'linear-gradient(160deg, #fffefb 0%, #f9f4e8 100%)',
+        background: '#fff',
         border: selected
           ? '2.5px solid #fbbf24'
           : highlight
@@ -197,129 +137,115 @@ function PlayingCard({
         overflow: 'hidden',
       }}
     >
-      <div style={{
-        position: 'absolute',
-        inset: 2,
-        borderRadius: size === 'xs' ? 3 : size === 'sm' ? 4 : 6,
-        border: '1px solid rgba(65,45,20,0.12)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 6px)',
-        pointerEvents: 'none',
-      }} />
-      {/* Top-left corner */}
-      <div style={{
-        position: 'absolute', top: size === 'xs' ? 2 : 3, left: size === 'xs' ? 3 : 4,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1,
-      }}>
-        <span style={{ fontSize: d.cornerFs, fontWeight: 900, color, lineHeight: 1 }}>{label}</span>
-        <SuitIcon suit={card.suit} size={d.cornerFs - 1} />
-      </div>
-
-      {/* Bottom-right corner (rotated) */}
-      <div style={{
-        position: 'absolute', bottom: size === 'xs' ? 2 : 3, right: size === 'xs' ? 3 : 4,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1,
-        transform: 'rotate(180deg)',
-      }}>
-        <span style={{ fontSize: d.cornerFs, fontWeight: 900, color, lineHeight: 1 }}>{label}</span>
-        <SuitIcon suit={card.suit} size={d.cornerFs - 1} />
-      </div>
-
-      {/* Center content */}
-      {isCourt ? (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', gap: size === 'xs' ? 1 : 2,
-        }}>
-          <SuitIcon suit={card.suit} size={d.pip + 2} />
-          {size !== 'xs' && (
-            <span style={{ fontSize: d.fs - 2, fontWeight: 900, color, letterSpacing: '0.05em', lineHeight: 1 }}>
-              {COURT_FULL[card.value]}
-            </span>
-          )}
-        </div>
-      ) : (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          {pips.map(([px, py], i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              left: `${px}%`, top: `${py}%`,
-              transform: 'translate(-50%, -50%)',
-            }}>
-              <SuitIcon suit={card.suit} size={d.pip} />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={`${card.value} de ${card.suit}`}
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          pointerEvents: 'none',
+        }}
+      />
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+export function TrucoScreen(props: Props) {
+  const useRetroUi = (process.env.NEXT_PUBLIC_TRUCO_UI ?? '').toLowerCase() === 'retro';
+  const myAlias = useMinigameStore((s) => s.myAlias);
+  const view = useMinigameStore((s) => s.truco);
+
+  if (!useRetroUi) {
+    return <LiveTrucoScreen {...props} />;
+  }
+
+  const myTeam = view?.myTeam;
+  const scoreUs =
+    myTeam === 'A' ? (view?.teamAScore ?? 0) : myTeam === 'B' ? (view?.teamBScore ?? 0) : 0;
+  const scoreThem =
+    myTeam === 'A' ? (view?.teamBScore ?? 0) : myTeam === 'B' ? (view?.teamAScore ?? 0) : 0;
+  const myHand = view?.myHand ?? [];
+  const alreadyPlayed = !!view?.currentRoundCards?.[myAlias];
+  const canPlay = view?.phase === 'playing' && view?.currentTurnAlias === myAlias && !alreadyPlayed;
+  const teamAView = view?.teamAMembers ?? [];
+  const teamBView = view?.teamBMembers ?? [];
+  const allAliases = [...teamAView, ...teamBView].map((p) => p.alias);
+  const opponentAlias = allAliases.find((alias) => alias !== myAlias) ?? "Rival";
+  const opponentCardCount = view?.allPlayerCardCounts?.[opponentAlias] ?? Math.max(myHand.length, 3);
+
+  const handleCanto = (type: CantoType) => {
+    if (type === 'envido') {
+      props.sendTrucoAction({ type: 'envido' });
+      return;
+    }
+    if (type === 'falta') {
+      props.sendTrucoAction({ type: 'falta-envido' });
+      return;
+    }
+    props.sendTrucoAction({ type: 'truco' });
+  };
+
+  const handlePlayCard = (card: TrucoCard) => {
+    if (!canPlay) return;
+    props.sendTrucoAction({ type: 'play-card', card });
+  };
+
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+      <TrucoTable
+        playerName={myAlias || 'Jugador'}
+        scoreUs={scoreUs}
+        scoreThem={scoreThem}
+        hand={myHand}
+        opponentName={opponentAlias}
+        opponentCardCount={opponentCardCount}
+        onCanto={handleCanto}
+        onPlayCard={handlePlayCard}
+      />
+    </div>
+  );
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CARD BACK
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function CardBack({ size = 'md' }: { size?: CardSize }) {
   const d = CSIZES[size];
   return (
     <div style={{
       width: d.w, height: d.h,
       borderRadius: size === 'xs' ? 4 : size === 'sm' ? 5 : 7,
-      background: 'linear-gradient(135deg, #1a237e 0%, #283593 40%, #1565c0 70%, #1a237e 100%)',
       border: '1px solid rgba(255,255,255,0.12)',
       boxShadow: '0 3px 10px rgba(0,0,0,0.5)',
       flexShrink: 0,
       position: 'relative',
       overflow: 'hidden',
     }}>
-      <div style={{
-        position: 'absolute', inset: size === 'xs' ? 2 : 3,
-        border: '1px solid rgba(255,255,255,0.18)',
-        borderRadius: size === 'xs' ? 2 : 4,
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: `repeating-linear-gradient(
-          45deg,
-          rgba(255,255,255,0.04) 0px,
-          rgba(255,255,255,0.04) 1.5px,
-          transparent 1.5px,
-          transparent 7px
-        ), repeating-linear-gradient(
-          -45deg,
-          rgba(255,255,255,0.03) 0px,
-          rgba(255,255,255,0.03) 1.5px,
-          transparent 1.5px,
-          transparent 7px
-        )`,
-      }} />
-      {size !== 'xs' && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{
-            width: d.w * 0.42, height: d.h * 0.38,
-            border: '1px solid rgba(255,255,255,0.22)',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ fontSize: size === 'sm' ? 9 : 12, opacity: 0.35 }}>♦</span>
-          </div>
-        </div>
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={BACK_URL}
+        alt="Carta boca abajo"
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          pointerEvents: 'none',
+        }}
+      />
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TABLE POSITIONS (for N players, always I'm at bottom center)
-   Returns [{x, y, rot}] — x/y as % of container, rot in deg
-═══════════════════════════════════════════════════════════════════════════ */
+   Returns [{x, y, rot}] â€” x/y as % of container, rot in deg
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 type Pos = { x: number; y: number; rot: number };
 function getPositions(n: number): Pos[] {
   if (n === 2) return [
@@ -409,23 +335,23 @@ function CallLogPanel({
         CANTOS
       </div>
       <div style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700 }}>
-        Envido: {lastEnvido ? `${lastEnvido.alias} cantó ${envidoName(lastEnvido.type)}` : '—'}
+        Envido: {lastEnvido ? `${lastEnvido.alias} canto ${envidoName(lastEnvido.type)}` : '-'}
       </div>
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
         {envidoStatus === 'pending' ? 'Respuesta: pendiente'
           : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoLastResponse.response === 'noquiero' ? 'No Quiero' : envidoLastResponse.response === 'quiero' ? 'Quiero' : envidoLastResponse.response}`
           : envidoResult ? `Resultado: ${envidoResult.winnerAlias ?? 'equipo ganador'} (${envidoResult.pts ?? 0} pts)`
-          : 'Resultado: —'}
+          : 'Resultado: -'}
       </div>
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
       <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
-        Truco: {lastTruco ? `${lastTruco.alias} cantó ${trucoName(lastTruco.type)}` : '—'}
+        Truco: {lastTruco ? `${lastTruco.alias} canto ${trucoName(lastTruco.type)}` : '-'}
       </div>
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
         {trucoStatus === 'pending' ? 'Respuesta: pendiente'
           : trucoLastResponse ? `Respuesta: ${trucoLastResponse.alias} dijo ${trucoLastResponse.response === 'noquiero' ? 'No Quiero' : trucoLastResponse.response === 'quiero' ? 'Quiero' : trucoLastResponse.response}`
           : lastTruco ? (trucoAccepted ? 'Respuesta: Quiero' : 'Respuesta: No Quiero')
-          : 'Respuesta: —'}
+          : 'Respuesta: -'}
       </div>
       {logLines.length > 0 && (
         <>
@@ -446,35 +372,35 @@ function CallLogPanel({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ACTION BUTTON STYLE HELPERS
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 type BtnVariant = 'primary' | 'danger' | 'success' | 'warning' | 'ghost';
 const BTN_STYLES: Record<BtnVariant, React.CSSProperties> = {
   primary: {
-    background: 'linear-gradient(135deg,#4f46e5,#6366f1)',
-    border: '1px solid rgba(99,102,241,0.5)',
-    color: '#fff', boxShadow: '0 4px 14px rgba(79,70,229,0.4)',
+    background: 'linear-gradient(180deg,#5f8ed0,#3e6aab)',
+    border: '1px solid rgba(173,206,255,0.35)',
+    color: '#f2f8ff', boxShadow: '0 6px 16px rgba(20,49,88,0.5)',
   },
   danger: {
-    background: 'linear-gradient(135deg,#dc2626,#ef4444)',
-    border: '1px solid rgba(239,68,68,0.5)',
-    color: '#fff', boxShadow: '0 4px 14px rgba(220,38,38,0.4)',
+    background: 'linear-gradient(180deg,#db2b57,#b81543)',
+    border: '1px solid rgba(255,134,167,0.35)',
+    color: '#fff', boxShadow: '0 6px 16px rgba(104,8,33,0.52)',
   },
   success: {
-    background: 'linear-gradient(135deg,#059669,#10b981)',
-    border: '1px solid rgba(16,185,129,0.5)',
-    color: '#fff', boxShadow: '0 4px 14px rgba(5,150,105,0.4)',
+    background: 'linear-gradient(180deg,#1cbf78,#13935d)',
+    border: '1px solid rgba(140,255,203,0.35)',
+    color: '#fff', boxShadow: '0 6px 16px rgba(10,88,58,0.48)',
   },
   warning: {
-    background: 'linear-gradient(135deg,#d97706,#f59e0b)',
-    border: '1px solid rgba(245,158,11,0.5)',
-    color: '#fff', boxShadow: '0 4px 14px rgba(217,119,6,0.4)',
+    background: 'linear-gradient(180deg,#f2b340,#d98a0b)',
+    border: '1px solid rgba(255,223,148,0.4)',
+    color: '#fff', boxShadow: '0 6px 16px rgba(125,79,8,0.48)',
   },
   ghost: {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: 'rgba(255,255,255,0.6)', boxShadow: 'none',
+    background: 'rgba(28,38,58,0.55)',
+    border: '1px solid rgba(150,185,240,0.25)',
+    color: 'rgba(231,241,255,0.84)', boxShadow: 'none',
   },
 };
 
@@ -489,15 +415,17 @@ function Btn({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: small ? '6px 12px' : '9px 18px',
-        borderRadius: 10,
+        padding: small ? '7px 14px' : '10px 20px',
+        borderRadius: 14,
         fontSize: small ? 12 : 13,
-        fontWeight: 700,
+        fontWeight: 800,
+        letterSpacing: '0.01em',
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'inherit',
         opacity: disabled ? 0.45 : 1,
-        transition: 'all .15s',
+        transition: 'transform .12s, filter .12s, opacity .12s',
         whiteSpace: 'nowrap',
+        filter: disabled ? 'none' : 'saturate(1.08)',
         ...BTN_STYLES[variant],
       }}
     >
@@ -506,10 +434,10 @@ function Btn({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TANTEADOR — traditional Argentine Truco score board
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   TANTEADOR â€” traditional Argentine Truco score board
    Squares in groups of 5; filled squares get an X through them
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const TANTO_SQ   = 11; // px per square
 const TANTO_GAP  = 2;  // px between squares in a group
 const TANTO_GSEP = 6;  // px between groups
@@ -590,9 +518,9 @@ function ScorePanel({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PLAYER SLOT (around the table — shows face-down cards + name badge)
-═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PLAYER SLOT (around the table â€” shows face-down cards + name badge)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function PlayerSlot({
   alias, cardCount, isMyTeam, isCurrentTurn, rot, themeText,
 }: {
@@ -656,9 +584,9 @@ function PlayerSlot({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PLAYED CARD ON FELT — card positioned at a player's played-card zone
-═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PLAYED CARD ON FELT â€” card positioned at a player's played-card zone
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function PlayedCardOnFelt({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   card, x, y, rot, alias, isMe, dimmed = false, roundIdx = 0,
@@ -688,9 +616,9 @@ function PlayedCardOnFelt({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PLAYER CALL BUBBLE — floats above a player's seat when they make a call
-═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PLAYER CALL BUBBLE â€” floats above a player's seat when they make a call
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function PlayerCallBubble({ text, color }: { text: string; color: string }) {
   return (
     <div style={{
@@ -728,9 +656,9 @@ function PlayerCallBubble({ text, color }: { text: string; color: string }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TURN TIMER — counts down when it's someone's turn
-═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   TURN TIMER â€” counts down when it's someone's turn
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function TurnTimer({ seconds }: { seconds: number }) {
   const pct = seconds / 30;
   const color = seconds > 10 ? '#10b981' : seconds > 5 ? '#f59e0b' : '#ef4444';
@@ -754,9 +682,9 @@ function TurnTimer({ seconds }: { seconds: number }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HAND RESULT TOAST (non-blocking)
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function HandResultToast({ result, myTeam }: {
   result: { envidoWinnerTeam?: 'A' | 'B' | null; trucoPtsWinner?: 'A' | 'B' | null; mazoTeam?: 'A' | 'B' | null } | null;
   myTeam: 'A' | 'B';
@@ -764,13 +692,13 @@ function HandResultToast({ result, myTeam }: {
   if (!result) return null;
   const lines: { text: string; win: boolean }[] = [];
   if (result.envidoWinnerTeam) {
-    lines.push({ text: `Envido: ${result.envidoWinnerTeam === myTeam ? '✓ ganamos' : '✗ perdimos'}`, win: result.envidoWinnerTeam === myTeam });
+    lines.push({ text: `Envido: ${result.envidoWinnerTeam === myTeam ? 'OK ganamos' : 'X perdimos'}`, win: result.envidoWinnerTeam === myTeam });
   }
   if (result.trucoPtsWinner) {
-    lines.push({ text: `Truco: ${result.trucoPtsWinner === myTeam ? '✓ ganamos' : '✗ perdimos'}`, win: result.trucoPtsWinner === myTeam });
+    lines.push({ text: `Truco: ${result.trucoPtsWinner === myTeam ? 'OK ganamos' : 'X perdimos'}`, win: result.trucoPtsWinner === myTeam });
   }
   if (result.mazoTeam) {
-    lines.push({ text: `Ir al mazo: ${result.mazoTeam === myTeam ? '✗ nos fuimos' : '✓ se fueron'}`, win: result.mazoTeam !== myTeam });
+    lines.push({ text: `Ir al mazo: ${result.mazoTeam === myTeam ? 'X nos fuimos' : 'OK se fueron'}`, win: result.mazoTeam !== myTeam });
   }
   if (lines.length === 0) return null;
 
@@ -796,9 +724,9 @@ function HandResultToast({ result, myTeam }: {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SHOW ENVIDO PROMPT
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ShowEnvidoPrompt({
   onShow, onHide, timeLeft,
 }: { onShow: () => void; onHide: () => void; timeLeft: number }) {
@@ -816,10 +744,10 @@ function ShowEnvidoPrompt({
       animation: 'slideUp 0.3s ease',
     }}>
       <div style={{ fontSize: 12, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        ¿Mostrar el envido?
+        Mostrar el envido?
       </div>
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.4 }}>
-        Ganaste el envido. Si no mostrás, perdés los puntos.
+        Ganaste el envido. Si no mostras, perdes los puntos.
       </div>
       <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
         <div style={{
@@ -832,15 +760,15 @@ function ShowEnvidoPrompt({
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{timeLeft}s restantes</div>
       <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
         <Btn label="Mostrar cartas" variant="success" onClick={onShow} />
-        <Btn label="No mostrar (−pts)" variant="danger" onClick={onHide} />
+        <Btn label="No mostrar (-pts)" variant="danger" onClick={onHide} />
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    THEME PICKER (host only)
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ThemePicker({
   current, onChange, onClose,
 }: { current: TableTheme; onChange: (t: TableTheme) => void; onClose: () => void }) {
@@ -873,7 +801,7 @@ function ThemePicker({
           }}>
             <span>{th.icon}</span>
             <span>{th.label}</span>
-            {active && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#818cf8' }}>✓</span>}
+            {active && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#818cf8' }}>OK</span>}
           </button>
         );
       })}
@@ -881,9 +809,9 @@ function ThemePicker({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ROUND INDICATORS (top-left)
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function RoundIndicators({
   roundWinners, myTeam, themeText,
 }: { roundWinners: ('A' | 'B' | 'tie')[]; myTeam: 'A' | 'B'; themeText: string }) {
@@ -896,7 +824,7 @@ function RoundIndicators({
       {[0, 1, 2].map(i => {
         const w = roundWinners[i];
         const color = !w ? 'rgba(255,255,255,0.12)' : w === 'tie' ? '#fbbf24' : w === myTeam ? '#10b981' : '#ef4444';
-        const label = !w ? '' : w === 'tie' ? '=' : w === myTeam ? '✓' : '✗';
+        const label = !w ? '' : w === 'tie' ? '=' : w === myTeam ? 'OK' : 'X';
         return (
           <div key={i} style={{
             width: 28, height: 28, borderRadius: 8,
@@ -916,17 +844,17 @@ function RoundIndicators({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ACTION PANEL — context-sensitive buttons (Argentine Truco rules)
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ACTION PANEL â€” context-sensitive buttons (Argentine Truco rules)
 
    Rules implemented:
    - Envido / Real Envido / Falta Envido only on round 1, while envido available
    - Envido response: No Quiero | (escalate) Real Envido / Falta Envido | Quiero
    - Flor must-declare (con flor cuando tiene flor)
-   - Truco chain: Truco → Retruco → Vale Cuatro
+   - Truco chain: Truco â†’ Retruco â†’ Vale Cuatro
    - Truco response: No Quiero | (escalate) | Quiero
    - Ir al mazo (fold) on my turn
-═══════════════════════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ActionPanel({
   view, myAlias, myTeam, onAction,
 }: {
@@ -957,22 +885,22 @@ function ActionPanel({
 
   const sections: React.ReactNode[] = [];
 
-  /* ── Flor must-declare ── */
+  /* â”€â”€ Flor must-declare â”€â”€ */
   if (florMust && !florDone && phase === 'playing') {
     sections.push(
       <div key="flor" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>¡Tenés Flor!</span>
+        <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>Tenes Flor!</span>
         <Btn label="Declarar Flor" variant="success" onClick={() => onAction({ type: 'flor' })} />
       </div>
     );
   }
 
-  /* ── Flor responder (opponent declared flor, my team must respond) ── */
+  /* â”€â”€ Flor responder (opponent declared flor, my team must respond) â”€â”€ */
   if (florSt === 'pending' && florResp && !florMust && phase === 'playing') {
     sections.push(
       <div key="flor-resp" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: '#10b981', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>
-          ¿QUIEREN LA FLOR?
+          QUIEREN LA FLOR?
         </span>
         <Btn label="Con Gangamos" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
         {contraFlorEnabled && (
@@ -986,8 +914,8 @@ function ActionPanel({
     );
   }
 
-  /* ── Envido call (available on round 1, any player can call) ── */
-  // Envido solo en la primera ronda de la mano, mientras esté disponible
+  /* â”€â”€ Envido call (available on round 1, any player can call) â”€â”€ */
+  // Envido solo en la primera ronda de la mano, mientras este disponible
   if (envidoSt === 'available' && phase === 'playing' && view.round === 0 && !florMust && florSt !== 'pending') {
     sections.push(
       <div key="envido-call" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -999,9 +927,9 @@ function ActionPanel({
     );
   }
 
-  /* ── Envido response (opponent called envido) ── */
+  /* â”€â”€ Envido response (opponent called envido) â”€â”€ */
   if (envidoSt === 'pending' && envidoResp && phase === 'playing') {
-    // lastEnvido comes from the engine chain (.type = 'envido'|'realenvido'|'faltaenvido' — no hyphens)
+    // lastEnvido comes from the engine chain (.type = 'envido'|'realenvido'|'faltaenvido' â€” no hyphens)
     const canRaiseToReal  = lastEnvido === 'envido';
     const canRaiseToFalta = lastEnvido === 'envido' || lastEnvido === 'realenvido';
     const displayName = lastEnvido === 'realenvido' ? 'REAL ENVIDO'
@@ -1010,7 +938,7 @@ function ActionPanel({
     sections.push(
       <div key="envido-resp" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: '#fbbf24', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>
-          ¿QUIEREN EL {displayName}?
+          QUIEREN EL {displayName}?
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
         {canRaiseToReal && (
@@ -1024,7 +952,7 @@ function ActionPanel({
     );
   }
 
-  /* ── Truco call (truco available, any player can call) ── */
+  /* â”€â”€ Truco call (truco available, any player can call) â”€â”€ */
   if (trucoSt === 'available' && phase === 'playing' && florSt !== 'pending') {
     sections.push(
       <div key="truco-call" style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
@@ -1034,14 +962,14 @@ function ActionPanel({
     );
   }
 
-  /* ── Truco response ── */
+  /* â”€â”€ Truco response â”€â”€ */
   if (trucoSt === 'pending' && trucoResp && phase === 'playing') {
     const canRetruco    = lastTruco === 'truco';
     const canValeCuatro = lastTruco === 'retruco';
     sections.push(
       <div key="truco-resp" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>
-          ¿QUIEREN EL {(lastTruco ?? '').toUpperCase()}?
+          QUIEREN EL {(lastTruco ?? '').toUpperCase()}?
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
         {canRetruco && (
@@ -1055,7 +983,7 @@ function ActionPanel({
     );
   }
 
-  /* ── Ir al mazo (my turn only) ── */
+  /* â”€â”€ Ir al mazo (my turn only) â”€â”€ */
   if (isMyTurn && phase === 'playing') {
     sections.push(
       <div key="mazo" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -1086,19 +1014,21 @@ function ActionPanel({
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)',
-      borderRadius: 16, padding: '12px 18px',
-      border: '1px solid rgba(255,255,255,0.07)',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.4)',
+      background: 'linear-gradient(180deg, rgba(8,18,28,0.92), rgba(4,10,18,0.95))',
+      backdropFilter: 'blur(12px)',
+      borderRadius: 18,
+      padding: '14px 20px',
+      border: '1px solid rgba(127,161,220,0.28)',
+      boxShadow: '0 12px 32px rgba(0,0,0,0.46), inset 0 0 0 1px rgba(17,35,60,0.55)',
     }}>
       {sections}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   CALL NOTIFICATION — floating banner when envido/truco is called at you
-═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CALL NOTIFICATION â€” floating banner when envido/truco is called at you
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function CallNotification({
   call, sub, color, onDismiss,
 }: {
@@ -1144,10 +1074,11 @@ function CallNotification({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN TRUCO SCREEN
 ═══════════════════════════════════════════════════════════════════════════ */
-export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) {
+function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame }: Props) {
+  void _onExitGame;
   const myAlias  = useMinigameStore(s => s.myAlias);
   const isHost   = useMinigameStore(s => s.isHost);
   const players  = useMinigameStore(s => s.players);
@@ -1174,7 +1105,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTurnRef  = useRef('');
 
-  // Player call bubbles: alias → { text, color, id }
+  // Player call bubbles: alias â†’ { text, color, id }
   const [callBubbles, setCallBubbles] = useState<Record<string, { text: string; color: string; id: number }>>({});
   const [callHistory, setCallHistory] = useState<string[]>([]);
   const prevEnvidoChainLenRef = useRef(0);
@@ -1194,7 +1125,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
   const prevTrucoStRef  = useRef('');
   const prevFlorStRef   = useRef('');
 
-  // Sync theme with room config (valid: syncing server config → local state)
+  // Sync theme with room config (valid: syncing server config â†’ local state)
   useEffect(() => {
     if (view?.config?.tableTheme) setTheme(view.config.tableTheme);
   }, [view?.config?.tableTheme]);
@@ -1263,22 +1194,22 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
 
     if (envidoSt === 'pending' && prevEnvidoStRef.current !== 'pending' && envidoResp && lastEnvido) {
       setCallNotif({
-        call: `¡${lastEnvido.type.toUpperCase()}!`,
-        sub: `${lastEnvido.alias} te cantó — ¿lo querés?`,
+        call: `!${lastEnvido.type.toUpperCase()}!`,
+        sub: `${lastEnvido.alias} te canto - lo queres?`,
         color: '#fbbf24',
       });
     }
     if (trucoSt === 'pending' && prevTrucoStRef.current !== 'pending' && trucoResp && lastTruco) {
       setCallNotif({
-        call: `¡${lastTruco.type.toUpperCase()}!`,
-        sub: `${lastTruco.alias} te cantó — ¿lo querés?`,
+        call: `!${lastTruco.type.toUpperCase()}!`,
+        sub: `${lastTruco.alias} te canto - lo queres?`,
         color: '#ef4444',
       });
     }
     if (florSt === 'pending' && prevFlorStRef.current !== 'pending' && florResp) {
       setCallNotif({
-        call: '¡FLOR!',
-        sub: 'El rival cantó flor — ¿qué respondés?',
+        call: '!FLOR!',
+        sub: 'El rival canto flor - que respondes?',
         color: '#10b981',
       });
     }
@@ -1289,7 +1220,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view?.envidoStatus, view?.trucoStatus, view?.florStatus, view?.envidoResponderTeam, view?.trucoResponderTeam, view?.florResponderTeam, view?.envidoChain, view?.trucoChain]);
 
-  // Turn timer — resets to 30s each time the current player changes
+  // Turn timer â€” resets to 30s each time the current player changes
   useEffect(() => {
     if (!view || view.phase !== 'playing') return;
     const currentTurn = view.currentTurnAlias as string;
@@ -1306,7 +1237,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     return () => { if (turnTimerRef.current) clearInterval(turnTimerRef.current); };
   }, [view?.currentTurnAlias, view?.phase, view]);
 
-  // Call bubbles — show speech bubble near player when they make a call
+  // Call bubbles â€” show speech bubble near player when they make a call
   useEffect(() => {
     if (!view) return;
     const envidoCh  = (view.envidoChain ?? []) as { type: string; alias: string }[];
@@ -1321,7 +1252,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     if (envidoCh.length > prevEnvidoChainLenRef.current) {
       const last = envidoCh[envidoCh.length - 1];
       const label = last.type === 'realenvido' ? 'Real Envido' : last.type === 'faltaenvido' ? 'Falta Envido' : last.type.charAt(0).toUpperCase() + last.type.slice(1);
-      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `¡${label}!`, color: '#fbbf24', id: Date.now() } }));
+      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `!${label}!`, color: '#fbbf24', id: Date.now() } }));
       changed = true;
     }
     prevEnvidoChainLenRef.current = envidoCh.length;
@@ -1347,7 +1278,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     if (trucoCh.length > prevTrucoChainLenRef.current) {
       const last = trucoCh[trucoCh.length - 1];
       const label = last.type === 'valecuatro' ? 'Vale Cuatro' : last.type === 'retruco' ? 'Retruco' : 'Truco';
-      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `¡${label}!`, color: '#ef4444', id: Date.now() } }));
+      setCallBubbles(prev => ({ ...prev, [last.alias]: { text: `!${label}!`, color: '#ef4444', id: Date.now() } }));
       changed = true;
     }
     prevTrucoChainLenRef.current = trucoCh.length;
@@ -1356,7 +1287,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     if (trucoSt !== 'pending' && trucoAcc && !prevTrucoAcceptedRef.current) {
       const lastCall = trucoCh[trucoCh.length - 1];
       if (lastCall) {
-        setCallBubbles(prev => ({ ...prev, [lastCall.alias]: { text: '¡Quiero!', color: '#10b981', id: Date.now() } }));
+        setCallBubbles(prev => ({ ...prev, [lastCall.alias]: { text: '!Quiero!', color: '#10b981', id: Date.now() } }));
         changed = true;
       }
     }
@@ -1428,7 +1359,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.5 }}>🃏</div>
+          <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.5 }}>{'\uD83C\uDCCF'}</div>
           <div style={{ fontWeight: 600 }}>Cargando Truco...</div>
         </div>
       </div>
@@ -1472,7 +1403,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
     }
   };
 
-  // Drag to play — drop on the felt
+  // Drag to play â€” drop on the felt
   const handleDrop = () => {
     if (draggingCard && canPlay) {
       sendTrucoAction({ type: 'play-card', card: draggingCard });
@@ -1487,40 +1418,79 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
   return (
     <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-      {/* ── Table area ── */}
+      {/* â”€â”€ Table area â”€â”€ */}
       <div style={{
         flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden',
         background: th.bg,
       }}>
-        {/* ── Exit button ── */}
-        <button
-          onClick={onExitGame}
-          style={{
-            position: 'absolute', top: 10, right: 10, zIndex: 30,
-            padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
-            background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.12)',
-            color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-          }}
-        >
-          Salir
-        </button>
+        {/* Room ambience: dark wall + subtle floor planks */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 22%, rgba(0,0,0,0.78) 100%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute',
+          left: 0, right: 0, bottom: 0,
+          height: '43%',
+          background: `
+            repeating-linear-gradient(
+              90deg,
+              rgba(255,255,255,0.05) 0px,
+              rgba(255,255,255,0.05) 1px,
+              transparent 1px,
+              transparent 44px
+            ),
+            linear-gradient(180deg, rgba(8,12,18,0) 0%, rgba(6,10,16,0.82) 35%, rgba(2,5,10,0.97) 100%)
+          `,
+          opacity: 0.36,
+          pointerEvents: 'none',
+        }} />
+
+        {/* Table shadow on floor */}
+        <div style={{
+          position: 'absolute',
+          left: '11%',
+          right: '11%',
+          bottom: '10%',
+          height: '22%',
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.22) 56%, transparent 78%)',
+          filter: 'blur(3px)',
+          pointerEvents: 'none',
+        }} />
 
         {/* Felt oval */}
         <div style={{
           position: 'absolute',
-          top: '6%', left: '4%', right: '4%', bottom: '12%',
+          top: '8%', left: '5%', right: '5%', bottom: '14%',
           borderRadius: '50%',
           background: th.felt,
-          boxShadow: `inset 0 0 72px rgba(0,0,0,0.48), 0 0 0 10px ${th.border}, 0 0 0 16px rgba(0,0,0,0.28)`,
+          boxShadow: `inset 0 0 96px rgba(0,0,0,0.5), 0 0 0 11px ${th.border}, 0 0 0 18px rgba(0,0,0,0.33), 0 22px 38px rgba(0,0,0,0.4)`,
         }} />
 
         {/* Felt texture overlay */}
         <div style={{
           position: 'absolute',
-          top: '6%', left: '4%', right: '4%', bottom: '12%',
+          top: '8%', left: '5%', right: '5%', bottom: '14%',
           borderRadius: '50%',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")`,
-          opacity: 0.5,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E")`,
+          opacity: 0.42,
+          pointerEvents: 'none',
+        }} />
+
+        {/* Ambient top glow */}
+        <div style={{
+          position: 'absolute',
+          top: '-16%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 780,
+          height: 240,
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at center, rgba(140,174,229,0.35) 0%, rgba(68,95,148,0.16) 32%, transparent 72%)',
+          filter: 'blur(16px)',
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -1535,7 +1505,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           zIndex: 1,
         }} />
 
-        {/* ── Drop zone (entire felt area — shown while dragging) ── */}
+        {/* â”€â”€ Drop zone (entire felt area â€” shown while dragging) â”€â”€ */}
         {draggingCard && canPlay && (
           <div
             onDragOver={(e) => { e.preventDefault(); setDropActive(true); }}
@@ -1548,7 +1518,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
             onDrop={(e) => { e.preventDefault(); handleDrop(); }}
             style={{
               position: 'absolute',
-              top: '6%', left: '4%', right: '4%', bottom: '12%',
+              top: '8%', left: '5%', right: '5%', bottom: '14%',
               borderRadius: '50%',
               zIndex: 13,
               border: dropActive
@@ -1567,18 +1537,18 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
               transition: 'opacity 0.15s',
               pointerEvents: 'none',
             }}>
-              <span style={{ fontSize: 28 }}>🃏</span>
+              <span style={{ fontSize: 28 }}>{'\uD83C\uDCCF'}</span>
               <span style={{
                 fontSize: 11, fontWeight: 700,
                 color: dropActive ? '#fbbf24' : 'rgba(255,255,255,0.5)',
               }}>
-                {dropActive ? '¡Soltá la carta!' : 'Arrastrá acá para jugar'}
+                {dropActive ? 'Solta la carta!' : 'Arrastra aca para jugar'}
               </span>
             </div>
           </div>
         )}
 
-        {/* ── Played cards on the felt: all rounds of this hand ── */}
+        {/* â”€â”€ Played cards on the felt: all rounds of this hand â”€â”€ */}
         {historicCards.map(({ alias, card, round }) => {
           const seatIdx = seating.indexOf(alias);
           const pos     = positions[seatIdx];
@@ -1624,7 +1594,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           );
         })}
 
-        {/* ── Score panel (top center) ── */}
+        {/* â”€â”€ Score panel (top center) â”€â”€ */}
         <ScorePanel
           teamAScore={view.teamAScore}
           teamBScore={view.teamBScore}
@@ -1632,19 +1602,19 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           maxPoints={view.config.maxPoints}
         />
 
-        {/* ── Round indicators (top-left) ── */}
+        {/* â”€â”€ Round indicators (top-left) â”€â”€ */}
         <RoundIndicators
           roundWinners={view.roundWinners ?? []}
           myTeam={myTeam}
           themeText={th.text}
         />
 
-        {/* ── Hand result toast (top-right) ── */}
+        {/* â”€â”€ Hand result toast (top-right) â”€â”€ */}
         {view.handEndResult && (
           <HandResultToast result={view.handEndResult} myTeam={myTeam} />
         )}
 
-        {/* ── Host theme picker button (top-right) ── */}
+        {/* â”€â”€ Host theme picker button (top-right) â”€â”€ */}
         {isHost && (
           <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 30 }}>
             <button
@@ -1670,7 +1640,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           </div>
         )}
 
-        {/* ── Game info pill (hand / round / dealer) ── */}
+        {/* â”€â”€ Game info pill (hand / round / dealer) â”€â”€ */}
         <div style={{
           position: 'absolute', bottom: 14, right: 14, zIndex: 20,
           background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
@@ -1679,19 +1649,19 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600,
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
         }}>
-          <span>Mano Nº {view.handNum}</span>
+          <span>Mano Nro {view.handNum}</span>
           <span>Ronda {(view.round ?? 0) + 1}/3</span>
           <span style={{ color: 'rgba(255,255,255,0.25)' }}>Dealer: {view.dealerAlias}</span>
         </div>
 
-        {/* ── Turn timer ── */}
+        {/* â”€â”€ Turn timer â”€â”€ */}
         {view.phase === 'playing' && (
           <div style={{ position: 'absolute', top: isHost ? 52 : 10, right: 10, zIndex: 20 }}>
             <TurnTimer seconds={turnTimer} />
           </div>
         )}
 
-        {/* ── Envido result chip ── */}
+        {/* â”€â”€ Envido result chip â”€â”€ */}
         {view.envidoStatus !== 'available' && view.envidoResult && (
           <div style={{
             position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',
@@ -1716,7 +1686,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           trucoLastResponse={view.trucoLastResponse}
         />
 
-        {/* ── Opponents around the table ── */}
+        {/* â”€â”€ Opponents around the table â”€â”€ */}
         {opponentSeats.map((alias, i) => {
           const pos = positions[i + 1];
           if (!pos) return null;
@@ -1748,7 +1718,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           );
         })}
 
-        {/* ── Call notification overlay ── */}
+        {/* â”€â”€ Call notification overlay â”€â”€ */}
         {callNotif && (
           <CallNotification
             call={callNotif.call}
@@ -1758,7 +1728,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           />
         )}
 
-        {/* ── Show Envido prompt ── */}
+        {/* â”€â”€ Show Envido prompt â”€â”€ */}
         {needShowEnvido && (
           <ShowEnvidoPrompt
             timeLeft={envidoTimer}
@@ -1767,7 +1737,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           />
         )}
 
-        {/* ── Envido shown cards overlay ── */}
+        {/* â”€â”€ Envido shown cards overlay â”€â”€ */}
         {view.phase === 'show_envido' &&
           view.envidoResult?.reveals &&
           view.envidoResult.reveals.some((r: { cards?: TrucoCard[] }) => r.cards && r.cards.length > 0) && (
@@ -1782,7 +1752,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
             {view.envidoResult.reveals.filter((r: { cards?: TrucoCard[] }) => r.cards?.length).map((reveal: { alias: string; value: number; cards?: TrucoCard[] }) => (
               <div key={reveal.alias} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {reveal.alias} muestra · {reveal.value} pts
+                  {reveal.alias} muestra - {reveal.value} pts
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {(reveal.cards ?? []).map((c: TrucoCard, i: number) => (
@@ -1794,7 +1764,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           </div>
         )}
 
-        {/* ── Game over overlay ── */}
+        {/* â”€â”€ Game over overlay â”€â”€ */}
         {view.phase === 'game_over' && (
           <div style={{
             position: 'absolute', inset: 0, zIndex: 50,
@@ -1808,11 +1778,11 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
               boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
             }}>
-              <div style={{ fontSize: 48 }}>🏆</div>
+              <div style={{ fontSize: 48 }}>{'\uD83C\uDFC6'}</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.03em' }}>
                 {(myTeam === 'A' ? view.teamAScore : view.teamBScore) >= view.config.maxPoints
-                  ? '¡Ganamos!'
-                  : '¡Perdimos!'}
+                  ? 'Ganamos!'
+                  : 'Perdimos!'}
               </div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
                 Resultado final: {view.teamAScore} - {view.teamBScore}
@@ -1821,7 +1791,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
           </div>
         )}
 
-        {/* ── My hand + action buttons (bottom strip) ── */}
+        {/* â”€â”€ My hand + action buttons (bottom strip) â”€â”€ */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
@@ -1887,12 +1857,12 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
               {draggingCard
                 ? ''
                 : selectedCard
-                ? 'Clic de nuevo para confirmar · o elegí otra carta'
-                : 'Arrastrá una carta al tapete, o hacé clic para seleccionar'}
+                ? 'Clic de nuevo para confirmar - o elegi otra carta'
+                : 'Arrastra una carta al tapete, o hace clic para seleccionar'}
             </div>
           )}
 
-          {/* Action panel — BELOW the cards */}
+          {/* Action panel â€” BELOW the cards */}
           <ActionPanel
             view={view}
             myAlias={myAlias}
@@ -1913,7 +1883,7 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
         `}</style>
       </div>
 
-      {/* ── Sidebar (no reactions in Truco — they distract from the game) ── */}
+      {/* â”€â”€ Sidebar (no reactions in Truco â€” they distract from the game) â”€â”€ */}
       <GameSidebar
         myScore={myScore}
         myAlias={myAlias}
@@ -1921,7 +1891,11 @@ export function TrucoScreen({ sendTrucoAction, onSendChat, onExitGame }: Props) 
         roomChat={roomChat}
         onSendChat={onSendChat}
         showScores
+        variant="truco"
       />
     </div>
   );
 }
+
+
+

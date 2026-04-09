@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useMinigameStore } from '../../store/minigame.store';
 import { PlayerList } from '../../components/PlayerList';
 import { ChatPanel } from '../../components/ChatPanel';
-import { ReactionBar } from '../../components/ReactionBar';
 import { AIGeneratorModal } from '../../components/modals/AIGeneratorModal';
 import type { GameType, TrucoConfig } from '../../types/game.types';
 
@@ -24,7 +23,6 @@ interface Props {
   onKickPlayer:   (a: string)  => void;
   onPromotePlayer: (a: string) => void;
   onSendChat:     (t: string)  => void;
-  onSendReaction:  (e: string) => void;
   onDeleteGame:   (id: string) => void;
   onRefreshGames: ()           => void;
 }
@@ -32,7 +30,7 @@ interface Props {
 export function LobbyScreen({
   onPickGame, onStartGame, onExitLobby,
   onKickPlayer, onPromotePlayer,
-  onSendChat, onSendReaction, onDeleteGame, onRefreshGames,
+  onSendChat, onDeleteGame, onRefreshGames,
 }: Props) {
   const myAlias        = useMinigameStore((s) => s.myAlias);
   const isHost         = useMinigameStore((s) => s.isHost);
@@ -317,14 +315,11 @@ export function LobbyScreen({
             </div>
           </div>
 
-          {/* Chat + reactions */}
+          {/* Chat */}
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '12px 16px 10px', gap: 8, overflow: 'hidden' }}>
             <SideLabel>Chat</SideLabel>
             <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <ChatPanel messages={roomChat} onSend={onSendChat} placeholder="Mensaje..." grow />
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <ReactionBar onReact={onSendReaction} />
             </div>
           </div>
         </div>
@@ -428,7 +423,7 @@ export function LobbyScreen({
       {showAI && (
         <AIGeneratorModal
           onClose={() => setShowAI(false)}
-          onSaved={onRefreshGames}
+          onSaved={(id) => { onRefreshGames(); if (id) onPickGame(id); }}
         />
       )}
     </div>

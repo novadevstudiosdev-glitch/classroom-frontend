@@ -7,14 +7,14 @@ import { GameSidebar } from '../../components/GameSidebar';
 interface Props {
   onSpinWheel: () => void;
   onSubmitPQAnswer: (optionId: string) => void;
-  onSendReaction: (emoji: string) => void;
   onSendChat: (text: string) => void;
+  onExitGame?: () => void;
 }
 
 const WHEEL_SIZE = 260;
 const OPT_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981'];
 
-export function PreguntadosScreen({ onSpinWheel, onSubmitPQAnswer, onSendReaction, onSendChat }: Props) {
+export function PreguntadosScreen({ onSpinWheel, onSubmitPQAnswer, onSendChat, onExitGame }: Props) {
   const myAlias  = useMinigameStore((s) => s.myAlias);
   const players  = useMinigameStore((s) => s.players);
   const roomChat = useMinigameStore((s) => s.roomChat);
@@ -260,7 +260,7 @@ export function PreguntadosScreen({ onSpinWheel, onSubmitPQAnswer, onSendReactio
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {currentQuestion.options.map((opt, i) => {
+                {(Array.isArray((currentQuestion as any).options) ? ((currentQuestion as any).options as { id: string; text: string }[]) : []).map((opt: { id: string; text: string }, i: number) => {
                   const col = OPT_COLORS[i] ?? '#6366f1';
                   const active = isMyTurn && !awaitingResult;
                   return (
@@ -306,7 +306,7 @@ export function PreguntadosScreen({ onSpinWheel, onSubmitPQAnswer, onSendReactio
           players={players}
           roomChat={roomChat}
           onSendChat={onSendChat}
-          onSendReaction={onSendReaction}
+          onExitGame={onExitGame}
           showScores
         />
       </div>

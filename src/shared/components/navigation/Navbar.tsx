@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth/auth.store';
 
@@ -61,18 +62,17 @@ export default function Navbar() {
                 {user.name?.[0]?.toUpperCase() ?? '?'}
               </button>
 
-              {/* Dropdown */}
-              {open && (
+              {/* Dropdown — rendered via portal to escape backdrop-filter stacking context */}
+              {open && typeof window !== 'undefined' && createPortal(
                 <>
-                  {/* Overlay para cerrar al hacer clic afuera */}
                   <div
-                    style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                    style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
                     onClick={() => setOpen(false)}
                   />
                   <div
                     style={{
-                      position: 'absolute', right: 0, top: '2.75rem',
-                      width: 176, zIndex: 50,
+                      position: 'fixed', right: 16, top: 52,
+                      width: 176, zIndex: 9999,
                       background: '#0d1117',
                       border: '1px solid rgba(255,255,255,0.10)',
                       borderRadius: 12,
@@ -110,7 +110,8 @@ export default function Navbar() {
                       Cerrar sesión
                     </button>
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
           )}

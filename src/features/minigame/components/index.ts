@@ -7,3 +7,4 @@ export { FloatReaction } from './FloatReaction';
 export { ReactionBar } from './ReactionBar';
 export { VolumeControl } from './VolumeControl';
 export { StarField } from './StarField';
+export { SpanishCard, CardBack, cardFromCode } from './SpanishCard';
