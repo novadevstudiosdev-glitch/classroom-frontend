@@ -40,7 +40,7 @@ export default function GameCantoBanner({
             <div className="canto-banner-main">{text}</div>
             <div className="canto-banner-meta">
               {actor ? `${actor} canto` : "Canto en mesa"}
-              {waitingResponse && responder ? ` · Responde ${responder}` : ""}
+              {waitingResponse && responder ? ` - Responde ${responder}` : ""}
             </div>
           </motion.div>
         </motion.div>

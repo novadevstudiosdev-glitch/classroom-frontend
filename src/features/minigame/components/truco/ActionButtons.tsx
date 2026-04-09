@@ -21,8 +21,8 @@ export default function ActionButtons({ onCanto }: Props) {
         </button>
       </div>
       <div className="btn-row">
-        <button className="btn b-truco" onClick={() => onCanto("truco", "¡ TRUCO !")}>
-          ✦ TRUCO ✦
+        <button className="btn b-truco" onClick={() => onCanto("truco", "TRUCO")}>
+          TRUCO
         </button>
       </div>
       <button className="btn b-mazo">Ir al mazo</button>
