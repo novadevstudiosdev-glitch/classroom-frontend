@@ -357,9 +357,8 @@ export default function TrucoTable({
 
   const handleAction = (actionType: string) => {
     onAction?.(actionType);
-    if (actionType !== "ir-al-mazo") {
-      pushTransientBanner(actionLabel(actionType), playerName, actionTone(actionType));
-    }
+    // Keep banners driven by shared server state (chains/responses),
+    // not optimistic local clicks, to avoid desync perception.
   };
 
   const activeBanner = transientBanner
