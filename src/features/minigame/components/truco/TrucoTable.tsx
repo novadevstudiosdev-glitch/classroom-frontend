@@ -16,7 +16,13 @@ import {
   getTrucoLabel,
   type PlayerActionOption,
 } from "./cantoHelpers";
-import type { ChatMessage, TrucoCard, TrucoEnvidoCall, TrucoTrucoCall } from "../../types/game.types";
+import type {
+  ChatMessage,
+  TrucoCard,
+  TrucoEnvidoCall,
+  TrucoEnvidoResult,
+  TrucoTrucoCall,
+} from "../../types/game.types";
 
 type HandCard = TrucoCard & { uid: string };
 type OpponentCard = { id: number };
@@ -41,12 +47,14 @@ interface Props {
   round?: number;
   dealerAlias?: string;
   currentRoundCards?: Record<string, TrucoCard | null>;
+  playedCardsHistory?: { alias: string; round: number; card: TrucoCard }[];
   myTeam?: "A" | "B";
   teamAMembers?: TeamMember[];
   teamBMembers?: TeamMember[];
   envidoStatus?: "available" | "pending" | "resolved" | "expired";
   envidoChain?: TrucoEnvidoCall[];
   envidoResponderTeam?: "A" | "B" | null;
+  envidoResult?: TrucoEnvidoResult | null;
   envidoLastResponse?: { alias: string; response: "quiero" | "noquiero" | string } | null;
   trucoStatus?: "available" | "pending" | "resolved";
   trucoChain?: TrucoTrucoCall[];
@@ -79,13 +87,16 @@ function actionLabel(actionType: string): string {
   if (actionType === "quiero") return "QUIERO";
   if (actionType === "truco") return "TRUCO";
   if (actionType === "envido") return "ENVIDO";
+  if (actionType === "son-buenas") return "SON BUENAS";
+  if (actionType === "decir-puntos") return "DIGO PUNTOS";
   if (actionType === "ir-al-mazo") return "AL MAZO";
   return actionType.toUpperCase();
 }
 
 function actionTone(actionType: string): BannerTone {
   if (actionType === "quiero") return "accept";
-  if (actionType === "no-quiero") return "reject";
+  if (actionType === "no-quiero" || actionType === "son-buenas") return "reject";
+  if (actionType === "decir-puntos") return "accept";
   if (actionType === "retruco" || actionType === "vale-cuatro" || actionType === "real-envido" || actionType === "falta-envido") return "raise";
   if (actionType === "envido") return "envido";
   if (actionType === "truco") return "truco";
@@ -116,12 +127,14 @@ export default function TrucoTable({
   round = 0,
   dealerAlias,
   currentRoundCards,
+  playedCardsHistory = [],
   myTeam,
   teamAMembers = [],
   teamBMembers = [],
   envidoStatus,
   envidoChain = [],
   envidoResponderTeam,
+  envidoResult,
   envidoLastResponse,
   trucoStatus,
   trucoChain = [],
@@ -273,6 +286,18 @@ export default function TrucoTable({
   const myRoundCard = currentRoundCards?.[playerName] ?? pendingPlayedCard;
   const opponentRoundCard = currentRoundCards?.[opponentName] ?? null;
   const bothCardsOnTable = !!myRoundCard && !!opponentRoundCard;
+  const historicPlayedCards = useMemo(
+    () => playedCardsHistory.filter((entry) => entry.round < (round ?? 0)),
+    [playedCardsHistory, round],
+  );
+
+  const envidoPointLine = useMemo(() => {
+    if (!envidoResult?.reveals?.length) return null;
+    const me = envidoResult.reveals.find((r) => normalizeAlias(r.alias) === normalizeAlias(playerName));
+    const rival = envidoResult.reveals.find((r) => normalizeAlias(r.alias) === normalizeAlias(opponentName));
+    if (me && rival) return `${me.alias}: ${me.value} - ${rival.alias}: ${rival.value}`;
+    return envidoResult.reveals.map((r) => `${r.alias}: ${r.value}`).join(" | ");
+  }, [envidoResult, playerName, opponentName]);
 
   const turnText =
     phase !== "playing"
@@ -435,6 +460,35 @@ export default function TrucoTable({
             pointerEvents: "none",
           }}
         >
+          {historicPlayedCards.map((entry, index) => {
+            const isMine = normalizeAlias(entry.alias) === normalizeAlias(playerName);
+            const sideOffset = isMine ? 26 : -26;
+            const yBase = isMine ? 62 : -62;
+            const x = 40 + entry.round * 14 + (index % 2 === 0 ? 0 : 6);
+            const y = yBase + entry.round * 18;
+            return (
+              <motion.div
+                key={`history-${entry.alias}-${entry.round}-${entry.card.suit}-${entry.card.value}-${index}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 0.72, scale: 0.92 }}
+                transition={{ duration: 0.25 }}
+                style={{ position: "absolute", left: sideOffset, width: CARD_W, height: CARD_H }}
+              >
+                <AnimatedCard
+                  id={`history-${entry.alias}-${entry.round}-${entry.card.suit}-${entry.card.value}-${index}`}
+                  card={entry.card}
+                  alt={`${entry.card.value} de ${entry.card.suit}`}
+                  width={CARD_W}
+                  height={CARD_H}
+                  dealt={false}
+                  dealFrom={{ x: 0, y: 0 }}
+                  to={{ x, y, rotate: isMine ? 6 : -6 }}
+                  border="1.5px solid rgba(23,23,23,0.88)"
+                />
+              </motion.div>
+            );
+          })}
+
           <AnimatePresence>
             {opponentRoundCard && (
               <motion.div
@@ -534,6 +588,20 @@ export default function TrucoTable({
                 ? "Esperando confirmacion del servidor..."
                 : `Esperando jugada de ${currentTurnAlias ?? "rival"}`}
         </p>
+        {envidoPointLine && (
+          <p
+            className="card-hint"
+            style={{
+              position: "absolute",
+              bottom: 172,
+              marginBottom: 0,
+              color: "rgba(255, 220, 160, 0.9)",
+              fontWeight: 700,
+            }}
+          >
+            Envido: {envidoPointLine}
+          </p>
+        )}
 
         <div style={{ position: "absolute", bottom: 56, left: "50%", transform: "translateX(-50%)", zIndex: 28 }}>
           <PlayerActionButtons

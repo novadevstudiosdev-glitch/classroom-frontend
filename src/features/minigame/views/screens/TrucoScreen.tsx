@@ -202,12 +202,14 @@ export function TrucoScreen(props: Props) {
         round={view?.round}
         dealerAlias={view?.dealerAlias}
         currentRoundCards={view?.currentRoundCards}
+        playedCardsHistory={view?.playedCardsHistory}
         myTeam={view?.myTeam}
         teamAMembers={view?.teamAMembers}
         teamBMembers={view?.teamBMembers}
         envidoStatus={view?.envidoStatus}
         envidoChain={view?.envidoChain}
         envidoResponderTeam={view?.envidoResponderTeam}
+        envidoResult={view?.envidoResult}
         envidoLastResponse={view?.envidoLastResponse}
         trucoStatus={view?.trucoStatus}
         trucoChain={view?.trucoChain}
@@ -312,6 +314,7 @@ function CallLogPanel({
   trucoChain,
   envidoStatus,
   envidoResult,
+  envidoReveals,
   trucoStatus,
   trucoAccepted,
   logLines,
@@ -322,6 +325,7 @@ function CallLogPanel({
   trucoChain: Array<{ alias: string; type: string }>;
   envidoStatus: string;
   envidoResult: { winnerAlias?: string; winnerTeam?: 'A' | 'B'; pts?: number } | null;
+  envidoReveals: Array<{ alias: string; value: number }>;
   trucoStatus: string;
   trucoAccepted: boolean;
   logLines: string[];
@@ -332,6 +336,13 @@ function CallLogPanel({
   const lastTruco = trucoChain[trucoChain.length - 1];
   const envidoName = (t: string) => t === 'realenvido' ? 'Real Envido' : t === 'faltaenvido' ? 'Falta Envido' : 'Envido';
   const trucoName = (t: string) => t === 'retruco' ? 'Retruco' : t === 'valecuatro' ? 'Vale Cuatro' : 'Truco';
+  const envidoRespLabel = (resp: string) => {
+    if (resp === 'noquiero') return 'No Quiero';
+    if (resp === 'quiero') return 'Quiero';
+    if (resp === 'sonbuenas') return 'Son Buenas';
+    if (resp === 'decirpuntos') return 'Dijo Puntos';
+    return resp;
+  };
 
   return (
     <div style={{
@@ -351,10 +362,15 @@ function CallLogPanel({
       </div>
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
         {envidoStatus === 'pending' ? 'Respuesta: pendiente'
-          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoLastResponse.response === 'noquiero' ? 'No Quiero' : envidoLastResponse.response === 'quiero' ? 'Quiero' : envidoLastResponse.response}`
+          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoRespLabel(envidoLastResponse.response)}`
           : envidoResult ? `Resultado: ${envidoResult.winnerAlias ?? 'equipo ganador'} (${envidoResult.pts ?? 0} pts)`
           : 'Resultado: -'}
       </div>
+      {envidoStatus === 'resolved' && envidoReveals.length > 0 && (
+        <div style={{ fontSize: 10, color: 'rgba(251,191,36,0.85)', lineHeight: 1.3 }}>
+          Puntos: {envidoReveals.map((r) => `${r.alias} ${r.value}`).join(' | ')}
+        </div>
+      )}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
       <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
         Truco: {lastTruco ? `${lastTruco.alias} canto ${trucoName(lastTruco.type)}` : '-'}
@@ -953,12 +969,14 @@ function ActionPanel({
           QUIEREN EL {displayName}?
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
+        <Btn label="Son Buenas" variant="ghost" onClick={() => onAction({ type: 'son-buenas' })} />
         {canRaiseToReal && (
           <Btn label="Real Envido" variant="primary" small onClick={() => onAction({ type: 'real-envido' })} />
         )}
         {canRaiseToFalta && (
           <Btn label="Falta Envido" variant="warning" small onClick={() => onAction({ type: 'falta-envido' })} />
         )}
+        <Btn label="Decir Puntos" variant="primary" onClick={() => onAction({ type: 'decir-puntos' })} />
         <Btn label="Quiero" variant="success" onClick={() => onAction({ type: 'quiero' })} />
       </div>
     );
@@ -1105,12 +1123,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   const [envidoTimer, setEnvidoTimer]   = useState(30);
   const envidoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Track all played cards for the current hand (across rounds)
-  const [historicCards, setHistoricCards] = useState<
-    Array<{ alias: string; card: TrucoCard; round: number }>
-  >([]);
-  const seenPlayedRef = useRef<Set<string>>(new Set());
-  const lastHandRef   = useRef(-1);
+  const historicCards = (view?.playedCardsHistory ?? []) as Array<{ alias: string; card: TrucoCard; round: number }>;
 
   // Turn timer (30 seconds per turn)
   const [turnTimer, setTurnTimer]   = useState(30);
@@ -1162,32 +1175,18 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   // Reset selected card on new hand / round
   useEffect(() => { setSelectedCard(null); }, [view?.handNum, view?.round]);
 
-  // Accumulate played cards so they stay on the table across rounds
   useEffect(() => {
-    if (!view) return;
-    const currentCards = view.currentRoundCards as Record<string, TrucoCard | null>;
-
-    if (view.handNum !== lastHandRef.current) {
-      lastHandRef.current = view.handNum;
-      seenPlayedRef.current = new Set();
-      setHistoricCards([]);
-      setCallHistory([]);
-      return;
-    }
-
-    const newEntries: Array<{ alias: string; card: TrucoCard; round: number }> = [];
-    for (const [alias, card] of Object.entries(currentCards)) {
-      if (!card) continue;
-      const key = `${view.handNum}-${view.round}-${alias}`;
-      if (!seenPlayedRef.current.has(key)) {
-        seenPlayedRef.current.add(key);
-        newEntries.push({ alias, card, round: view.round as number });
-      }
-    }
-    if (newEntries.length > 0) {
-      setHistoricCards(prev => [...prev, ...newEntries]);
-    }
-  }, [view]);
+    setCallHistory([]);
+    prevEnvidoChainLenRef.current = 0;
+    prevTrucoChainLenRef.current = 0;
+    prevHistEnvidoLenRef.current = 0;
+    prevHistTrucoLenRef.current = 0;
+    prevEnvidoResultRef.current = null;
+    prevHistEnvidoStatusRef.current = '';
+    prevHistTrucoStatusRef.current = '';
+    prevBubbleEnvidoStatusRef.current = '';
+    prevBubbleTrucoStatusRef.current = '';
+  }, [view?.handNum]);
 
   // Show call notification when envido, truco, or flor is called at our team
   useEffect(() => {
@@ -1691,6 +1690,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           trucoChain={trucoChain}
           envidoStatus={view.envidoStatus}
           envidoResult={view.envidoResult}
+          envidoReveals={(view.envidoResult?.reveals ?? []).map((r: { alias: string; value: number }) => ({ alias: r.alias, value: r.value }))}
           trucoStatus={view.trucoStatus}
           trucoAccepted={view.trucoAccepted}
           logLines={callHistory}

@@ -55,6 +55,8 @@ export function getTrucoLabel(type: string): string {
 export function getResponseLabel(response: string): string {
   if (response === "noquiero") return "NO QUIERO";
   if (response === "quiero") return "QUIERO";
+  if (response === "sonbuenas") return "SON BUENAS";
+  if (response === "decirpuntos") return "DIGO PUNTOS";
   if (response === "realenvido") return "REAL ENVIDO";
   if (response === "faltaenvido") return "FALTA ENVIDO";
   if (response === "retruco") return "RETRUCO";
@@ -116,6 +118,8 @@ export function getResponseOptions(state: CantoFlowState): PlayerActionOption[] 
     const base: PlayerActionOption[] = [
       { actionType: "quiero", label: "QUIERO", variant: "primary" },
       { actionType: "no-quiero", label: "NO QUIERO", variant: "danger" },
+      { actionType: "decir-puntos", label: "DECIR PUNTOS", variant: "neutral" },
+      { actionType: "son-buenas", label: "SON BUENAS", variant: "danger" },
     ];
 
     if (state.callType === "envido") {
