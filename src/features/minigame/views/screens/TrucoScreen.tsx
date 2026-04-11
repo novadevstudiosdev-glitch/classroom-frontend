@@ -1072,37 +1072,48 @@ function CallNotification({
   call: string; sub: string; color: string; onDismiss: () => void;
 }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 3500);
+    const t = setTimeout(onDismiss, 3000);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
   return (
     <div style={{
-      position: 'absolute', top: '28%', left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 40,
-      animation: 'callBounce 0.4s cubic-bezier(.34,1.56,.64,1)',
+      position: 'absolute',
+      top: '46%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 'clamp(320px, 68%, 900px)',
+      zIndex: 44,
+      animation: 'callBounce 0.36s cubic-bezier(.34,1.56,.64,1)',
       pointerEvents: 'none',
     }}>
       <div style={{
-        background: `linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,20,20,0.95))`,
-        border: `2px solid ${color}`,
-        borderRadius: 16,
-        padding: '14px 24px',
+        background: `linear-gradient(110deg, rgba(10,12,16,0.86), rgba(12,18,26,0.7) 46%, rgba(10,12,16,0.86))`,
+        border: `1px solid ${color}55`,
+        borderRadius: 18,
+        padding: '16px 26px 14px',
         textAlign: 'center',
-        boxShadow: `0 0 40px ${color}44, 0 8px 32px rgba(0,0,0,0.6)`,
-        minWidth: 180,
+        backdropFilter: 'blur(12px)',
+        boxShadow: `0 16px 42px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 36px ${color}22`,
       }}>
         <div style={{
-          fontSize: 22, fontWeight: 900, color,
-          letterSpacing: '-0.02em', lineHeight: 1,
-          textShadow: `0 0 20px ${color}88`,
+          fontSize: 50,
+          fontWeight: 900,
+          color,
+          letterSpacing: '0.14em',
+          lineHeight: 1,
+          textTransform: 'uppercase',
+          textShadow: `0 0 24px ${color}55`,
         }}>
           {call}
         </div>
         <div style={{
-          fontSize: 12, color: 'rgba(255,255,255,0.6)',
-          fontWeight: 600, marginTop: 5,
+          fontSize: 15,
+          color: 'rgba(246, 232, 206, 0.85)',
+          fontWeight: 700,
+          marginTop: 8,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
         }}>
           {sub}
         </div>
@@ -1209,25 +1220,35 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
     const trucoCh    = (view.trucoChain  ?? []) as { type: string; alias: string }[];
     const lastEnvido = envidoCh[envidoCh.length - 1];
     const lastTruco  = trucoCh[trucoCh.length - 1];
+    const envidoLabel = (type: string) => (
+      type === 'realenvido' ? 'REAL ENVIDO' :
+      type === 'faltaenvido' ? 'FALTA ENVIDO' :
+      'ENVIDO'
+    );
+    const trucoLabel = (type: string) => (
+      type === 'retruco' ? 'RETRUCO' :
+      type === 'valecuatro' ? 'VALE CUATRO' :
+      'TRUCO'
+    );
 
     if (envidoSt === 'pending' && prevEnvidoStRef.current !== 'pending' && envidoResp && lastEnvido) {
       setCallNotif({
-        call: `!${lastEnvido.type.toUpperCase()}!`,
-        sub: `${lastEnvido.alias} te canto - lo queres?`,
+        call: envidoLabel(lastEnvido.type),
+        sub: `${lastEnvido.alias} canto - responde`,
         color: '#fbbf24',
       });
     }
     if (trucoSt === 'pending' && prevTrucoStRef.current !== 'pending' && trucoResp && lastTruco) {
       setCallNotif({
-        call: `!${lastTruco.type.toUpperCase()}!`,
-        sub: `${lastTruco.alias} te canto - lo queres?`,
+        call: trucoLabel(lastTruco.type),
+        sub: `${lastTruco.alias} canto - responde`,
         color: '#ef4444',
       });
     }
     if (florSt === 'pending' && prevFlorStRef.current !== 'pending' && florResp) {
       setCallNotif({
-        call: '!FLOR!',
-        sub: 'El rival canto flor - que respondes?',
+        call: 'FLOR',
+        sub: 'El rival canto flor - responde',
         color: '#10b981',
       });
     }
