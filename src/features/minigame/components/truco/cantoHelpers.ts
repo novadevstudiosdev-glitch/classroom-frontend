@@ -17,6 +17,9 @@ export interface CantoFlowState {
   callerAlias: string | null;
   responderAlias: string | null;
   waitingResponse: boolean;
+  envidoCallCount: number;
+  hasRealEnvido: boolean;
+  hasFaltaEnvido: boolean;
 }
 
 interface BuildStateParams {
@@ -84,6 +87,9 @@ export function buildCantoFlowState({
       callerAlias: last.alias,
       responderAlias: getResponderAlias(envidoResponderTeam, teamAMembers, teamBMembers),
       waitingResponse: true,
+      envidoCallCount: envidoChain.filter((c) => c.type === "envido").length,
+      hasRealEnvido: envidoChain.some((c) => c.type === "realenvido"),
+      hasFaltaEnvido: envidoChain.some((c) => c.type === "faltaenvido"),
     };
   }
 
@@ -97,6 +103,9 @@ export function buildCantoFlowState({
       callerAlias: last.alias,
       responderAlias: getResponderAlias(trucoResponderTeam, teamAMembers, teamBMembers),
       waitingResponse: true,
+      envidoCallCount: 0,
+      hasRealEnvido: false,
+      hasFaltaEnvido: false,
     };
   }
 
@@ -108,6 +117,9 @@ export function buildCantoFlowState({
     callerAlias: null,
     responderAlias: null,
     waitingResponse: false,
+    envidoCallCount: 0,
+    hasRealEnvido: false,
+    hasFaltaEnvido: false,
   };
 }
 
@@ -115,6 +127,14 @@ export function getResponseOptions(state: CantoFlowState): PlayerActionOption[] 
   if (!state.waitingResponse || !state.source || !state.callType) return [];
 
   if (state.source === "envido") {
+    const canRaiseEnvido =
+      state.callType === "envido" &&
+      state.envidoCallCount === 1 &&
+      !state.hasRealEnvido &&
+      !state.hasFaltaEnvido;
+    const canRaiseReal = !state.hasRealEnvido && !state.hasFaltaEnvido;
+    const canRaiseFalta = !state.hasFaltaEnvido;
+
     const base: PlayerActionOption[] = [
       { actionType: "quiero", label: "QUIERO", variant: "primary" },
       { actionType: "no-quiero", label: "NO QUIERO", variant: "danger" },
@@ -122,17 +142,15 @@ export function getResponseOptions(state: CantoFlowState): PlayerActionOption[] 
       { actionType: "son-buenas", label: "SON BUENAS", variant: "danger" },
     ];
 
-    if (state.callType === "envido") {
-      return [
-        ...base,
-        { actionType: "real-envido", label: "REDOBLAR: REAL ENVIDO", variant: "accent" },
-        { actionType: "falta-envido", label: "REDOBLAR: FALTA ENVIDO", variant: "accent" },
-      ];
-    }
-    if (state.callType === "realenvido") {
-      return [...base, { actionType: "falta-envido", label: "REDOBLAR: FALTA ENVIDO", variant: "accent" }];
-    }
-    return base;
+    const raises: PlayerActionOption[] = [];
+    if (canRaiseEnvido)
+      raises.push({ actionType: "envido", label: "REDOBLAR: ENVIDO", variant: "accent" });
+    if (canRaiseReal)
+      raises.push({ actionType: "real-envido", label: "REDOBLAR: REAL ENVIDO", variant: "accent" });
+    if (canRaiseFalta)
+      raises.push({ actionType: "falta-envido", label: "REDOBLAR: FALTA ENVIDO", variant: "accent" });
+
+    return [...base, ...raises];
   }
 
   const base: PlayerActionOption[] = [

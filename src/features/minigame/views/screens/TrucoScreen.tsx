@@ -283,12 +283,12 @@ function getPositions(n: number): Pos[] {
   ];
 }
 
-/** Played card position = 62% of the way from player seat toward center of felt */
+/** Played card position = 70% of the way from player seat toward center of felt */
 function getPlayedCardPos(pos: Pos): { x: number; y: number } {
   const cx = 50, cy = 48; // felt center (slightly above geometric center)
   return {
-    x: pos.x + (cx - pos.x) * 0.62,
-    y: pos.y + (cy - pos.y) * 0.62,
+    x: pos.x + (cx - pos.x) * 0.70,
+    y: pos.y + (cy - pos.y) * 0.70,
   };
 }
 
@@ -631,7 +631,7 @@ function PlayedCardOnFelt({
       position: 'absolute',
       left: `${x}%`, top: `${y}%`,
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) rotate(${tiltDeg}deg)`,
-      zIndex: dimmed ? 10 : 12,
+      zIndex: dimmed ? 24 : 28,
       filter: dimmed
         ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) grayscale(0.4)'
         : 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
@@ -909,7 +909,7 @@ function ActionPanel({
   const envidoChain = (view.envidoChain ?? []) as { type: string }[];
   const lastEnvido  = envidoChain[envidoChain.length - 1]?.type ?? null;
 
-  if (phase === 'show_envido' || phase === 'hand_end' || phase === 'game_over') return null;
+  if ((phase === 'show_envido' || phase === 'show_envido_points') || phase === 'hand_end' || phase === 'game_over') return null;
 
   const sections: React.ReactNode[] = [];
 
@@ -958,8 +958,12 @@ function ActionPanel({
   /* â”€â”€ Envido response (opponent called envido) â”€â”€ */
   if (envidoSt === 'pending' && envidoResp && phase === 'playing') {
     // lastEnvido comes from the engine chain (.type = 'envido'|'realenvido'|'faltaenvido' â€” no hyphens)
-    const canRaiseToReal  = lastEnvido === 'envido';
-    const canRaiseToFalta = lastEnvido === 'envido' || lastEnvido === 'realenvido';
+    const envidoCount = envidoChain.filter((c) => c.type === 'envido').length;
+    const hasRealEnvido = envidoChain.some((c) => c.type === 'realenvido');
+    const hasFaltaEnvido = envidoChain.some((c) => c.type === 'faltaenvido');
+    const canRaiseToEnvido = lastEnvido === 'envido' && envidoCount < 2 && !hasRealEnvido && !hasFaltaEnvido;
+    const canRaiseToReal  = !hasRealEnvido && !hasFaltaEnvido;
+    const canRaiseToFalta = !hasFaltaEnvido;
     const displayName = lastEnvido === 'realenvido' ? 'REAL ENVIDO'
       : lastEnvido === 'faltaenvido' ? 'FALTA ENVIDO'
       : (lastEnvido ?? '').toUpperCase();
@@ -970,6 +974,9 @@ function ActionPanel({
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
         <Btn label="Son Buenas" variant="ghost" onClick={() => onAction({ type: 'son-buenas' })} />
+        {canRaiseToEnvido && (
+          <Btn label="Envido" variant="primary" small onClick={() => onAction({ type: 'envido' })} />
+        )}
         {canRaiseToReal && (
           <Btn label="Real Envido" variant="primary" small onClick={() => onAction({ type: 'real-envido' })} />
         )}
@@ -1155,9 +1162,9 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
     if (view?.config?.tableTheme) setTheme(view.config.tableTheme);
   }, [view?.config?.tableTheme]);
 
-  // Countdown for show_envido phase
+  // Countdown for show_envido_points phase
   useEffect(() => {
-    if (view?.phase === 'show_envido') {
+    if (view?.phase === 'show_envido' || view?.phase === 'show_envido_points') {
       setEnvidoTimer(30);
       envidoTimerRef.current = setInterval(() => {
         setEnvidoTimer(t => {
@@ -1390,7 +1397,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   const cardCounts   = (view.allPlayerCardCounts ?? {}) as Record<string, number>;
   const alreadyPlayed = !!currentRound[myAlias];
   const canPlay      = isMyTurn && view.phase === 'playing' && !alreadyPlayed;
-  const needShowEnvido = view.phase === 'show_envido' &&
+  const needShowEnvido = (view.phase === 'show_envido' || view.phase === 'show_envido_points') &&
     Array.isArray(view.pendingShowEnvido) &&
     (view.pendingShowEnvido as string[]).includes(myAlias);
   const envidoChain = (view.envidoChain ?? []) as Array<{ alias: string; type: string }>;
@@ -1750,7 +1757,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
         )}
 
         {/* â”€â”€ Envido shown cards overlay â”€â”€ */}
-        {view.phase === 'show_envido' &&
+        {(view.phase === 'show_envido' || view.phase === 'show_envido_points') &&
           view.envidoResult?.reveals &&
           view.envidoResult.reveals.some((r: { cards?: TrucoCard[] }) => r.cards && r.cards.length > 0) && (
           <div style={{

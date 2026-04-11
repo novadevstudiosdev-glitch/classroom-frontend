@@ -42,7 +42,7 @@ interface Props {
   opponentCardCount?: number;
   currentTurnAlias?: string;
   canPlay?: boolean;
-  phase?: "playing" | "show_envido" | "hand_end" | "game_over";
+  phase?: "playing" | "show_envido" | "show_envido_points" | "hand_end" | "game_over";
   handNum?: number;
   round?: number;
   dealerAlias?: string;
@@ -301,7 +301,7 @@ export default function TrucoTable({
 
   const turnText =
     phase !== "playing"
-      ? phase === "show_envido"
+      ? (phase === "show_envido" || phase === "show_envido_points")
         ? "Mostrando Envido"
         : phase === "hand_end"
           ? "Fin de Mano"
@@ -451,12 +451,12 @@ export default function TrucoTable({
         <div
           style={{
             position: "absolute",
-            top: "35%",
+            top: "24%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: CARD_W + 82,
-            height: CARD_H + 108,
-            zIndex: 16,
+            width: CARD_W + 160,
+            height: CARD_H + 190,
+            zIndex: 42,
             pointerEvents: "none",
           }}
         >

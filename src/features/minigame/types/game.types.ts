@@ -61,7 +61,7 @@ export interface TrucoPlayerView {
   teamAMembers: { socketId: string; alias: string }[];
   teamBMembers: { socketId: string; alias: string }[];
   myTeam: 'A' | 'B';
-  phase: 'playing' | 'show_envido' | 'hand_end' | 'game_over';
+  phase: 'playing' | 'show_envido' | 'show_envido_points' | 'hand_end' | 'game_over';
   handNum: number;
   dealerAlias: string;
   manoAlias: string;
