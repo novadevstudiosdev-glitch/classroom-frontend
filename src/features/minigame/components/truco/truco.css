@@ -288,18 +288,18 @@
 /* Mesa redonda */
 .table-wrap {
   position: absolute;
-  top: 10px;
+  top: 6px;
   left: 10px;
   right: 10px;
-  height: 68%;
+  height: 72%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .table-oval {
-  width: 90%;
-  height: 90%;
+  width: 92%;
+  height: 92%;
   background: radial-gradient(
     ellipse 70% 55% at 50% 42%,
     #2a6e3a 30%,

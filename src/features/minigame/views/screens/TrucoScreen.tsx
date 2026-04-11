@@ -283,12 +283,27 @@ function getPositions(n: number): Pos[] {
   ];
 }
 
-/** Played card position = 70% of the way from player seat toward center of felt */
-function getPlayedCardPos(pos: Pos): { x: number; y: number } {
-  const cx = 50, cy = 48; // felt center (slightly above geometric center)
+/** Played card position with per-round lane separation to avoid overlap */
+function getPlayedCardPos(pos: Pos, roundIdx: number, isMe: boolean): { x: number; y: number } {
+  const cx = 50;
+  const cy = 48; // felt center (slightly above geometric center)
+  const vx = cx - pos.x;
+  const vy = cy - pos.y;
+  const len = Math.hypot(vx, vy) || 1;
+  const nx = vx / len;
+  const ny = vy / len;
+  const px = -ny;
+  const py = nx;
+
+  const towardCenter = 0.66;
+  const baseX = pos.x + vx * towardCenter;
+  const baseY = pos.y + vy * towardCenter;
+  const lane = (roundIdx - 1) * 4.6;
+  const depth = (roundIdx - 1) * (isMe ? 1.8 : -1.8);
+
   return {
-    x: pos.x + (cx - pos.x) * 0.70,
-    y: pos.y + (cy - pos.y) * 0.70,
+    x: baseX + px * lane + nx * depth,
+    y: baseY + py * lane + ny * depth,
   };
 }
 
@@ -1592,7 +1607,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           const seatIdx = seating.indexOf(alias);
           const pos     = positions[seatIdx];
           if (!pos) return null;
-          const { x, y } = getPlayedCardPos(pos);
+          const { x, y } = getPlayedCardPos(pos, round, alias === myAlias);
           const currentRoundNum = view.round as number;
           const isCurrent = round === currentRoundNum && !!currentRound[alias];
           return (
@@ -1618,7 +1633,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           if (alreadyInHistory) return null; // avoid duplicate
           const pos = positions[seatIdx];
           if (!pos) return null;
-          const { x, y } = getPlayedCardPos(pos);
+          const { x, y } = getPlayedCardPos(pos, view.round as number, alias === myAlias);
           return (
             <PlayedCardOnFelt
               key={`curr-${alias}`}

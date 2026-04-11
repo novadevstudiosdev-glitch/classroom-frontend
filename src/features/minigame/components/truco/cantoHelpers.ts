@@ -33,6 +33,14 @@ interface BuildStateParams {
   teamBMembers?: { alias: string }[];
 }
 
+interface CallOptionsParams {
+  phase?: "playing" | "show_envido" | "show_envido_points" | "hand_end" | "game_over";
+  round?: number;
+  envidoStatus?: "available" | "pending" | "resolved" | "expired";
+  trucoStatus?: "available" | "pending" | "resolved";
+  canGoMazo?: boolean;
+}
+
 function getResponderAlias(
   team: "A" | "B" | null | undefined,
   teamAMembers: { alias: string }[],
@@ -167,12 +175,30 @@ export function getResponseOptions(state: CantoFlowState): PlayerActionOption[] 
   return base;
 }
 
-export function getDefaultCallOptions(): PlayerActionOption[] {
-  return [
-    { actionType: "envido", label: "ENVIDO", variant: "primary" },
-    { actionType: "real-envido", label: "REAL ENVIDO", variant: "primary" },
-    { actionType: "falta-envido", label: "FALTA ENVIDO", variant: "accent" },
-    { actionType: "truco", label: "TRUCO", variant: "neutral" },
-    { actionType: "ir-al-mazo", label: "IR AL MAZO", variant: "danger" },
-  ];
+export function getCallOptions({
+  phase,
+  round = 0,
+  envidoStatus,
+  trucoStatus,
+  canGoMazo = false,
+}: CallOptionsParams): PlayerActionOption[] {
+  if (phase !== "playing") return [];
+
+  const options: PlayerActionOption[] = [];
+
+  if (envidoStatus === "available" && round === 0) {
+    options.push({ actionType: "envido", label: "ENVIDO", variant: "primary" });
+    options.push({ actionType: "real-envido", label: "REAL ENVIDO", variant: "primary" });
+    options.push({ actionType: "falta-envido", label: "FALTA ENVIDO", variant: "accent" });
+  }
+
+  if (trucoStatus === "available" && envidoStatus !== "pending") {
+    options.push({ actionType: "truco", label: "TRUCO", variant: "neutral" });
+  }
+
+  if (canGoMazo) {
+    options.push({ actionType: "ir-al-mazo", label: "IR AL MAZO", variant: "danger" });
+  }
+
+  return options;
 }

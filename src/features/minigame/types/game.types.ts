@@ -75,6 +75,7 @@ export interface TrucoPlayerView {
   envidoChain: TrucoEnvidoCall[];
   envidoResponderTeam: 'A' | 'B' | null;
   envidoResult: TrucoEnvidoResult | null;
+  envidoPointsAwarded: boolean;
   envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | 'sonbuenas' | 'decirpuntos' | string } | null;
   pendingShowEnvido: string[];
   myEnvidoValue: number;

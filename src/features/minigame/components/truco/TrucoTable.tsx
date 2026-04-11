@@ -9,7 +9,7 @@ import PlayerActionButtons from "./PlayerActionButtons";
 import ScorePanel from "./ScorePanel";
 import {
   buildCantoFlowState,
-  getDefaultCallOptions,
+  getCallOptions,
   getEnvidoLabel,
   getResponseLabel,
   getResponseOptions,
@@ -279,7 +279,10 @@ export default function TrucoTable({
   });
 
   const isMyTurn = normalizeAlias(currentTurnAlias ?? "") === normalizeAlias(playerName);
-  const isMyResponseTurn = normalizeAlias(cantoFlow.responderAlias ?? "") === normalizeAlias(playerName);
+  const isMyResponseTurn =
+    !!myTeam &&
+    ((cantoFlow.source === "envido" && envidoResponderTeam === myTeam) ||
+      (cantoFlow.source === "truco" && trucoResponderTeam === myTeam));
 
   const canInteract = canPlay && phase === "playing" && !pendingPlayedCard && !cantoFlow.waitingResponse;
 
@@ -316,7 +319,13 @@ export default function TrucoTable({
   const opponentHandWidth = CARD_W + HAND_SPACING * Math.max(0, opponentCardFanCount - 1) + 34;
 
   const responseOptions = isMyResponseTurn ? getResponseOptions(cantoFlow) : [];
-  const callOptions = getDefaultCallOptions();
+  const callOptions = getCallOptions({
+    phase,
+    round,
+    envidoStatus,
+    trucoStatus,
+    canGoMazo: isMyTurn,
+  });
 
   const actionOptions: PlayerActionOption[] =
     cantoFlow.waitingResponse ? responseOptions : phase === "playing" ? callOptions : [];
@@ -327,6 +336,13 @@ export default function TrucoTable({
       : cantoFlow.waitingResponse
         ? "Esperando respuesta rival"
         : "Cantar";
+
+  const envidoResultLine = useMemo(() => {
+    if (!envidoResult) return null;
+    if (envidoPointLine) return envidoPointLine;
+    const iWon = myTeam ? envidoResult.winnerTeam === myTeam : false;
+    return `${iWon ? "Ganaste" : "Gano el rival"} ${envidoResult.pts} punto${envidoResult.pts === 1 ? "" : "s"}`;
+  }, [envidoResult, envidoPointLine, myTeam]);
 
   const handleSelectOrPlay = (card: HandCard) => {
     if (!canInteract) return;
@@ -451,28 +467,28 @@ export default function TrucoTable({
         <div
           style={{
             position: "absolute",
-            top: "24%",
+            top: "19%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: CARD_W + 160,
-            height: CARD_H + 190,
+            width: CARD_W * 2 + 220,
+            height: CARD_H * 2 + 150,
             zIndex: 42,
             pointerEvents: "none",
           }}
         >
           {historicPlayedCards.map((entry, index) => {
             const isMine = normalizeAlias(entry.alias) === normalizeAlias(playerName);
-            const sideOffset = isMine ? 26 : -26;
-            const yBase = isMine ? 62 : -62;
-            const x = 40 + entry.round * 14 + (index % 2 === 0 ? 0 : 6);
-            const y = yBase + entry.round * 18;
+            const laneX = 84 + entry.round * 58 + (index % 2 === 0 ? 0 : 6);
+            const laneY = isMine
+              ? 178 - entry.round * 22 + (index % 3) * 2
+              : 18 + entry.round * 20 + (index % 3) * 2;
             return (
               <motion.div
                 key={`history-${entry.alias}-${entry.round}-${entry.card.suit}-${entry.card.value}-${index}`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 0.72, scale: 0.92 }}
                 transition={{ duration: 0.25 }}
-                style={{ position: "absolute", left: sideOffset, width: CARD_W, height: CARD_H }}
+                style={{ position: "absolute", left: 0, width: CARD_W, height: CARD_H }}
               >
                 <AnimatedCard
                   id={`history-${entry.alias}-${entry.round}-${entry.card.suit}-${entry.card.value}-${index}`}
@@ -482,7 +498,7 @@ export default function TrucoTable({
                   height={CARD_H}
                   dealt={false}
                   dealFrom={{ x: 0, y: 0 }}
-                  to={{ x, y, rotate: isMine ? 6 : -6 }}
+                  to={{ x: laneX, y: laneY, rotate: isMine ? 6 + entry.round * 2 : -6 - entry.round * 2 }}
                   border="1.5px solid rgba(23,23,23,0.88)"
                 />
               </motion.div>
@@ -493,8 +509,8 @@ export default function TrucoTable({
             {opponentRoundCard && (
               <motion.div
                 key={`opponent-round-${opponentRoundCard.suit}-${opponentRoundCard.value}`}
-                initial={{ x: 40, y: -132, rotate: 0, scale: 0.82, opacity: 0 }}
-                animate={{ x: 40, y: bothCardsOnTable ? -42 : 8, rotate: bothCardsOnTable ? -7 : 0, scale: 1, opacity: 1 }}
+                initial={{ x: 146, y: -110, rotate: 0, scale: 0.82, opacity: 0 }}
+                animate={{ x: 146, y: bothCardsOnTable ? 44 : 60, rotate: bothCardsOnTable ? -7 : -3, scale: 1, opacity: 1 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
                 style={{ position: "absolute", width: CARD_W, height: CARD_H }}
               >
@@ -517,8 +533,8 @@ export default function TrucoTable({
             {myRoundCard && (
               <motion.div
                 key={`my-round-${myRoundCard.suit}-${myRoundCard.value}`}
-                initial={{ x: 40, y: 146, rotate: 0, scale: 0.82, opacity: 0 }}
-                animate={{ x: 40, y: bothCardsOnTable ? 42 : 8, rotate: bothCardsOnTable ? 8 : 0, scale: 1, opacity: 1 }}
+                initial={{ x: 146, y: 264, rotate: 0, scale: 0.82, opacity: 0 }}
+                animate={{ x: 146, y: bothCardsOnTable ? 156 : 142, rotate: bothCardsOnTable ? 8 : 3, scale: 1, opacity: 1 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
                 style={{ position: "absolute", width: CARD_W, height: CARD_H }}
               >
@@ -588,7 +604,7 @@ export default function TrucoTable({
                 ? "Esperando confirmacion del servidor..."
                 : `Esperando jugada de ${currentTurnAlias ?? "rival"}`}
         </p>
-        {envidoPointLine && (
+        {envidoResultLine && (
           <p
             className="card-hint"
             style={{
@@ -599,7 +615,7 @@ export default function TrucoTable({
               fontWeight: 700,
             }}
           >
-            Envido: {envidoPointLine}
+            Envido: {envidoResultLine}
           </p>
         )}
 
