@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
+import { useStudentDashboard } from "@/features/dashboard/student/hooks";
 
 export default function StudentDashboardPage() {
-  const [xpWidth, setXpWidth] = useState(0);
+  const { data, loading, error } = useStudentDashboard();
   const [missionProgress, setMissionProgress] = useState(0);
 
+  const missionPercent = useMemo(() => {
+    if (!data.mission.total) return 0;
+    return Math.round((data.mission.completed / data.mission.total) * 100);
+  }, [data.mission.completed, data.mission.total]);
+
   useEffect(() => {
-    setTimeout(() => setXpWidth(65), 300);
-    setTimeout(() => setMissionProgress(60), 500);
-  }, []);
+    setTimeout(() => setMissionProgress(missionPercent), 500);
+  }, [missionPercent]);
 
   return (
     <div className="relative min-h-screen">
@@ -19,12 +24,24 @@ export default function StudentDashboardPage() {
         {/* HEADER */}
         <header className="mb-6">
           <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
-            ¡Hola, Sofía! 👋
+            {`Hola, ${data.profile.alias}!`} 👋
           </h2>
           <p className="text-sm sm:text-base text-white">
             ¿Lista para otra aventura de aprendizaje?
           </p>
         </header>
+
+        {loading ? (
+          <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/85">
+            Cargando dashboard del alumno...
+          </section>
+        ) : null}
+
+        {!loading && error ? (
+          <section className="mb-6 rounded-2xl border border-red-300/40 bg-red-500/10 p-4 text-sm text-red-100">
+            {error}
+          </section>
+        ) : null}
 
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -40,10 +57,10 @@ export default function StudentDashboardPage() {
 
               <div className="flex-1 w-full">
                 <h4 className="text-base sm:text-lg font-bold mb-2">
-                  Completa 5 ejercicios de Matemática
+                  {data.mission.title}
                 </h4>
                 <p className="text-xs sm:text-sm opacity-90 mb-4">
-                  ¡Ya vas muy bien! Solo te faltan 2 ejercicios más.
+                  {data.mission.description}
                 </p>
 
                 <div className="bg-white/20 rounded-xl h-5 overflow-hidden mb-2">
@@ -51,14 +68,14 @@ export default function StudentDashboardPage() {
                     className="bg-[#FFD84D] h-full rounded-xl flex items-center justify-center text-xs font-bold text-gray-800"
                     animate={{ width: `${missionProgress}%` }}
                   >
-                    3/5
+                    {`${data.mission.completed}/${data.mission.total}`}
                   </motion.div>
                 </div>
 
                 <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-white/15 rounded-xl w-fit">
                   <span className="text-xl">🏅</span>
                   <span className="text-xs sm:text-sm font-bold">
-                    +150 XP al completar
+                    {`+${data.mission.rewardXp} XP al completar`}
                   </span>
                 </div>
               </div>
@@ -72,39 +89,7 @@ export default function StudentDashboardPage() {
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              {[
-                {
-                  icon: "🔢",
-                  name: "Matemática",
-                  progress: "75%",
-                  color: "#FFD84D",
-                },
-                {
-                  icon: "🔬",
-                  name: "Ciencias",
-                  progress: "60%",
-                  color: "#34D399",
-                },
-                {
-                  icon: "📖",
-                  name: "Lengua",
-                  progress: "85%",
-                  color: "#A855F7",
-                },
-                {
-                  icon: "🏛️",
-                  name: "Historia",
-                  progress: "45%",
-                  color: "#FB923C",
-                },
-                { icon: "🎨", name: "Arte", progress: "90%", color: "#F43F5E" },
-                {
-                  icon: "💻",
-                  name: "Tecnología",
-                  progress: "70%",
-                  color: "#3B82F6",
-                },
-              ].map((subject) => (
+              {data.subjects.map((subject) => (
                 <div
                   key={subject.name}
                   className="aspect-square rounded-[20px] flex flex-col items-center justify-center gap-1 sm:gap-2 text-center"
@@ -115,7 +100,7 @@ export default function StudentDashboardPage() {
                     {subject.name}
                   </span>
                   <span className="text-[20px] sm:text-xs text-white">
-                    {subject.progress}
+                    {`${subject.progress}%`}
                   </span>
                 </div>
               ))}
@@ -129,22 +114,22 @@ export default function StudentDashboardPage() {
             </h3>
 
             <div className="flex flex-col gap-3">
-              {[1, 2, 3].map((_, i) => (
+              {data.recentActivity.map((activity) => (
                 <div
-                  key={i}
+                  key={activity.id}
                   className="flex items-center gap-3 p-3 bg-[#ffffff45] rounded-xl"
                 >
                   <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-lg">
-                    🔢
+                    {activity.icon}
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold">Actividad</p>
+                    <p className="text-xs sm:text-sm font-bold">{activity.title}</p>
                     <p className="text-[10px] sm:text-xs text-gray-300">
-                      Hace poco
+                      {activity.whenLabel}
                     </p>
                   </div>
                   <span className="text-xs sm:text-sm font-bold text-[#FFD000]">
-                    95%
+                    {activity.scoreLabel}
                   </span>
                 </div>
               ))}
@@ -158,19 +143,19 @@ export default function StudentDashboardPage() {
             </h3>
 
             <div className="flex flex-col gap-3">
-              {[1, 2, 3].map((rank) => (
+              {data.leaderboard.map((row) => (
                 <div
-                  key={rank}
+                  key={row.id}
                   className="flex items-center gap-3 p-3 bg-[#ffffff45] rounded-xl"
                 >
                   <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gray-300 rounded-full text-xs font-bold">
-                    {rank}
+                    {row.rank}
                   </div>
                   <span className="flex-1 text-xs sm:text-sm font-bold">
-                    Usuario
+                    {row.name}
                   </span>
                   <span className="text-xs sm:text-sm text-[#FFD000]">
-                    500 XP
+                    {`${row.xp} XP`}
                   </span>
                 </div>
               ))}
@@ -193,18 +178,9 @@ export default function StudentDashboardPage() {
 
             {/* 🔥 GRID RESPONSIVE */}
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
-              {[
-                { icon: "🏆", name: "Primera Victoria", unlocked: true },
-                { icon: "📚", name: "Lector Ávido", unlocked: true },
-                { icon: "🔥", name: "Racha de 7", unlocked: true },
-                { icon: "⭐", name: "Perfeccionista", unlocked: true },
-                { icon: "🎨", name: "Artista", unlocked: true },
-                { icon: "💎", name: "Nivel 10", unlocked: false },
-                { icon: "🚀", name: "Explorador", unlocked: false },
-                { icon: "👑", name: "Campeón", unlocked: false },
-              ].map((badge, i) => (
+              {data.badges.map((badge, i) => (
                 <motion.div
-                  key={i}
+                  key={badge.id}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, delay: 0.5 + i * 0.05 }}
@@ -247,7 +223,7 @@ export default function StudentDashboardPage() {
             </motion.div>
 
             <div className="text-5xl sm:text-7xl font-black my-2 sm:my-4">
-              7
+              {data.streakDays}
             </div>
 
             <div className="text-sm sm:text-lg font-bold opacity-90">
