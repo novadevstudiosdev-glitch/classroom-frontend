@@ -1,7 +1,8 @@
 export type AuthMode = "login" | "register";
 
 export type AuthFormData = {
-  name: string;
+  first_name: string;
+  last_name: string;
   childName: string;
   schoolName: string;
   email: string;

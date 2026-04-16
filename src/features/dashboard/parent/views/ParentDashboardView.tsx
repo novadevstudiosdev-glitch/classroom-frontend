@@ -9,7 +9,6 @@ import { useAuthStore } from "@/store/auth/auth.store";
 export default function ParentDashboardView() {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
-
   const [profile, setProfile] = useState<ParentProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

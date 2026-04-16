@@ -57,7 +57,8 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<AuthFormData>({
-    name: "",
+    first_name: "",
+    last_name: "",
     childName: "",
     schoolName: "",
     email: "",
@@ -84,7 +85,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
           throw new Error("Las contraseñas no coinciden.");
         }
 
-        const { firstName, lastName } = getNameParts(formData.name);
+        const { firstName, lastName } = getNameParts(formData.first_name);
 
         if (registerRole === "teacher") {
           await registerTeacher({
@@ -235,12 +236,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       : "Completá los datos del adulto responsable para crear la cuenta."}
                   </p>
                 </div>
+                
               ) : null}
 
               {isRegister ? (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nombre completo
+                    Nombre
                   </label>
                   <div className="relative">
                     <User
@@ -249,15 +251,40 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                     />
                     <input
                       type="text"
-                      value={formData.name}
+                      value={formData.first_name}
                       onChange={(event) =>
-                        setFormData({ ...formData, name: event.target.value })
+                        setFormData({ ...formData, first_name: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
                       placeholder="Ej: María González"
                       required
                     />
                   </div>
+                  
+                </div>
+              ) : null}
+              {isRegister ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Apellido
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(event) =>
+                        setFormData({ ...formData, last_name: event.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
+                      placeholder="Ej: María González"
+                      required
+                    />
+                  </div>
+                  
                 </div>
               ) : null}
 
