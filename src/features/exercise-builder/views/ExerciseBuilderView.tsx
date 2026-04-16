@@ -9,7 +9,6 @@ import {
   ExerciseBuilderActions,
   ExerciseBuilderFormSection,
   ExerciseBuilderHeader,
-  ExercisePreviewPanel,
   ExerciseTypeTabs,
 } from "@/features/exercise-builder/components";
 import { useExerciseBuilder } from "@/features/exercise-builder/hooks/useExerciseBuilder";
@@ -85,7 +84,13 @@ const ExerciseBuilderView = () => {
           onChangeType={setType}
         />
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <ExerciseBuilderActions
+          onSaveDraft={handleSaveDraft}
+          onPreview={() => router.refresh()}
+          onPublish={handlePublish}
+        />
+
+        <div>
           <ExerciseBuilderFormSection
             draft={draft}
             onChangeBase={updateBase}
@@ -110,15 +115,6 @@ const ExerciseBuilderView = () => {
             onOrderElementsAddItem={addOrderItem}
             onOrderElementsMoveItem={moveOrderItem}
           />
-
-          <div className="space-y-4">
-            <ExercisePreviewPanel draft={draft} />
-            <ExerciseBuilderActions
-              onSaveDraft={handleSaveDraft}
-              onPreview={() => router.refresh()}
-              onPublish={handlePublish}
-            />
-          </div>
         </div>
       </main>
     </div>

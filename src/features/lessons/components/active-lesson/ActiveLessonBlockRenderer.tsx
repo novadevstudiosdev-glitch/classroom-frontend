@@ -52,7 +52,7 @@ const ActiveLessonBlockRenderer = ({ block, onContinue }: ActiveLessonBlockRende
     default:
       console.log("[ActiveLessonBlockRenderer] tipo de bloque no soportado", block);
       return (
-        <div className="rounded-2xl border border-yellow-300 bg-yellow-100 p-4 text-sm text-yellow-900">
+        <div className="rounded-2xl border border-yellow-600 bg-yellow-100 p-4 text-sm text-yellow-900">
           Tipo de bloque no soportado todavía.
         </div>
       );

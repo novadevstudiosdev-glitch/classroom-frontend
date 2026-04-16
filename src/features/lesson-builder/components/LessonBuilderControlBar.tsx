@@ -1,35 +1,24 @@
 import {
   Check,
-  Clock3,
   Eye,
-  ListChecks,
   Share2,
-  Star,
-  Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
 import type { LessonBuilderControlBarProps } from "@/features/lesson-builder/types";
 
 const LessonBuilderControlBar = ({
   className,
   draftLabel,
   isPublished,
-  metrics,
   onTogglePublished,
 }: LessonBuilderControlBarProps) => {
-  const metricIconById: Record<string, ReactNode> = {
-    exercises: <ListChecks size={16} className="text-white/60" />,
-    points: <Star size={16} className="text-amber-500" />,
-    duration: <Clock3 size={16} className="text-white/60" />,
-    students: <Users size={16} className="text-white/60" />,
-  };
-
   return (
     <div className="border-b border-white/10 bg-white/5 px-6 py-4 backdrop-blur-md">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-3">
+        <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-bold text-white">{className}</h3>
+            <h3 className="rounded-full bg-gradient-to-r from-sky-500/25 via-violet-500/25 to-emerald-500/25 px-3 py-1 text-base font-black text-white shadow-[0_10px_24px_rgba(2,6,26,0.4)]">
+              {className}
+            </h3>
             <button
               type="button"
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -46,29 +35,19 @@ const LessonBuilderControlBar = ({
               {draftLabel}
             </button>
           </div>
-
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {metrics.map((item) => (
-              <div key={item.id} className="inline-flex items-center gap-2">
-                {metricIconById[item.id] ?? <span className="text-white/60">•</span>}
-                <span className="text-sm font-semibold text-white">{item.value}</span>
-                <span className="text-xs text-white/70">{item.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+            className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-sky-500/20 to-cyan-500/20 px-3 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(2,6,26,0.35)] hover:from-sky-500/30 hover:to-cyan-500/30"
           >
             <Eye size={16} />
             Preview
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+            className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 px-3 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(2,6,26,0.35)] hover:from-violet-500/30 hover:to-fuchsia-500/30"
           >
             <Share2 size={16} />
             Compartir
@@ -76,10 +55,10 @@ const LessonBuilderControlBar = ({
           <button
             type="button"
             onClick={onTogglePublished}
-            className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white ${
+            className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(2,6,26,0.35)] ${
               isPublished
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-[#1CB0F6] hover:bg-[#1398d8]"
+                ? "bg-gradient-to-r from-emerald-500/45 to-teal-500/45 hover:from-emerald-500/60 hover:to-teal-500/60"
+                : "bg-gradient-to-r from-amber-500/45 to-orange-500/45 hover:from-amber-500/60 hover:to-orange-500/60"
             }`}
           >
             <Check size={16} />

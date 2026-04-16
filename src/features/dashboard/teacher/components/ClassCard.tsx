@@ -17,7 +17,7 @@ const ClassCard = ({
   onArchive,
 }: ClassCardProps) => {
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur-md">
+    <div className="rounded-2xl bg-white/10 p-6 shadow-sm backdrop-blur-md">
       {/* ------------------Header------------- */}
       <div className="flex items-start gap-4 mb-4">
         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/20 text-3xl">

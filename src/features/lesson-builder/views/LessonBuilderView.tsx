@@ -3,11 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
-  LessonBuilderAside,
   LessonBuilderControlBar,
   LessonBuilderExercisesSummaryCard,
   LessonBuilderMinigameCard,
+  LessonBuilderPerformanceCard,
   LessonBuilderSectionTabs,
+  LessonBuilderSettingsCard,
   LessonBuilderTopBar,
   LessonBuilderVideoSection,
   MinigamePicker,
@@ -45,8 +46,13 @@ const LessonBuilderView = () => {
         onTogglePublished={() => setIsPublished((prev) => !prev)}
       />
 
-      <main className="landing-module-content grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6">
+      <main className="landing-module-content space-y-6 p-6">
+        <section className="grid gap-4 md:grid-cols-2">
+          <LessonBuilderSettingsCard data={LESSON_BUILDER_MOCK.settings} />
+          <LessonBuilderPerformanceCard data={LESSON_BUILDER_MOCK.performance} />
+        </section>
+
+        <section className="space-y-6">
           <LessonBuilderVideoSection video={LESSON_BUILDER_MOCK.video} />
           <LessonBuilderExercisesSummaryCard
             totalExercises={LESSON_BUILDER_MOCK.exercises.length}
@@ -57,13 +63,7 @@ const LessonBuilderView = () => {
             selectedMinigameName={selectedMinigame?.name ?? null}
             onOpenPicker={() => setIsMinigamePickerOpen(true)}
           />
-        </div>
-
-        <LessonBuilderAside
-          aiTools={LESSON_BUILDER_MOCK.aiTools}
-          settings={LESSON_BUILDER_MOCK.settings}
-          performance={LESSON_BUILDER_MOCK.performance}
-        />
+        </section>
       </main>
 
       <MinigamePicker
