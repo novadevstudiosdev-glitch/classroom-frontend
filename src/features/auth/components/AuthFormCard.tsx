@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import axios from "axios";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,20 +20,6 @@ type AuthFormCardProps = {
 };
 
 type RegisterRole = "parent" | "teacher";
-
-const getNameParts = (name: string) => {
-  const normalized = name.trim().replace(/\s+/g, " ");
-  const parts = normalized.split(" ");
-
-  if (parts.length <= 1) {
-    return { firstName: parts[0] || "Docente", lastName: "Novi" };
-  }
-
-  return {
-    firstName: parts.slice(0, -1).join(" "),
-    lastName: parts.slice(-1).join(" "),
-  };
-};
 
 const getRedirectByRole = (role?: string) => {
   if (role === "teacher") return "/dashboard/teacher";
@@ -59,7 +46,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
   const [formData, setFormData] = useState<AuthFormData>({
     first_name: "",
     last_name: "",
-    childName: "",
+    student_email: "",
     schoolName: "",
     email: "",
     password: "",
@@ -78,19 +65,17 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
     try {
       if (isRegister) {
         if (registerRole === "parent" && !acceptTerms) {
-          throw new Error("Confirmá que sos padre, madre o tutor legal.");
+          throw new Error("Confirm� que sos padre, madre o tutor legal.");
         }
 
         if (formData.password !== formData.confirmPassword) {
-          throw new Error("Las contraseñas no coinciden.");
+          throw new Error("Las contrase�as no coinciden.");
         }
-
-        const { firstName, lastName } = getNameParts(formData.first_name);
 
         if (registerRole === "teacher") {
           await registerTeacher({
-            first_name: firstName,
-            last_name: lastName,
+            first_name: formData.first_name.trim(),
+            last_name: formData.last_name.trim(),
             email: formData.email.trim().toLowerCase(),
             password: formData.password,
             country: "Argentina",
@@ -98,25 +83,25 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
           });
         } else {
           await registerParent({
-            first_name: firstName,
-            last_name: lastName,
+            first_name: formData.first_name.trim(),
+            last_name: formData.last_name.trim(),
             email: formData.email.trim().toLowerCase(),
             password: formData.password,
-            student_email: formData.childName.trim().toLowerCase(),
+            student_email: formData.student_email.trim().toLowerCase(),
             recaptcha_token: "dev",
           });
         }
 
         setSuccessMessage(
           registerRole === "teacher"
-            ? "Cuenta docente creada. Revisá tu email para verificarla y luego iniciá sesión."
-            : "Cuenta familiar creada. Revisá tu email para verificarla y luego iniciá sesión."
+            ? "Cuenta docente creada. Revis� tu email para verificarla y luego inici� sesi�n."
+            : "Cuenta familiar creada. Revis� tu email para verificarla y luego inici� sesi�n."
         );
 
         setMode("login");
         setFormData((current) => ({
           ...current,
-          childName: "",
+          student_email: "",
           schoolName: "",
           password: "",
           confirmPassword: "",
@@ -141,10 +126,28 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         router.refresh();
       }
     } catch (error) {
-      if (error instanceof Error && error.message) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const rawData = error.response?.data;
+        const backendMessage = typeof rawData === "object" && rawData !== null && "message" in rawData
+          ? String(rawData.message)
+          : null;
+
+        if (status === 404 && isRegister && registerRole === "parent") {
+          setErrorMessage("No encontramos un alumno con ese email. Verific� el correo del estudiante e intent� de nuevo.");
+        } else if (backendMessage) {
+          setErrorMessage(backendMessage);
+        } else if (status === 404) {
+          setErrorMessage("No encontramos el endpoint de autenticaci�n. Revis� la configuraci�n del backend.");
+        } else if (status === 400) {
+          setErrorMessage("Los datos enviados no son v�lidos. Revisalos e intent� de nuevo.");
+        } else {
+          setErrorMessage(error.message || "No se pudo completar la operaci�n. Int�ntalo de nuevo.");
+        }
+      } else if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("No se pudo completar la operación. Inténtalo de nuevo.");
+        setErrorMessage("No se pudo completar la operaci�n. Int�ntalo de nuevo.");
       }
     } finally {
       setIsSubmitting(false);
@@ -187,7 +190,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
             }`}
             type="button"
           >
-            Iniciar sesión
+            Iniciar sesi�n
           </button>
           <button
             onClick={() => setMode("register")}
@@ -232,8 +235,8 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   </p>
                   <p className="text-xs text-slate-600 mt-1">
                     {registerRole === "teacher"
-                      ? "Completá los datos para crear tu cuenta docente."
-                      : "Completá los datos del adulto responsable para crear la cuenta."}
+                      ? "Complet� los datos para crear tu cuenta docente."
+                      : "Complet� los datos del adulto responsable para crear la cuenta."}
                   </p>
                 </div>
                 
@@ -256,7 +259,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         setFormData({ ...formData, first_name: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="Ej: María González"
+                      placeholder="Ej: Mar�a Gonz�lez"
                       required
                     />
                   </div>
@@ -280,7 +283,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         setFormData({ ...formData, last_name: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="Ej: María González"
+                      placeholder="Ej: Mar�a Gonz�lez"
                       required
                     />
                   </div>
@@ -291,7 +294,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {isRegister && registerRole === "parent" ? (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email del niño/a
+                    Email del ni�o/a
                   </label>
                   <div className="relative">
                     <User
@@ -300,9 +303,9 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                     />
                     <input
                       type="email"
-                      value={formData.childName}
+                      value={formData.student_email}
                       onChange={(event) =>
-                        setFormData({ ...formData, childName: event.target.value })
+                        setFormData({ ...formData, student_email: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
                       placeholder="alumno@email.com"
@@ -329,7 +332,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         setFormData({ ...formData, schoolName: event.target.value })
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="Ej: Escuela Primaria N° 12"
+                      placeholder="Ej: Escuela Primaria N� 12"
                       required
                     />
                   </div>
@@ -338,7 +341,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Correo electrónico
+                  Correo electr�nico
                 </label>
                 <div className="relative">
                   <Mail
@@ -360,7 +363,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Contraseña
+                  Contrase�a
                 </label>
                 <div className="relative">
                   <Lock
@@ -374,7 +377,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       setFormData({ ...formData, password: event.target.value })
                     }
                     className="w-full pl-10 pr-10 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                     required
                   />
                   <button
@@ -390,7 +393,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {isRegister ? (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Confirmar contraseña
+                    Confirmar contrase�a
                   </label>
                   <div className="relative">
                     <Lock
@@ -407,7 +410,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                         })
                       }
                       className="w-full pl-10 pr-10 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       required
                     />
                     <button
@@ -438,7 +441,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                     href="#"
                     className="text-sm font-semibold text-blue-600 hover:text-blue-700"
                   >
-                    ¿Olvidaste tu contraseña?
+                    �Olvidaste tu contrase�a?
                   </a>
                 </div>
               )}
@@ -468,7 +471,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   ? "Procesando..."
                   : isRegister
                     ? "Crear mi cuenta"
-                    : "Iniciar sesión"}
+                    : "Iniciar sesi�n"}
               </motion.button>
 
               <div className="relative my-5">
@@ -511,7 +514,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               </motion.button>
 
               <p className="text-center text-sm text-slate-600 mt-4">
-                {isRegister ? "¿Ya tenés cuenta? " : "¿No tenés una cuenta? "}
+                {isRegister ? "�Ya ten�s cuenta? " : "�No ten�s una cuenta? "}
                 <button
                   type="button"
                   onClick={() =>
@@ -521,7 +524,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                   }
                   className="font-bold text-blue-600 hover:text-blue-700"
                 >
-                  {isRegister ? "Iniciá sesión" : "Registrate aquí"}
+                  {isRegister ? "Inici� sesi�n" : "Registrate aqu�"}
                 </button>
               </p>
             </form>
@@ -536,10 +539,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         className="mt-4 text-center"
       >
         <p className="text-xs text-slate-300 italic">
-          &quot;El aprendizaje es un tesoro que seguirá a su dueño en todas partes&quot;
+          &quot;El aprendizaje es un tesoro que seguir� a su due�o en todas partes&quot;
         </p>
       </motion.div>
     </motion.div>
   );
 }
+
+
+
 
