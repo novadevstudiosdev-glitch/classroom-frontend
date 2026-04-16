@@ -1,81 +1,78 @@
 import type { Lesson } from "../types";
 
-export const LESSONS_MOCK: Lesson[] = [
-  {
-    id: "M34RSHC",
-    title: "Introduccion a las sumas",
-    description: "En esta leccion aprendemos a sumar numeros del 1 al 10.",
-    status: "draft",
+const COVER_IMAGES = [
+  "/mercurio.png",
+  "/astronauta-verde.svg",
+  "/tierra.png",
+  "/marte.png",
+  "/saturno.png",
+  "/neptuno.png",
+  "/urano.png",
+  "/maestra.png",
+];
+
+const LESSON_SEEDS: Array<{ title: string; description: string; subject: string }> = [
+  { title: "Sumas hasta 20", description: "Practica sumas rapidas con apoyo visual.", subject: "Matematica" },
+  { title: "Restas sin llevar", description: "Resuelve restas basicas paso a paso.", subject: "Matematica" },
+  { title: "Problemas de dos pasos", description: "Aplica operaciones en situaciones reales.", subject: "Matematica" },
+  { title: "Fracciones iniciales", description: "Identifica mitades y cuartos en objetos.", subject: "Matematica" },
+  { title: "Multiplicacion por 2 y 3", description: "Descubre patrones de multiplicacion simples.", subject: "Matematica" },
+  { title: "Lectura comprensiva I", description: "Lee un cuento corto y responde preguntas.", subject: "Lengua" },
+  { title: "Uso de mayusculas", description: "Aprende reglas clave de escritura correcta.", subject: "Lengua" },
+  { title: "Signos de puntuacion", description: "Domina coma, punto y signos de pregunta.", subject: "Lengua" },
+  { title: "Sinonimos y antonimos", description: "Amplia vocabulario con pares de palabras.", subject: "Lengua" },
+  { title: "Texto descriptivo", description: "Escribe una descripcion con detalles precisos.", subject: "Lengua" },
+  { title: "Sistema solar basico", description: "Conoce planetas y sus caracteristicas.", subject: "Ciencias" },
+  { title: "Estados del agua", description: "Observa cambios de solido, liquido y gas.", subject: "Ciencias" },
+  { title: "Partes de la planta", description: "Identifica raiz, tallo, hoja y flor.", subject: "Ciencias" },
+  { title: "Ciclo de vida animal", description: "Explora etapas de crecimiento de animales.", subject: "Ciencias" },
+  { title: "Cuidado del ambiente", description: "Acciones simples para proteger tu entorno.", subject: "Ciencias" },
+  { title: "Civilizaciones antiguas", description: "Descubre aportes de culturas historicas.", subject: "Historia" },
+  { title: "Linea del tiempo", description: "Ordena hechos importantes por fecha.", subject: "Historia" },
+  { title: "Heroes de la independencia", description: "Reconoce protagonistas y eventos clave.", subject: "Historia" },
+  { title: "Mapas y regiones", description: "Ubica regiones y sus caracteristicas.", subject: "Geografia" },
+  { title: "Climas del mundo", description: "Compara climas y paisajes distintos.", subject: "Geografia" },
+  { title: "Colores primarios", description: "Mezcla colores para crear nuevas tonalidades.", subject: "Arte" },
+  { title: "Figuras geometricas en arte", description: "Dibuja composiciones con formas simples.", subject: "Arte" },
+  { title: "Musica y ritmo", description: "Reconoce patrones ritmicos basicos.", subject: "Arte" },
+  { title: "Computacion basica", description: "Partes de una computadora y su uso.", subject: "Tecnologia" },
+  { title: "Seguridad en internet", description: "Buenas practicas para navegar seguro.", subject: "Tecnologia" },
+  { title: "Pensamiento computacional", description: "Resuelve retos con pasos logicos.", subject: "Tecnologia" },
+  { title: "English: Classroom words", description: "Vocabulario esencial del aula.", subject: "Ingles" },
+  { title: "English: Daily routines", description: "Frases cortas para rutinas diarias.", subject: "Ingles" },
+  { title: "Convivencia y respeto", description: "Estrategias para una mejor convivencia.", subject: "Formacion" },
+  { title: "Trabajo en equipo", description: "Dinamicas para colaborar en clase.", subject: "Formacion" },
+];
+
+const toLesson = (
+  seed: { title: string; description: string; subject: string },
+  index: number,
+): Lesson => {
+  const id = `LES${String(index + 1).padStart(3, "0")}`;
+  return {
+    id,
+    title: seed.title,
+    description: seed.description,
+    subject: seed.subject,
+    coverImage: COVER_IMAGES[index % COVER_IMAGES.length],
+    status: index % 4 === 0 ? "draft" : "published",
     content_json: {
       blocks: [
         {
-          id: "b1",
+          id: `${id}-p1`,
           type: "paragraph",
-          text: "Hola mundo",
+          text: `Leccion ${index + 1}: ${seed.title}.`,
         },
         {
-          id: "b2",
-          type: "multiple_choice",
-          prompt: "Si Juan tiene 8 manzanas y da 3 a María , cuantas le quedan?",
-          rewardXp: 10,
-          options: [
-            { id: "o1", letter: "A", text: "3 manzanas" },
-            { id: "o2", letter: "B", text: "5 manzanas" },
-            { id: "o3", letter: "C", text: "11 manzanas" },
-            { id: "o4", letter: "D", text: "8 manzanas" },
-          ],
-          correctOptionId: "o2",
-          explanation: "8 - 3 = 5",
-        },
-        {
-          id: "b3",
-          type: "fill_blank",
-          prompt: "Completa los espacios",
-          explanation: "Piensa en la resta para encontrar el resultado.",
-          fields: [
-            { id: "f1", mode: "text", answer: "8" },
-            { id: "f2", mode: "dropdown", answer: "5", options: ["3", "5", "10"] },
-          ],
-        },
-        {
-          id: "b4",
+          id: `${id}-tf1`,
           type: "true_false",
-          prompt: "Verdadero o falso: 2 + 2 = 4",
+          prompt: `El tema principal es ${seed.subject}.`,
           correctValue: true,
-          explanation: "Dos más dos siempre da cuatro.",
-        },
-        {
-          id: "b5",
-          type: "match_columns",
-          prompt: "Relaciona cada operación con su resultado",
-          leftItems: [
-            { id: "l1", label: "2 + 3" },
-            { id: "l2", label: "5 - 1" },
-          ],
-          rightItems: [
-            { id: "r1", label: "4" },
-            { id: "r2", label: "5" },
-          ],
-          correctPairs: [
-            { leftId: "l1", rightId: "r2" },
-            { leftId: "l2", rightId: "r1" },
-          ],
-        },
-        {
-          id: "b6",
-          type: "order_elements",
-          prompt: "Ordena de menor a mayor",
-          items: ["1", "2", "3", "4"],
-          explanation: "El orden correcto va de pequeño a grande.",
-        },
-        {
-          id: "b7",
-          type: "minigame",
-          title: "Minijuego de repaso",
-          description: "Haz un repaso rápido de lo aprendido en esta lección.",
-          ctaLabel: "Jugar y continuar",
+          explanation: "Corresponde con la materia de la leccion.",
         },
       ],
     },
-  },
-];
+  };
+};
+
+export const LESSONS_MOCK: Lesson[] = LESSON_SEEDS.map(toLesson);

@@ -7,6 +7,7 @@ import {
   AssignedLessonHeader,
   AssignedLessonSummary,
 } from "../components";
+import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
 import { LESSONS_MOCK } from "../data";
 import { useLessonSession } from "../hooks";
 import { getLessonById } from "../services";
@@ -59,68 +60,68 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
   }
 
   return (
-    <main className="landing-module-shell">
-      <AssignedLessonHeader currentIndex={activeBlockIndex} totalBlocks={totalBlocks} hearts={3} />
-      <AssignedLessonSummary lesson={lesson} />
+    <main className="relative min-h-screen">
+      <div className="fixed inset-0 z-0">
+        <AuthBackgroundCanvas />
+      </div>
 
-      <section className="landing-module-content px-6 pb-6">
-        <AssignedLessonBlocks
-          key={`${lesson.id}-${safeBlockIndex}`}
-          lesson={lesson}
-          activeBlockIndex={safeBlockIndex}
-          totalBlocks={totalBlocks}
-          onContinue={async () => {
-            // Log de control: te sirve para checar si "continuar" del bloque dispara bien.
-            console.log("[AssignedLessonView] continuar desde bloque", safeBlockIndex);
-            const currentBlock = lesson.content_json.blocks[safeBlockIndex];
-            const isExerciseBlock = [
-              "question",
-              "multiple_choice",
-              "fill_blank",
-              "true_false",
-              "match_columns",
-              "order_elements",
-            ].includes(currentBlock.type);
+      <div className="landing-module-shell relative z-10 pb-24">
+        <AssignedLessonHeader currentIndex={activeBlockIndex} totalBlocks={totalBlocks} hearts={3} />
+        <AssignedLessonSummary lesson={lesson} />
 
-            const nextCorrectExercises = isExerciseBlock
-              ? Math.min(correctExercises + 1, totalExercises)
-              : correctExercises;
+        <section className="landing-module-content px-6 pb-6">
+          <AssignedLessonBlocks
+            key={`${lesson.id}-${safeBlockIndex}`}
+            lesson={lesson}
+            activeBlockIndex={safeBlockIndex}
+            totalBlocks={totalBlocks}
+            onContinue={async () => {
+              console.log("[AssignedLessonView] continuar desde bloque", safeBlockIndex);
+              const currentBlock = lesson.content_json.blocks[safeBlockIndex];
+              const isExerciseBlock = [
+                "question",
+                "multiple_choice",
+                "fill_blank",
+                "true_false",
+                "match_columns",
+                "order_elements",
+              ].includes(currentBlock.type);
 
-            if (safeBlockIndex >= lastBlockIndex) {
-              const sessionResult = await finalizeSession({
-                lessonId,
-                lessonTitle: lesson.title,
-                correctAnswers: nextCorrectExercises,
-                totalExercises,
-              });
+              const nextCorrectExercises = isExerciseBlock
+                ? Math.min(correctExercises + 1, totalExercises)
+                : correctExercises;
 
-              const params = new URLSearchParams({
-                xp: String(sessionResult.earnedXp),
-                stars: String(sessionResult.stars),
-                correct: String(sessionResult.correctAnswers),
-                total: String(sessionResult.totalExercises),
-                levelBefore: String(sessionResult.levelBefore),
-                levelAfter: String(sessionResult.levelAfter),
-                lessonTitle: sessionResult.lessonTitle,
-              });
+              if (safeBlockIndex >= lastBlockIndex) {
+                const sessionResult = await finalizeSession({
+                  lessonId,
+                  lessonTitle: lesson.title,
+                  correctAnswers: nextCorrectExercises,
+                  totalExercises,
+                });
 
-              console.log("[AssignedLessonView] fin de lección, navegando a resultado", {
-                lessonId,
-                sessionResult,
-              });
+                const params = new URLSearchParams({
+                  xp: String(sessionResult.earnedXp),
+                  stars: String(sessionResult.stars),
+                  correct: String(sessionResult.correctAnswers),
+                  total: String(sessionResult.totalExercises),
+                  levelBefore: String(sessionResult.levelBefore),
+                  levelAfter: String(sessionResult.levelAfter),
+                  lessonTitle: sessionResult.lessonTitle,
+                });
 
-              router.push(`/lessons/${lessonId}/result?${params.toString()}`);
-              return;
-            }
+                router.push(`/lessons/${lessonId}/result?${params.toString()}`);
+                return;
+              }
 
-            if (isExerciseBlock) {
-              setCorrectExercises(nextCorrectExercises);
-            }
+              if (isExerciseBlock) {
+                setCorrectExercises(nextCorrectExercises);
+              }
 
-            setActiveBlockIndex((prev) => Math.min(lastBlockIndex, prev + 1));
-          }}
-        />
-      </section>
+              setActiveBlockIndex((prev) => Math.min(lastBlockIndex, prev + 1));
+            }}
+          />
+        </section>
+      </div>
     </main>
   );
 };

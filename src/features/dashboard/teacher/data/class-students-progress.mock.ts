@@ -11,7 +11,7 @@ export const CLASS_STUDENTS_PROGRESS_MOCK: ClassDetailData[] = [
     students: [
       {
         id: 's1',
-        fullName: 'Joaquín Pérez',
+        fullName: 'Salvador Gerardo De la Tijera Martínez',
         progressPercent: 87,
         lastActivity: 'Hoy',
       },

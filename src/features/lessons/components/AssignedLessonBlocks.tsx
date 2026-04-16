@@ -15,10 +15,10 @@ const AssignedLessonBlocks = ({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
-        <p className="mb-2 text-sm text-[#1CB0F6]/60">
+      <div className="rounded-2xl border border-white/10 bg-transparent p-6 shadow-[0_16px_24px_rgba(2,6,26,0.5)] backdrop-blur-md">
+        <h4 className="mb-2 text-lg text-[#1CB0F6]/80">
           Bloque {Math.min(activeBlockIndex + 1, totalBlocks)} de {totalBlocks}
-        </p>
+        </h4>
 
         <ActiveLessonBlockRenderer block={block} onContinue={onContinue} />
       </div>
