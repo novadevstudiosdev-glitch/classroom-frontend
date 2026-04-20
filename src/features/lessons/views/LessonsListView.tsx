@@ -35,6 +35,7 @@ const LessonsListView = () => {
   const bottomNavigationItems = [
     { id: "home", icon: "🏠", label: "Inicio", href: "/dashboard/teacher" },
     { id: "lessons", icon: "📚", label: "Lecciones", isActive: true, href: "/lessons" },
+    { id: "builder", icon: "🧩", label: "Builder", href: "/lesson-builder" },
   ];
 
   return (

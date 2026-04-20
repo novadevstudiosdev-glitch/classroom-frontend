@@ -3,14 +3,16 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
+  TeacherDashboardBottomNavigation,
+  TeacherDashboardTopbar,
+} from "@/features/dashboard/teacher/components";
+import {
   LessonBuilderControlBar,
   LessonBuilderExercisesSummaryCard,
   LessonBuilderMinigameCard,
   LessonBuilderPerformanceCard,
-  LessonBuilderSectionTabs,
   LessonBuilderSettingsCard,
   LessonBuilderTopBar,
-  LessonBuilderVideoSection,
   MinigamePicker,
 } from "@/features/lesson-builder/components";
 import { LESSON_BUILDER_MOCK } from "@/features/lesson-builder/data";
@@ -19,16 +21,21 @@ const LessonBuilderView = () => {
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const shouldShowForward = from === "exercise-new";
-  const [isPublished, setIsPublished] = useState(false);
   const [isMinigamePickerOpen, setIsMinigamePickerOpen] = useState(false);
   const [selectedMinigameId, setSelectedMinigameId] = useState<string | null>(
     LESSON_BUILDER_MOCK.minigames[0]?.id ?? null,
   );
   const selectedMinigame =
     LESSON_BUILDER_MOCK.minigames.find((item) => item.id === selectedMinigameId) ?? null;
+  const bottomNavigationItems = [
+    { id: "home", icon: "🏠", label: "Inicio", href: "/dashboard/teacher" },
+    { id: "lessons", icon: "📚", label: "Lecciones", href: "/lessons" },
+    { id: "builder", icon: "🧩", label: "Builder", href: "/lesson-builder", isActive: true },
+  ];
 
   return (
-    <div className="landing-module-shell">
+    <div className="landing-module-shell pb-24">
+      <TeacherDashboardTopbar />
       <LessonBuilderTopBar
         backHref="/dashboard/teacher"
         backLabel="Clases"
@@ -36,14 +43,10 @@ const LessonBuilderView = () => {
         forwardHref={shouldShowForward ? "/lesson-builder/exercises/new" : undefined}
         forwardLabel="Adelante"
       />
-      <LessonBuilderSectionTabs activeSection="builder" />
 
       <LessonBuilderControlBar
         className={LESSON_BUILDER_MOCK.className}
         draftLabel={LESSON_BUILDER_MOCK.draftLabel}
-        isPublished={isPublished}
-        metrics={LESSON_BUILDER_MOCK.metrics}
-        onTogglePublished={() => setIsPublished((prev) => !prev)}
       />
 
       <main className="landing-module-content space-y-6 p-6">
@@ -52,11 +55,10 @@ const LessonBuilderView = () => {
           <LessonBuilderPerformanceCard data={LESSON_BUILDER_MOCK.performance} />
         </section>
 
-        <section className="space-y-6">
-          <LessonBuilderVideoSection video={LESSON_BUILDER_MOCK.video} />
+        <section className="grid gap-6 lg:grid-cols-2">
           <LessonBuilderExercisesSummaryCard
             totalExercises={LESSON_BUILDER_MOCK.exercises.length}
-            manageExercisesHref="/lesson-builder/exercises"
+            exercises={LESSON_BUILDER_MOCK.exercises}
             addExerciseHref="/lesson-builder/exercises/new"
           />
           <LessonBuilderMinigameCard
@@ -76,6 +78,8 @@ const LessonBuilderView = () => {
         }}
         onClose={() => setIsMinigamePickerOpen(false)}
       />
+
+      <TeacherDashboardBottomNavigation items={bottomNavigationItems} />
     </div>
   );
 };
