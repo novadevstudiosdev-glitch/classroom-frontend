@@ -39,6 +39,10 @@ type RegisterParentRequest = {
   recaptcha_token: string;
 };
 
+type ForgotPasswordRequest = {
+  email: string;
+};
+
 type LoginBackendResponse = {
   access_token?: string;
   refresh_token?: string;
@@ -125,6 +129,17 @@ export async function registerTeacher(payload: RegisterTeacherRequest) {
 export async function registerParent(payload: RegisterParentRequest) {
   const response = await axiosClient.post("/auth/register/parent", payload);
   return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
+}
+
+export async function forgotPassword(payload: ForgotPasswordRequest) {
+  const apiBaseUrl = getApiBaseUrl();
+
+  const response = await axios.post<ApiEnvelope<{ message?: string }> | { message?: string }>(
+    `${apiBaseUrl}/auth/forgot-password`,
+    payload
+  );
+
+  return extractData<{ message?: string }>(response.data);
 }
 
 export async function refreshAccessToken(refreshToken: string) {
