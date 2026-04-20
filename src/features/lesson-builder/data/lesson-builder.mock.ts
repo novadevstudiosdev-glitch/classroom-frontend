@@ -9,10 +9,6 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
     { id: "duration", label: "Duración total", value: "45 min" },
     { id: "students", label: "Estudiantes", value: "24" },
   ],
-  video: {
-    title: "Introducción a las sumas",
-    subtitle: "Video inicial para contextualizar la lección y objetivos.",
-  },
   exercises: [
     {
       id: "ex-1",
@@ -58,16 +54,6 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
       description: "Desafío mixto con puntaje acumulado.",
     },
   ],
-  aiTools: {
-    title: "Herramientas IA",
-    subtitle: "Acelera la creación de la lección con sugerencias automáticas.",
-    items: [
-      { id: "ai-1", label: "Generar enunciado" },
-      { id: "ai-2", label: "Sugerir pistas" },
-      { id: "ai-3", label: "Reescribir instrucciones" },
-      { id: "ai-4", label: "Crear variación de ejercicio" },
-    ],
-  },
   settings: {
     grade: "4° Primaria",
     subject: "Matemáticas",

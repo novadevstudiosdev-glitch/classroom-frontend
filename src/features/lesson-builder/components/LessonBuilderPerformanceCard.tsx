@@ -16,7 +16,7 @@ const LessonBuilderPerformanceCard = ({ data }: LessonBuilderPerformanceCardProp
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-white/25 bg-white/10 px-3 py-2">
-          <span className="inline-flex items-center gap-2 text-xs text-white/80">
+          <span className="inline-flex items-center gap-2 text-md text-red/100">
             <Trophy size={14} />
             Promedio de calificaciones
           </span>
