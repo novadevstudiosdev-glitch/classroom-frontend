@@ -39,20 +39,9 @@ export interface LessonBuilderTopBarProps {
   forwardLabel?: string;
 }
 
-export type LessonBuilderSection = "builder" | "exercises";
-
-export interface LessonBuilderSectionTabsProps {
-  activeSection: LessonBuilderSection;
-  builderHref?: string;
-  exercisesHref?: string;
-}
-
 export interface LessonBuilderControlBarProps {
   className: string;
   draftLabel: string;
-  isPublished: boolean;
-  metrics: LessonBuilderMetric[];
-  onTogglePublished: () => void;
 }
 
 export interface LessonBuilderVideoSectionProps {
@@ -71,8 +60,14 @@ export interface LessonBuilderExercisesSectionProps {
 
 export interface LessonBuilderExercisesSummaryCardProps {
   totalExercises: number;
-  manageExercisesHref?: string;
+  exercises: LessonBuilderExercise[];
   addExerciseHref?: string;
+}
+
+export interface LessonBuilderExercisesModalProps {
+  isOpen: boolean;
+  exercises: LessonBuilderExercise[];
+  onClose: () => void;
 }
 
 export interface LessonBuilderAiToolItem {

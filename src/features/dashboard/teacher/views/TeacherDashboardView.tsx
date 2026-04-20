@@ -95,6 +95,7 @@ const TeacherDashboardView = () => {
   const bottomNavigationItems = [
     { id: "home", icon: "🏠", label: "Inicio", isActive: true, href: "/dashboard/teacher" },
     { id: "lessons", icon: "📚", label: "Lecciones", href: "/lessons" },
+    { id: "builder", icon: "🧩", label: "Builder", href: "/lesson-builder" },
   ];
 
   const classDetailById = useMemo(
