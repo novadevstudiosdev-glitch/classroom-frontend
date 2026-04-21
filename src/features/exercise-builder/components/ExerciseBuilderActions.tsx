@@ -11,7 +11,7 @@ const ExerciseBuilderActions = ({
       <button
         type="button"
         onClick={onSaveDraft}
-        className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+        className="inline-flex items-center gap-1 rounded-lg border border-white/25  px-3 py-2 bg-gradient-to-br from-[#6C63FF]/30 to-[#9B5DE5]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white hover:bg-white/20"
       >
         <Save size={16} />
         Guardar borrador
@@ -19,7 +19,7 @@ const ExerciseBuilderActions = ({
       <button
         type="button"
         onClick={onPreview}
-        className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+        className="inline-flex items-center gap-1 rounded-lg border border-white/25  px-3 py-2 bg-gradient-to-br from-[#2DD4BF]/30 to-[#0d9488]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white hover:bg-white/20"
       >
         <Eye size={16} />
         Vista previa
@@ -27,7 +27,7 @@ const ExerciseBuilderActions = ({
       <button
         type="button"
         onClick={onPublish}
-        className="inline-flex items-center gap-1 rounded-lg bg-[#1CB0F6] px-3 py-2 text-sm font-semibold text-white hover:bg-[#1398d8]"
+        className="inline-flex items-center gap-1 rounded-lg px-3 py-2 * bg-gradient-to-br from-[#FFD700]/30 to-[#FF9500]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white hover:bg-white/20"
       >
         <Send size={16} />
         Publicar

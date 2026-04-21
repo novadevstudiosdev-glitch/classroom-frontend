@@ -119,6 +119,8 @@ export interface MatchColumnsFormProps {
   onChangeRightLabel: (id: string, value: string) => void;
   onAddLeftItem: () => void;
   onAddRightItem: () => void;
+  onRemoveLeftItem: (id: string) => void;
+  onRemoveRightItem: (id: string) => void;
   onSetPair: (leftId: string, rightId: string) => void;
   onClearPair: (leftId: string) => void;
 }
@@ -127,6 +129,7 @@ export interface OrderElementsFormProps {
   data: OrderElementsData;
   onChangeItem: (index: number, value: string) => void;
   onAddItem: () => void;
+  onRemoveItem: (index: number) => void;
   onMoveItem: (activeIndex: number, overIndex: number) => void;
 }
 
@@ -148,9 +151,12 @@ export interface ExerciseBuilderFormSectionProps {
   onMatchColumnsChangeRightLabel: (id: string, value: string) => void;
   onMatchColumnsAddLeftItem: () => void;
   onMatchColumnsAddRightItem: () => void;
+  onMatchColumnsRemoveLeftItem: (id: string) => void;
+  onMatchColumnsRemoveRightItem: (id: string) => void;
   onMatchColumnsSetPair: (leftId: string, rightId: string) => void;
   onMatchColumnsClearPair: (leftId: string) => void;
   onOrderElementsChangeItem: (index: number, value: string) => void;
   onOrderElementsAddItem: () => void;
+  onOrderElementsRemoveItem: (index: number) => void;
   onOrderElementsMoveItem: (activeIndex: number, overIndex: number) => void;
 }

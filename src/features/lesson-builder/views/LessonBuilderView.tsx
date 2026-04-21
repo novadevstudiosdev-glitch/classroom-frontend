@@ -30,7 +30,7 @@ const LessonBuilderView = () => {
   const bottomNavigationItems = [
     { id: "home", icon: "🏠", label: "Inicio", href: "/dashboard/teacher" },
     { id: "lessons", icon: "📚", label: "Lecciones", href: "/lessons" },
-    { id: "builder", icon: "🧩", label: "Builder", href: "/lesson-builder", isActive: true },
+    { id: "builder", icon: "🧩", label: "Crear ejercicios", href: "/lesson-builder", isActive: true },
   ];
 
   return (
