@@ -7,6 +7,7 @@ const OrderElementsForm = ({
   data,
   onChangeItem,
   onAddItem,
+  onRemoveItem,
   onMoveItem,
 }: OrderElementsFormProps) => {
   const handleDragEnd = (event: DragEndEvent) => {
@@ -22,11 +23,11 @@ const OrderElementsForm = ({
   return (
     <section className="space-y-3 rounded-2xl border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur-md">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-white">Formulario Ordenar elementos</h3>
+        <h3 className="text-base font-bold text-white">Ordenar elementos</h3>
         <button
           type="button"
           onClick={onAddItem}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-2 py-1 text-xs font-semibold text-white"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-gradient-to-br from-[#2DD4BF]/30 to-[#0d9488]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white px-2 py-1 text-xs font-semibold text-white"
         >
           <Plus size={14} />
           Agregar
@@ -41,6 +42,7 @@ const OrderElementsForm = ({
               id={`order-${index}`}
               label={item}
               onChange={(value) => onChangeItem(index, value)}
+              onRemove={() => onRemoveItem(index)}
             />
           ))}
         </div>

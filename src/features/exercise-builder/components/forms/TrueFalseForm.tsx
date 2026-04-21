@@ -24,7 +24,7 @@ const TrueFalseForm = ({
           onClick={() => onChangeCorrectValue(true)}
           className={`rounded-lg px-3 py-2 text-sm font-semibold ${
             data.correctValue
-              ? "bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]"
+              ? "bg-gradient-to-br from-[#2DD4BF]/50 to-[#0d9488]/60 text-white shadow-lg backdrop-blur-xl text-[var(--color-secondary)]"
               : "bg-white/10 text-white/80"
           }`}
         >
@@ -35,7 +35,7 @@ const TrueFalseForm = ({
           onClick={() => onChangeCorrectValue(false)}
           className={`rounded-lg px-3 py-2 text-sm font-semibold ${
             !data.correctValue
-              ? "bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]"
+              ? "bg-gradient-to-br from-[#2DD4BF]/50 to-[#0d9488]/60 text-white shadow-lg backdrop-blur-xl text-[var(--color-secondary)]"
               : "bg-white/10 text-white/80"
           }`}
         >

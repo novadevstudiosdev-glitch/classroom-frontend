@@ -25,7 +25,7 @@ const DraggableRightItem = ({ item, isLinked }: DraggableRightItemProps) => {
       {...listeners}
       {...attributes}
       type="button"
-      className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-left text-sm font-semibold text-white"
+      className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-[#6C63FF]/30 to-[#9B5DE5]/30 px-3 py-2 text-left text-sm font-semibold text-white shadow-lg backdrop-blur-xl"
     >
       {item.label}
     </button>

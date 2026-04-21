@@ -16,8 +16,8 @@ const LessonBuilderExercisesSummaryCard = ({
   return (
     <section className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur-md">
       <div className="mb-3">
-        <h2 className="text-base font-bold text-white">Ejercicios</h2>
-        <p className="text-sm text-white/70">
+        <h2 className="text-base font-bold text-[#FFD700]">Ejercicios</h2>
+        <p className="text-md text-white/70">
           Tienes {totalExercises} ejercicios en esta lección.
         </p>
       </div>
@@ -26,17 +26,17 @@ const LessonBuilderExercisesSummaryCard = ({
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-gradient-to-br from-[#FFD700]/30 to-[#FF9500]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white px-3 py-2 text-md font-semibold text-black hover:bg-[#FF9500]"
         >
           Ver ejercicios
           <ArrowRight size={16} />
         </button>
         <Link
           href={addExerciseHref}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-gradient-to-br from-[#6C63FF]/30 to-[#9B5DE5]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white px-3 py-2 text-sm font-semibold text-white hover:bg-[#9B5DE5]"
         >
           <Plus size={16} />
-          + Agregar ejercicio
+          Agregar ejercicio
         </Link>
       </div>
 
