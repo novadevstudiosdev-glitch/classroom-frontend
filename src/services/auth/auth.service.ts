@@ -48,6 +48,10 @@ type RegisterStudentRequest = {
   recaptcha_token: string;
 };
 
+type ForgotPasswordRequest = {
+  email: string;
+};
+
 type LoginBackendResponse = {
   access_token?: string;
   refresh_token?: string;
@@ -66,7 +70,7 @@ export type AuthSession = {
 };
 
 const getApiBaseUrl = () => {
-  const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+  const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://classroom-backend.up.railway.app";
   const normalizedBaseUrl = rawBaseUrl.replace(/\/+$/, "");
   return normalizedBaseUrl.endsWith("/api")
     ? normalizedBaseUrl
@@ -172,3 +176,4 @@ export function getGoogleAuthUrl() {
     ? `${apiBaseUrl}/auth/google`
     : `${apiBaseUrl}/api/auth/google`;
 }
+

@@ -11,7 +11,6 @@ const AVATAR_PALETTE = ['#6366f1', '#0ea5e9', '#f59e0b', '#10b981', '#8b5cf6', '
 interface Props {
   onFindWord:        (word: string, cells: WordCell[]) => void;
   onSubmitComplete:  (score: number) => void;
-  onSendReaction:    (emoji: string) => void;
   onSendChat:        (text: string)  => void;
 }
 

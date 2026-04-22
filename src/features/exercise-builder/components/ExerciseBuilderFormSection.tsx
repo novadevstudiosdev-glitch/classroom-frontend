@@ -22,10 +22,13 @@ const ExerciseBuilderFormSection = ({
   onMatchColumnsChangeRightLabel,
   onMatchColumnsAddLeftItem,
   onMatchColumnsAddRightItem,
+  onMatchColumnsRemoveLeftItem,
+  onMatchColumnsRemoveRightItem,
   onMatchColumnsSetPair,
   onMatchColumnsClearPair,
   onOrderElementsChangeItem,
   onOrderElementsAddItem,
+  onOrderElementsRemoveItem,
   onOrderElementsMoveItem,
 }: ExerciseBuilderFormSectionProps) => {
   return (
@@ -105,6 +108,8 @@ const ExerciseBuilderFormSection = ({
           onChangeRightLabel={onMatchColumnsChangeRightLabel}
           onAddLeftItem={onMatchColumnsAddLeftItem}
           onAddRightItem={onMatchColumnsAddRightItem}
+          onRemoveLeftItem={onMatchColumnsRemoveLeftItem}
+          onRemoveRightItem={onMatchColumnsRemoveRightItem}
           onSetPair={onMatchColumnsSetPair}
           onClearPair={onMatchColumnsClearPair}
         />
@@ -115,6 +120,7 @@ const ExerciseBuilderFormSection = ({
           data={draft.orderElements}
           onChangeItem={onOrderElementsChangeItem}
           onAddItem={onOrderElementsAddItem}
+          onRemoveItem={onOrderElementsRemoveItem}
           onMoveItem={onOrderElementsMoveItem}
         />
       ) : null}

@@ -16,7 +16,7 @@ const getTokenValue = (params: URLSearchParams, key: string) => {
   return value && value.trim().length > 0 ? value : null;
 };
 
-export default function AuthCallbackPage() {
+function AuthCallbackInner() {
   const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
 
@@ -39,11 +39,7 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    setSession({
-      accessToken,
-      refreshToken,
-    });
-
+    setSession({ accessToken, refreshToken });
     router.replace(getRedirectByRole(role));
     router.refresh();
   }, [router, setSession]);
@@ -55,5 +51,17 @@ export default function AuthCallbackPage() {
         <p className="text-sm text-slate-300 mt-2">No cierres esta ventana.</p>
       </div>
     </main>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <p className="text-lg font-semibold">Cargando…</p>
+      </main>
+    }>
+      <AuthCallbackInner />
+    </Suspense>
   );
 }

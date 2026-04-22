@@ -1,5 +1,5 @@
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import DroppableLeftSlot from "@/features/exercise-builder/components/dnd/DroppableLeftSlot";
 import DraggableRightItem from "@/features/exercise-builder/components/dnd/DraggableRightItem";
 import type { MatchColumnsFormProps } from "@/features/exercise-builder/types";
@@ -10,6 +10,8 @@ const MatchColumnsForm = ({
   onChangeRightLabel,
   onAddLeftItem,
   onAddRightItem,
+  onRemoveLeftItem,
+  onRemoveRightItem,
   onSetPair,
   onClearPair,
 }: MatchColumnsFormProps) => {
@@ -35,19 +37,28 @@ const MatchColumnsForm = ({
             <button
               type="button"
               onClick={onAddLeftItem}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-2 py-1 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-gradient-to-br from-[#2DD4BF]/30 to-[#0d9488]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white px-2 py-1 text-xs font-semibold text-white"
             >
               <Plus size={14} />
               Agregar
             </button>
           </div>
           {data.leftItems.map((item) => (
-            <input
-              key={item.id}
-              value={item.label}
-              onChange={(e) => onChangeLeftLabel(item.id, e.target.value)}
-              className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm text-white"
-            />
+            <div key={item.id} className="flex items-center gap-2">
+              <input
+                value={item.label}
+                onChange={(e) => onChangeLeftLabel(item.id, e.target.value)}
+                className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm text-white"
+              />
+              <button
+                type="button"
+                onClick={() => onRemoveLeftItem(item.id)}
+                className="rounded-lg border border-white/25 p-2 bg-[#8B0000]/40 text-white/60  hover:bg-[#FF0000]/60"
+                aria-label={`Eliminar ${item.label}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           ))}
         </div>
 
@@ -57,19 +68,28 @@ const MatchColumnsForm = ({
             <button
               type="button"
               onClick={onAddRightItem}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-white/10 px-2 py-1 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/25 bg-gradient-to-br from-[#2DD4BF]/30 to-[#0d9488]/30 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl text-white px-2 py-1 text-xs font-semibold text-white"
             >
               <Plus size={14} />
               Agregar
             </button>
           </div>
           {data.rightItems.map((item) => (
-            <input
-              key={item.id}
-              value={item.label}
-              onChange={(e) => onChangeRightLabel(item.id, e.target.value)}
-              className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm text-white"
-            />
+            <div key={item.id} className="flex items-center gap-2">
+              <input
+                value={item.label}
+                onChange={(e) => onChangeRightLabel(item.id, e.target.value)}
+                className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm text-white"
+              />
+              <button
+                type="button"
+                onClick={() => onRemoveRightItem(item.id)}
+                className="rounded-lg border border-white/25 p-2 bg-[#8B0000]/40 text-white/60  hover:bg-[#FF0000]/60"
+                aria-label={`Eliminar ${item.label}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           ))}
         </div>
       </div>

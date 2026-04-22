@@ -41,12 +41,18 @@ body {
 
 body {
   font-family: var(--font-main);
-  background: linear-gradient(
-    to bottom,
-    var(--color-bg-dark),
-    var(--color-bg-deep),
-    var(--color-bg-dark)
-  );
+  background-color: #07061a;
+  background-image:
+    radial-gradient(circle at 14% 10%, rgba(108, 99, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 85% 24%, rgba(255, 107, 157, 0.16), transparent 36%),
+    radial-gradient(circle at 62% 72%, rgba(45, 212, 191, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 76%, rgba(108, 99, 255, 0.1), transparent 32%),
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.22) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 80% 18%, rgba(255, 255, 255, 0.2) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 65% 50%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1.5px),
+    linear-gradient(to bottom, #06051a 0%, #0a0f2c 45%, #07061a 100%);
+  background-size: auto, auto, auto, auto, 220px 220px, 260px 260px, 300px 300px, auto;
+  background-attachment: fixed;
   color: rgb(255, 255, 255);
   -webkit-font-smoothing: antialiased;
 }
@@ -142,7 +148,7 @@ p {
   }
 
   .landing-module-card {
-    @apply rounded-2xl border border-white/15 bg-white/8 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)];
+    @apply rounded-2xl border border-white/15 bg-white/10 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)];
   }
 
   .landing-module-title {
@@ -155,6 +161,62 @@ p {
 
   .landing-module-link {
     @apply inline-flex items-center gap-1 text-sm font-semibold text-red-300 transition-colors hover:text-red-200;
+  }
+
+  .cosmic-hero {
+    @apply relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#090a23] p-6 shadow-[0_24px_80px_rgba(3,5,24,0.55)] md:p-8;
+  }
+
+  .cosmic-hero::before {
+    content: "";
+    @apply pointer-events-none absolute -left-24 -top-20 h-60 w-60 rounded-full blur-3xl;
+    background: radial-gradient(circle, rgba(108, 99, 255, 0.35), transparent 70%);
+  }
+
+  .cosmic-hero::after {
+    content: "";
+    @apply pointer-events-none absolute -bottom-28 -right-20 h-64 w-64 rounded-full blur-3xl;
+    background: radial-gradient(circle, rgba(255, 107, 157, 0.2), transparent 72%);
+  }
+
+  .cosmic-hero-content {
+    @apply relative z-10;
+  }
+
+  .cosmic-badge {
+    @apply mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/65;
+  }
+
+  .cosmic-badge-dot {
+    @apply h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)];
+  }
+
+  .cosmic-title {
+    @apply text-3xl font-black leading-tight tracking-tight text-white md:text-4xl;
+  }
+
+  .cosmic-subtitle {
+    @apply mt-2 text-sm text-white/65;
+  }
+
+  .cosmic-grid {
+    @apply mt-6 grid gap-3 md:grid-cols-3;
+  }
+
+  .cosmic-stat {
+    @apply rounded-2xl bg-white/10 px-4 py-4 text-center backdrop-blur-sm;
+  }
+
+  .cosmic-stat-value {
+    @apply text-2xl font-black text-white md:text-3xl;
+  }
+
+  .cosmic-stat-label {
+    @apply mt-1 text-xs font-bold uppercase tracking-[0.12em] text-white/60;
+  }
+
+  .cosmic-panel {
+    @apply rounded-2xl border border-white/15 bg-white/10 p-5 shadow-[0_14px_36px_rgba(2,4,20,0.35)] backdrop-blur-sm;
   }
 }
 

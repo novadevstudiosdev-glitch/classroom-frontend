@@ -5,12 +5,12 @@ import { GameSidebar } from '../../components/GameSidebar';
 interface Props {
   onContinue: () => void;
   onSendChat: (text: string) => void;
-  onSendReaction: (emoji: string) => void;
+  onExitGame?: () => void;
 }
 
 const RANK_MEDALS = ['🥇', '🥈', '🥉'];
 
-export function RoundEndScreen({ onContinue, onSendChat, onSendReaction }: Props) {
+export function RoundEndScreen({ onContinue, onSendChat, onExitGame }: Props) {
   const myAlias = useMinigameStore((s) => s.myAlias);
   const players  = useMinigameStore((s) => s.players);
   const roomChat = useMinigameStore((s) => s.roomChat);
@@ -154,7 +154,7 @@ export function RoundEndScreen({ onContinue, onSendChat, onSendReaction }: Props
           players={players}
           roomChat={roomChat}
           onSendChat={onSendChat}
-          onSendReaction={onSendReaction}
+          onExitGame={onExitGame}
           showScores
         />
       </div>

@@ -8,9 +8,9 @@ const ActiveLessonMinigameBlock = ({
   onContinue?: () => void;
 }) => {
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
-      <h3 className="text-lg font-bold text-gray-800">{block.title}</h3>
-      <p className="mt-2 text-sm text-gray-600">{block.description}</p>
+    <article className="rounded-2xl border border-white/15 bg-transparent p-6 shadow-[0_14px_28px_rgba(2,6,26,0.45)]">
+      <h3 className="text-lg font-bold text-white">{block.title}</h3>
+      <p className="mt-2 text-sm text-white/75">{block.description}</p>
       <button
         type="button"
         onClick={() => {

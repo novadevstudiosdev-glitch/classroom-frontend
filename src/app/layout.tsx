@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import "@/styles/theme.css";
 import "@/styles/home-view.css";
+import "@/features/minigame/components/truco/truco.css";
 
 const nunito = Nunito({
   subsets: ["latin"],

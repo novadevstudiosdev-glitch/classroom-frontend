@@ -15,7 +15,6 @@ import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 export default function ParentDashboardView() {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
-
   const [profile, setProfile] = useState<ParentProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

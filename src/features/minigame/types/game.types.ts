@@ -61,7 +61,7 @@ export interface TrucoPlayerView {
   teamAMembers: { socketId: string; alias: string }[];
   teamBMembers: { socketId: string; alias: string }[];
   myTeam: 'A' | 'B';
-  phase: 'playing' | 'show_envido' | 'hand_end' | 'game_over';
+  phase: 'playing' | 'show_envido' | 'show_envido_points' | 'hand_end' | 'game_over';
   handNum: number;
   dealerAlias: string;
   manoAlias: string;
@@ -70,11 +70,13 @@ export interface TrucoPlayerView {
   roundWinners: ('A' | 'B' | 'tie')[];
   lastPlayedCards: Record<string, TrucoCard>;
   currentRoundCards: Record<string, TrucoCard | null>;
+  playedCardsHistory: { alias: string; round: number; card: TrucoCard }[];
   envidoStatus: 'available' | 'pending' | 'resolved' | 'expired';
   envidoChain: TrucoEnvidoCall[];
   envidoResponderTeam: 'A' | 'B' | null;
   envidoResult: TrucoEnvidoResult | null;
-  envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | string } | null;
+  envidoPointsAwarded: boolean;
+  envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | 'sonbuenas' | 'decirpuntos' | string } | null;
   pendingShowEnvido: string[];
   myEnvidoValue: number;
   florStatus: 'none' | 'pending' | 'resolved';
@@ -117,12 +119,47 @@ export interface QuizOption {
   text: string;
 }
 
-export interface QuizQuestion {
+export type QuizQuestionType = 'mcq' | 'true_false' | 'fill_blank' | 'match' | 'order';
+
+export interface QuizQuestionBase {
+  type?: QuizQuestionType;
   text: string;
-  options: QuizOption[];
   image_url?: string;
   time_limit_ms?: number;
 }
+
+export interface QuizQuestionMCQ extends QuizQuestionBase {
+  type?: 'mcq';
+  options: QuizOption[];
+}
+
+export interface QuizQuestionTrueFalse extends QuizQuestionBase {
+  type: 'true_false';
+  options: QuizOption[];
+}
+
+export interface QuizQuestionFillBlank extends QuizQuestionBase {
+  type: 'fill_blank';
+  placeholder?: string;
+}
+
+export interface QuizQuestionOrder extends QuizQuestionBase {
+  type: 'order';
+  items: string[];
+}
+
+export interface QuizQuestionMatch extends QuizQuestionBase {
+  type: 'match';
+  left: string[];
+  right: string[];
+}
+
+export type QuizQuestion =
+  | QuizQuestionMCQ
+  | QuizQuestionTrueFalse
+  | QuizQuestionFillBlank
+  | QuizQuestionOrder
+  | QuizQuestionMatch;
 
 export interface ScoreboardEntry {
   alias: string;
@@ -144,7 +181,8 @@ export interface WSGameData {
 }
 
 export interface AnagramGameData {
-  word: string;
+  word?: string;
+  words?: string[];
   hint?: string;
 }
 

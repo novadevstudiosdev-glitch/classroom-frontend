@@ -6,7 +6,7 @@ import { MinigameLobbyView } from '@/features/minigame/views/MinigameLobbyView';
 
 function LobbyInner() {
   const router = useRouter();
-  const { isAuthenticated, initialized } = useAuthStore();
+  const { isAuthenticated, initialized, user } = useAuthStore();
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {
@@ -14,7 +14,7 @@ function LobbyInner() {
     }
   }, [initialized, isAuthenticated, router]);
 
-  if (!initialized || !isAuthenticated) {
+  if (!initialized || !isAuthenticated || !user) {
     return (
       <div style={{
         minHeight: '100vh', background: '#06080f',

@@ -10,8 +10,8 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
     { id: "students", label: "Estudiantes", value: "24" },
   ],
   video: {
-    title: "Introducción a las sumas",
-    subtitle: "Video inicial para contextualizar la lección y objetivos.",
+    title: "Introducción a sumas y restas",
+    subtitle: "Repaso rápido antes de empezar con los ejercicios.",
   },
   exercises: [
     {
@@ -60,12 +60,12 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
   ],
   aiTools: {
     title: "Herramientas IA",
-    subtitle: "Acelera la creación de la lección con sugerencias automáticas.",
+    subtitle: "Sugerencias automáticas para enriquecer la clase.",
     items: [
-      { id: "ai-1", label: "Generar enunciado" },
-      { id: "ai-2", label: "Sugerir pistas" },
-      { id: "ai-3", label: "Reescribir instrucciones" },
-      { id: "ai-4", label: "Crear variación de ejercicio" },
+      { id: "explain", label: "Explicar un concepto" },
+      { id: "examples", label: "Generar ejemplos" },
+      { id: "quiz", label: "Crear quiz" },
+      { id: "adapt", label: "Adaptar dificultad" },
     ],
   },
   settings: {
@@ -79,3 +79,4 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
     averageTime: "14 min",
   },
 };
+

@@ -9,3 +9,4 @@ export type AuthFormData = {
   password: string;
   confirmPassword: string;
 };
+

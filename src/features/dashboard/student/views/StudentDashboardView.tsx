@@ -12,7 +12,7 @@ import {
 import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 
 export default function StudentDashboardPage() {
-  const [xpWidth, setXpWidth] = useState(0);
+  const { data, loading, error } = useStudentDashboard();
   const [missionProgress, setMissionProgress] = useState(0);
   const [parentRequests, setParentRequests] = useState<ParentRequest[]>([]);
   const [linkCode, setLinkCode] = useState<string>("");
@@ -20,10 +20,14 @@ export default function StudentDashboardPage() {
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [actingRequestId, setActingRequestId] = useState<string | null>(null);
 
+  const missionPercent = useMemo(() => {
+    if (!data.mission.total) return 0;
+    return Math.round((data.mission.completed / data.mission.total) * 100);
+  }, [data.mission.completed, data.mission.total]);
+
   useEffect(() => {
-    setTimeout(() => setXpWidth(65), 300);
-    setTimeout(() => setMissionProgress(60), 500);
-  }, []);
+    setTimeout(() => setMissionProgress(missionPercent), 500);
+  }, [missionPercent]);
 
   const refreshRequests = async () => {
     const [requests, codePayload] = await Promise.all([

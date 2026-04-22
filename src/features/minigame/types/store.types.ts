@@ -28,8 +28,15 @@ export interface QuizState {
   currentIndex: number;
   totalQuestions: number;
   answered: boolean;
+  /** Result of my last submitted answer for this question. */
+  answerCorrect: boolean | null;
+  /** For MCQ / True-False */
   selectedOptionId: string | null;
+  /** Generic last submitted answer payload (for non-MCQ types). */
+  submittedAnswer: unknown | null;
   correctOptionId: string | null;
+  /** Generic correct answer payload (for non-MCQ types). */
+  correctAnswer: unknown | null;
   timeLimitMs: number;
   myScore: number;
 }
@@ -46,6 +53,10 @@ export interface WordSearchState {
 }
 
 export interface AnagramState {
+  /** Full word list for this game (multi-round). */
+  words: string[];
+  /** Index into `words` for the currently active word. */
+  currentWordIndex: number;
   word: string;
   hint: string;
   scrambled: string[];
