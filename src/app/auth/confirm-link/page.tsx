@@ -8,18 +8,19 @@ import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 type ConfirmStatus = "loading" | "success" | "error";
 
 export default function ConfirmParentLinkPage() {
-  const [status, setStatus] = useState<ConfirmStatus>("loading");
-  const [message, setMessage] = useState("Estamos confirmando la vinculacion...");
+  const token =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("token")
+      : null;
+  const [status, setStatus] = useState<ConfirmStatus>(token ? "loading" : "error");
+  const [message, setMessage] = useState(
+    token
+      ? "Estamos confirmando la vinculacion..."
+      : "Falta el token de vinculacion en el enlace."
+  );
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-
-    if (!token) {
-      setStatus("error");
-      setMessage("Falta el token de vinculacion en el enlace.");
-      return;
-    }
+    if (!token) return;
 
     let isMounted = true;
 
@@ -43,7 +44,7 @@ export default function ConfirmParentLinkPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <main className="min-h-screen bg-[#0b1230] text-white p-4 sm:p-6 md:p-8 flex items-center justify-center">
