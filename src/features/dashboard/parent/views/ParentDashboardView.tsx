@@ -10,6 +10,7 @@ import {
   type ParentProfile,
 } from "@/services/parents/parents.service";
 import { useAuthStore } from "@/store/auth/auth.store";
+import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 
 export default function ParentDashboardView() {
   const router = useRouter();
@@ -66,11 +67,7 @@ export default function ParentDashboardView() {
       setChildEmail("");
       await loadProfile();
     } catch (linkError) {
-      if (linkError instanceof Error && linkError.message) {
-        setLinkMessage(linkError.message);
-      } else {
-        setLinkMessage("No se pudo enviar la solicitud de vinculacion.");
-      }
+      setLinkMessage(extractApiErrorMessage(linkError, "No se pudo enviar la solicitud de vinculacion."));
     } finally {
       setIsLinking(false);
     }

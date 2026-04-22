@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { verifyEmailToken } from "@/services/auth/auth.service";
+import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 
 type VerificationStatus = "loading" | "success" | "error";
 
@@ -30,12 +31,12 @@ export default function VerifyEmailPage() {
         setMessage(response.message ?? "Tu cuenta fue verificada correctamente.");
       } catch (error) {
         if (!isMounted) return;
-        const fallbackMessage = "No se pudo verificar tu cuenta. El enlace puede estar vencido o ser invalido.";
-        if (error instanceof Error && error.message) {
-          setMessage(error.message);
-        } else {
-          setMessage(fallbackMessage);
-        }
+        setMessage(
+          extractApiErrorMessage(
+            error,
+            "No se pudo verificar tu cuenta. El enlace puede estar vencido o ser invalido."
+          )
+        );
         setStatus("error");
       }
     };
