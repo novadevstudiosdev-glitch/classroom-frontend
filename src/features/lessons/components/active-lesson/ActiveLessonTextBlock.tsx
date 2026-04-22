@@ -8,16 +8,17 @@ const ActiveLessonTextBlock = ({
   onContinue?: () => void;
 }) => {
   return (
+    // --------LECCIN TIUTLO ----------
     <button
       type="button"
       onClick={() => {
         console.log("[ActiveLessonTextBlock] click en bloque de texto", block.id);
         onContinue?.();
       }}
-      className="w-full rounded-2xl border border-gray-100 bg-white p-6 text-left shadow-lg transition-all hover:scale-[1.01] hover:border-[#1CB0F6]/40 hover:shadow-xl"
+      className="w-full rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FF9500] text-[#1a0f00] p-6 text-left text-[#1a0f00] shadow-[0_10px_40px_rgba(255,215,0,0.35)] transition-all hover:scale-[1.02] hover:shadow-[0_18px_50px_rgba(255,215,0,0.5)]"
       aria-label="Continuar al siguiente bloque"
     >
-      <p className="text-base text-gray-800">{block.text}</p>
+      <p className="text-base font-bold text-black text-md">{block.text}</p>
     </button>
   );
 };

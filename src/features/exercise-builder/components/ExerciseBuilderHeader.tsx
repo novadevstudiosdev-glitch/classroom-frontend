@@ -18,8 +18,8 @@ const ExerciseBuilderHeader = ({
           <span>{backLabel}</span>
         </Link>
       </div>
-      <h1 className="text-xl font-bold text-white">{title}</h1>
-      <p className="mt-1 text-sm text-white/70">{subtitle}</p>
+      <h2 className="text-md font-bold text-[#FFD700]">{title}</h2>
+      <p className="mt-1 text-md text-white/70">{subtitle}</p>
     </header>
   );
 };

@@ -18,11 +18,11 @@ const SessionResultXpCounter = ({ earnedXp }: SessionResultXpCounterProps) => {
   }, [earnedXp]);
 
   return (
-    <section className="rounded-2xl border border-white/20 bg-white/10 p-5 text-center shadow-lg">
-      <p className="text-xs font-semibold uppercase text-white/70">XP ganado</p>
-      <p className="mt-2 text-4xl font-black text-[#FFD000]">+{displayXp}</p>
+    <section className="mx-auto flex h-60 w-60 flex-col items-center justify-center rounded-full border bg-gradient-to-br from-[#FFD700] to-[#FF9500] text-[#1a0f00] p-5 text-center shadow-[0_18px_40px_rgba(13,148,136,0.4)]">
+      <h3 className="text-xl font-bold uppercase text-[#3B82F6]">XP ganado</h3>
+      <h1 className="mt-2  font-black text-[red]">+{displayXp}</h1>
     </section>
-  );
+  ); 
 };
 
 export default SessionResultXpCounter;

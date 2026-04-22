@@ -15,8 +15,8 @@ const ExerciseTypeTabs = ({
             onClick={() => onChangeType(option.id)}
             className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
               activeType === option.id
-                ? "bg-[#1CB0F6] text-white"
-                : "bg-white/10 text-white/90 hover:bg-white/20"
+                ? "bg-gradient-to-br from-[#6C63FF] to-[#9B5DE5] border-white/20 shadow-xl rounded-3xl"
+                : "bg-[#FFD700] text-black hover:bg-[#FFD700]/60"
             }`}
           >
             {option.label}

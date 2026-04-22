@@ -39,6 +39,10 @@ type RegisterParentRequest = {
   recaptcha_token: string;
 };
 
+type ForgotPasswordRequest = {
+  email: string;
+};
+
 type LoginBackendResponse = {
   access_token?: string;
   refresh_token?: string;
@@ -57,7 +61,7 @@ export type AuthSession = {
 };
 
 const getApiBaseUrl = () => {
-  const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+  const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://classroom-backend.up.railway.app";
   const normalizedBaseUrl = rawBaseUrl.replace(/\/+$/, "");
   return normalizedBaseUrl.endsWith("/api")
     ? normalizedBaseUrl
@@ -127,6 +131,17 @@ export async function registerParent(payload: RegisterParentRequest) {
   return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
 }
 
+export async function forgotPassword(payload: ForgotPasswordRequest) {
+  const apiBaseUrl = getApiBaseUrl();
+
+  const response = await axios.post<ApiEnvelope<{ message?: string }> | { message?: string }>(
+    `${apiBaseUrl}/auth/forgot-password`,
+    payload
+  );
+
+  return extractData<{ message?: string }>(response.data);
+}
+
 export async function refreshAccessToken(refreshToken: string) {
   const apiBaseUrl = getApiBaseUrl();
 
@@ -148,3 +163,4 @@ export function getGoogleAuthUrl() {
     ? `${apiBaseUrl}/auth/google`
     : `${apiBaseUrl}/api/auth/google`;
 }
+

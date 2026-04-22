@@ -9,6 +9,8 @@ export interface Lesson {
   description: string;
   content_json: LessonContentJson;
   status: LessonStatus;
+  coverImage?: string;
+  subject?: string;
   created_at?: string;
   updated_at?: string;
 }

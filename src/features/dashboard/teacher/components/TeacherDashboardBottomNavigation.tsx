@@ -5,7 +5,7 @@ const TeacherDashboardBottomNavigation = ({
   items,
 }: TeacherDashboardBottomNavigationProps) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-white">
+    <div className="fixed bottom-0 left-0 right-0 z-[130] bg-[#07061a]/55 backdrop-blur-2xl shadow-[0_-14px_30px_rgba(2,6,26,0.5)]">
       <div className="flex justify-around py-3">
         {items.map((item) => {
           const content = (
@@ -15,7 +15,7 @@ const TeacherDashboardBottomNavigation = ({
               </span>
               <span
                 className={`text-xs ${
-                  item.isActive ? "font-bold text-[#1CB0F6]" : "text-gray-400"
+                  item.isActive ? "font-bold text-[#FFD700]" : "text-white/55"
                 }`}
               >
                 {item.label}
@@ -28,7 +28,7 @@ const TeacherDashboardBottomNavigation = ({
               <Link
                 key={item.id}
                 href={item.href}
-                className="flex flex-col items-center gap-1"
+                className="flex items-center gap-2"
               >
                 {content}
               </Link>
@@ -39,7 +39,7 @@ const TeacherDashboardBottomNavigation = ({
             <button
               key={item.id}
               type="button"
-              className="flex flex-col items-center gap-1"
+              className="flex items-center gap-2"
             >
               {content}
             </button>

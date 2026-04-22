@@ -189,6 +189,28 @@ export const useExerciseBuilder = () => {
     }));
   };
 
+  const removeMatchLeftItem = (id: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      matchColumns: {
+        ...prev.matchColumns,
+        leftItems: prev.matchColumns.leftItems.filter((item) => item.id !== id),
+        pairs: prev.matchColumns.pairs.filter((pair) => pair.leftId !== id),
+      },
+    }));
+  };
+
+  const removeMatchRightItem = (id: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      matchColumns: {
+        ...prev.matchColumns,
+        rightItems: prev.matchColumns.rightItems.filter((item) => item.id !== id),
+        pairs: prev.matchColumns.pairs.filter((pair) => pair.rightId !== id),
+      },
+    }));
+  };
+
   const setMatchPair = (leftId: string, rightId: string) => {
     setDraft((prev) => {
       const pairsWithoutLeft = prev.matchColumns.pairs.filter((p) => p.leftId !== leftId);
@@ -234,6 +256,16 @@ export const useExerciseBuilder = () => {
     }));
   };
 
+  const removeOrderItem = (index: number) => {
+    setDraft((prev) => ({
+      ...prev,
+      orderElements: {
+        ...prev.orderElements,
+        items: prev.orderElements.items.filter((_, idx) => idx !== index),
+      },
+    }));
+  };
+
   const moveOrderItem = (activeIndex: number, overIndex: number) => {
     setDraft((prev) => {
       if (activeIndex === overIndex) return prev;
@@ -275,10 +307,13 @@ export const useExerciseBuilder = () => {
     setMatchRightLabel,
     addMatchLeftItem,
     addMatchRightItem,
+    removeMatchLeftItem,
+    removeMatchRightItem,
     setMatchPair,
     clearMatchPair,
     setOrderItem,
     addOrderItem,
+    removeOrderItem,
     moveOrderItem,
   };
 };

@@ -3,13 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  TeacherDashboardBottomNavigation,
+  TeacherDashboardTopbar,
+} from "@/features/dashboard/teacher/components";
+import {
   EXERCISE_TYPE_OPTIONS,
 } from "@/features/exercise-builder/data";
 import {
   ExerciseBuilderActions,
   ExerciseBuilderFormSection,
   ExerciseBuilderHeader,
-  ExercisePreviewPanel,
   ExerciseTypeTabs,
 } from "@/features/exercise-builder/components";
 import { useExerciseBuilder } from "@/features/exercise-builder/hooks/useExerciseBuilder";
@@ -20,6 +23,11 @@ import {
 
 const ExerciseBuilderView = () => {
   const router = useRouter();
+  const bottomNavigationItems = [
+    { id: "home", icon: "🏠", label: "Inicio", href: "/dashboard/teacher" },
+    { id: "lessons", icon: "📚", label: "Lecciones", href: "/lessons" },
+    { id: "builder", icon: "🧩", label: "Crear ejercicios", href: "/lesson-builder", isActive: true },
+  ];
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string>("");
   const {
@@ -40,10 +48,13 @@ const ExerciseBuilderView = () => {
     setMatchRightLabel,
     addMatchLeftItem,
     addMatchRightItem,
+    removeMatchLeftItem,
+    removeMatchRightItem,
     setMatchPair,
     clearMatchPair,
     setOrderItem,
     addOrderItem,
+    removeOrderItem,
     moveOrderItem,
   } = useExerciseBuilder();
 
@@ -64,7 +75,9 @@ const ExerciseBuilderView = () => {
   };
 
   return (
-    <div className="landing-module-shell">
+    <div className="landing-module-shell pb-24">
+      <TeacherDashboardTopbar />
+
       <ExerciseBuilderHeader
         backHref="/lesson-builder?from=exercise-new"
         backLabel="Volver al lesson-builder"
@@ -85,7 +98,13 @@ const ExerciseBuilderView = () => {
           onChangeType={setType}
         />
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <ExerciseBuilderActions
+          onSaveDraft={handleSaveDraft}
+          onPreview={() => router.refresh()}
+          onPublish={handlePublish}
+        />
+
+        <div>
           <ExerciseBuilderFormSection
             draft={draft}
             onChangeBase={updateBase}
@@ -104,23 +123,19 @@ const ExerciseBuilderView = () => {
             onMatchColumnsChangeRightLabel={setMatchRightLabel}
             onMatchColumnsAddLeftItem={addMatchLeftItem}
             onMatchColumnsAddRightItem={addMatchRightItem}
+            onMatchColumnsRemoveLeftItem={removeMatchLeftItem}
+            onMatchColumnsRemoveRightItem={removeMatchRightItem}
             onMatchColumnsSetPair={setMatchPair}
             onMatchColumnsClearPair={clearMatchPair}
             onOrderElementsChangeItem={setOrderItem}
             onOrderElementsAddItem={addOrderItem}
+            onOrderElementsRemoveItem={removeOrderItem}
             onOrderElementsMoveItem={moveOrderItem}
           />
-
-          <div className="space-y-4">
-            <ExercisePreviewPanel draft={draft} />
-            <ExerciseBuilderActions
-              onSaveDraft={handleSaveDraft}
-              onPreview={() => router.refresh()}
-              onPublish={handlePublish}
-            />
-          </div>
         </div>
       </main>
+
+      <TeacherDashboardBottomNavigation items={bottomNavigationItems} />
     </div>
   );
 };

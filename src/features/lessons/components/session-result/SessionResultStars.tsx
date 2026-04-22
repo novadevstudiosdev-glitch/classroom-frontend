@@ -17,11 +17,11 @@ const SessionResultStars = ({ stars }: SessionResultStarsProps) => {
   }, [stars]);
 
   return (
-    <section className="rounded-2xl border border-white/20 bg-white/10 p-5 text-center shadow-lg">
-      <p className="text-xs font-semibold uppercase text-white/70">Estrellas</p>
+    <section className="p-5 text-center ">
+      <p className="text-xl font-bold uppercase text-white/70">Estrellas</p>
       <div className="mt-3 flex items-center justify-center gap-3 text-4xl">
         {Array.from({ length: 3 }).map((_, idx) => (
-          <span key={`star-${idx}`} className={idx < visibleStars ? "scale-110 text-[#FFD000]" : "text-white/20"}>
+          <span key={`star-${idx}`} className={idx < visibleStars ? "scale-220  text-[#FFD000] p-8" : "text-white/20"}>
             ★
           </span>
         ))}

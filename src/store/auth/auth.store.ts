@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { tokenStorage } from "@/lib/axios/token-storage";
-import { getMyProfile } from "@/services/users/users.service";
+import { getCurrentAuthUser, getMyProfile } from "@/services/users/users.service";
 import type { AuthStore } from "@/types/auth.types";
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -24,6 +24,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ status: "loading" });
 
     try {
+      await getCurrentAuthUser();
       const user = await getMyProfile();
       set({
         user,
