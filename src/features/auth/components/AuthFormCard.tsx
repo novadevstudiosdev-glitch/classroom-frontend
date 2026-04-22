@@ -96,12 +96,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
             recaptcha_token: "dev",
           });
         } else {
+          const childEmail = formData.childName.trim().toLowerCase();
           await registerParent({
             first_name: firstName,
             last_name: lastName,
             email: formData.email.trim().toLowerCase(),
             password: formData.password,
-            student_email: formData.childName.trim().toLowerCase(),
+            ...(childEmail ? { student_email: childEmail } : {}),
             recaptcha_token: "dev",
           });
         }
@@ -264,7 +265,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {isRegister && registerRole === "parent" ? (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email del niño/a
+                    Email del niño/a (opcional)
                   </label>
                   <div className="relative">
                     <User
@@ -279,7 +280,6 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       }
                       className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
                       placeholder="alumno@email.com"
-                      required
                     />
                   </div>
                 </div>

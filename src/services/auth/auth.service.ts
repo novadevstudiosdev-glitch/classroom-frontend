@@ -35,7 +35,7 @@ type RegisterParentRequest = {
   last_name: string;
   email: string;
   password: string;
-  student_email: string;
+  student_email?: string;
   recaptcha_token: string;
 };
 
@@ -125,6 +125,11 @@ export async function registerTeacher(payload: RegisterTeacherRequest) {
 export async function registerParent(payload: RegisterParentRequest) {
   const response = await axiosClient.post("/auth/register/parent", payload);
   return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
+}
+
+export async function verifyEmailToken(token: string) {
+  const response = await axiosClient.post("/auth/verify-email", { token });
+  return extractData<{ message?: string }>(response.data);
 }
 
 export async function refreshAccessToken(refreshToken: string) {
