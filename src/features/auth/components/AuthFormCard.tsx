@@ -13,14 +13,16 @@ import {
   getGoogleAuthUrl,
   loginWithEmailPassword,
   registerParent,
+  registerStudent,
   registerTeacher,
 } from "@/services/auth/auth.service";
+import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 
 type AuthFormCardProps = {
   defaultMode?: AuthMode;
 };
 
-type RegisterRole = "parent" | "teacher";
+type RegisterRole = "parent" | "teacher" | "student";
 
 const getRedirectByRole = (role?: string) => {
   if (role === "teacher") return "/dashboard/teacher";
@@ -33,7 +35,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setSession = useAuthStore((state) => state.setSession);
-  const registerRole: RegisterRole = searchParams.get("role") === "teacher" ? "teacher" : "parent";
+  const requestedRole = searchParams.get("role");
+  const registerRole: RegisterRole =
+    requestedRole === "teacher"
+      ? "teacher"
+      : requestedRole === "student"
+        ? "student"
+        : "parent";
 
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -50,10 +58,10 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
   const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] = useState(false);
 
   const [formData, setFormData] = useState<AuthFormData>({
-    first_name: "",
-    last_name: "",
-    student_email: "",
+    name: "",
     schoolName: "",
+    studentAlias: "",
+    inviteCode: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -61,6 +69,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
 
   const isRegister = mode === "register";
   const canSubmitRegister = registerRole !== "parent" || acceptTerms;
+
+  const updateRole = (role: RegisterRole) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("role", role);
+    params.set("mode", "register");
+    router.replace(`/register?${params.toString()}`);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,6 +94,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         }
 
         if (registerRole === "teacher") {
+          const { firstName, lastName } = getNameParts(formData.name);
           await registerTeacher({
             first_name: formData.first_name.trim(),
             last_name: formData.last_name.trim(),
@@ -87,13 +103,23 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
             country: "Argentina",
             recaptcha_token: "dev",
           });
-        } else {
+        } else if (registerRole === "parent") {
+          const { firstName, lastName } = getNameParts(formData.name);
           await registerParent({
             first_name: formData.first_name.trim(),
             last_name: formData.last_name.trim(),
             email: formData.email.trim().toLowerCase(),
             password: formData.password,
-            student_email: formData.student_email.trim().toLowerCase(),
+            recaptcha_token: "dev",
+          });
+        } else {
+          const inviteCode = formData.inviteCode.trim().toUpperCase();
+          await registerStudent({
+            alias: formData.studentAlias.trim(),
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password,
+            avatar_id: "avatar_01",
+            ...(inviteCode ? { invite_code: inviteCode } : {}),
             recaptcha_token: "dev",
           });
         }
@@ -101,14 +127,17 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         setSuccessMessage(
           registerRole === "teacher"
             ? "Cuenta docente creada. Revisá tu email para verificarla y luego iniciá sesión."
-            : "Cuenta familiar creada. Revisá tu email para verificarla y luego iniciá sesión."
+            : registerRole === "parent"
+              ? "Cuenta familiar creada. Revisá tu email para verificarla y luego iniciá sesión."
+              : "Cuenta de alumno creada. Ya podés iniciar sesión."
         );
 
         setMode("login");
         setFormData((current) => ({
           ...current,
-          student_email: "",
           schoolName: "",
+          studentAlias: "",
+          inviteCode: "",
           password: "",
           confirmPassword: "",
         }));
@@ -132,29 +161,7 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
         router.refresh();
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        const rawData = error.response?.data;
-        const backendMessage = typeof rawData === "object" && rawData !== null && "message" in rawData
-          ? String(rawData.message)
-          : null;
-
-        if (status === 404 && isRegister && registerRole === "parent") {
-          setErrorMessage("No encontramos un alumno con ese email. Verificá el correo del estudiante e intentá de nuevo.");
-        } else if (backendMessage) {
-          setErrorMessage(backendMessage);
-        } else if (status === 404) {
-          setErrorMessage("No encontramos el endpoint de autenticación. Revisá la configuración del backend.");
-        } else if (status === 400) {
-          setErrorMessage("Los datos enviados no son válidos. Revisalos e intentá de nuevo.");
-        } else {
-          setErrorMessage(error.message || "No se pudo completar la operación. Inténtalo de nuevo.");
-        }
-      } else if (error instanceof Error && error.message) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("No se pudo completar la operación. Inténtalo de nuevo.");
-      }
+      setErrorMessage(extractApiErrorMessage(error, "No se pudo completar la operación. Inténtalo de nuevo."));
     } finally {
       setIsSubmitting(false);
     }
@@ -294,17 +301,58 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
               {isRegister ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm font-semibold text-slate-800">
-                    {registerRole === "teacher" ? "Cuenta docente" : "Cuenta familiar"}
+                    {registerRole === "teacher"
+                      ? "Cuenta docente"
+                      : registerRole === "student"
+                        ? "Cuenta de alumno"
+                        : "Cuenta familiar"}
                   </p>
                   <p className="mt-1 text-xs text-slate-600">
                     {registerRole === "teacher"
                       ? "Completá los datos para crear tu cuenta docente."
-                      : "Completá los datos del adulto responsable para crear la cuenta."}
+                      : registerRole === "student"
+                        ? "Completá tus datos para crear tu cuenta de alumno."
+                        : "Completá los datos del adulto responsable para crear la cuenta."}
                   </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateRole("parent")}
+                      className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                        registerRole === "parent"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      Familiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateRole("student")}
+                      className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                        registerRole === "student"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      Alumno
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateRole("teacher")}
+                      className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                        registerRole === "teacher"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      Docente
+                    </button>
+                  </div>
                 </div>
               ) : null}
 
-              {isRegister ? (
+              {isRegister && registerRole !== "student" ? (
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
                     Nombre
@@ -352,10 +400,10 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                 </div>
               ) : null}
 
-              {isRegister && registerRole === "parent" ? (
+              {isRegister && registerRole === "student" ? (
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Email del niño/a
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Alias del alumno
                   </label>
                   <div className="relative">
                     <User
@@ -363,13 +411,13 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       size={18}
                     />
                     <input
-                      type="email"
-                      value={formData.student_email}
+                      type="text"
+                      value={formData.studentAlias}
                       onChange={(event) =>
-                        setFormData({ ...formData, student_email: event.target.value })
+                        setFormData({ ...formData, studentAlias: event.target.value })
                       }
-                      className="w-full rounded-xl border-2 border-slate-200 py-3.5 pl-10 pr-4 font-medium text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      placeholder="alumno@email.com"
+                      className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
+                      placeholder="Ej: Sofia123"
                       required
                     />
                   </div>
@@ -395,6 +443,30 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                       className="w-full rounded-xl border-2 border-slate-200 py-3.5 pl-10 pr-4 font-medium text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       placeholder="Ej: Escuela Primaria N° 12"
                       required
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {isRegister && registerRole === "student" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Código de clase (opcional)
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      value={formData.inviteCode}
+                      onChange={(event) =>
+                        setFormData({ ...formData, inviteCode: event.target.value.toUpperCase() })
+                      }
+                      className="w-full pl-10 pr-4 py-3.5 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-slate-800 font-medium"
+                      placeholder="ABC123"
+                      maxLength={6}
                     />
                   </div>
                 </div>
@@ -539,44 +611,48 @@ export function AuthFormCard({ defaultMode = "login" }: AuthFormCardProps) {
                     : "Iniciar sesión"}
               </motion.button>
 
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 font-medium text-slate-500">
-                    o continuar con
-                  </span>
-                </div>
-              </div>
+              {!isRegister || registerRole !== "student" ? (
+                <>
+                  <div className="relative my-5">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-slate-500 font-medium">
+                        o continuar con
+                      </span>
+                    </div>
+                  </div>
 
-              <motion.button
-                type="button"
-                onClick={handleGoogleAuth}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-slate-200 py-3.5 font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 01-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M10 20c2.7 0 4.964-.895 6.618-2.423l-3.232-2.509c-.895.6-2.04.955-3.386.955-2.605 0-4.81-1.76-5.595-4.123H1.064v2.59A9.996 9.996 0 0010 20z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Google
-              </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={handleGoogleAuth}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3.5 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 01-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M10 20c2.7 0 4.964-.895 6.618-2.423l-3.232-2.509c-.895.6-2.04.955-3.386.955-2.605 0-4.81-1.76-5.595-4.123H1.064v2.59A9.996 9.996 0 0010 20z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    Google
+                  </motion.button>
+                </>
+              ) : null}
 
               <p className="mt-4 text-center text-sm text-slate-600">
                 {isRegister ? "¿Ya tenés cuenta? " : "¿No tenés una cuenta? "}

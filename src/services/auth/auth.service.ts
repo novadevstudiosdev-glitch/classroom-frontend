@@ -35,7 +35,16 @@ type RegisterParentRequest = {
   last_name: string;
   email: string;
   password: string;
-  student_email: string;
+  student_email?: string;
+  recaptcha_token: string;
+};
+
+type RegisterStudentRequest = {
+  alias: string;
+  email: string;
+  password: string;
+  avatar_id: string;
+  invite_code?: string;
   recaptcha_token: string;
 };
 
@@ -131,14 +140,18 @@ export async function registerParent(payload: RegisterParentRequest) {
   return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
 }
 
-export async function forgotPassword(payload: ForgotPasswordRequest) {
-  const apiBaseUrl = getApiBaseUrl();
+export async function registerStudent(payload: RegisterStudentRequest) {
+  const response = await axiosClient.post("/auth/register/student", payload);
+  return extractData<{ message?: string; user_id?: string; profile_id?: string }>(response.data);
+}
 
-  const response = await axios.post<ApiEnvelope<{ message?: string }> | { message?: string }>(
-    `${apiBaseUrl}/auth/forgot-password`,
-    payload
-  );
+export async function verifyEmailToken(token: string) {
+  const response = await axiosClient.post("/auth/verify-email", { token });
+  return extractData<{ message?: string }>(response.data);
+}
 
+export async function confirmParentLinkToken(token: string) {
+  const response = await axiosClient.post("/auth/confirm-parent-link", { token });
   return extractData<{ message?: string }>(response.data);
 }
 

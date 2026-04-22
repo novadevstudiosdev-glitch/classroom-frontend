@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth/auth.store";
 
 const getRedirectByRole = (role?: string | null) => {
@@ -18,11 +18,10 @@ const getTokenValue = (params: URLSearchParams, key: string) => {
 
 function AuthCallbackInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const setSession = useAuthStore((state) => state.setSession);
 
   useEffect(() => {
-    if (!searchParams) return;
+    const searchParams = new URLSearchParams(window.location.search);
 
     const accessToken =
       getTokenValue(searchParams, "access_token") ??
@@ -43,7 +42,7 @@ function AuthCallbackInner() {
     setSession({ accessToken, refreshToken });
     router.replace(getRedirectByRole(role));
     router.refresh();
-  }, [router, searchParams, setSession]);
+  }, [router, setSession]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
