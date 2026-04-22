@@ -3,6 +3,8 @@
 interface Props {
   scoreUs: number;
   scoreThem: number;
+  lastEnvido?: string;
+  lastTruco?: string;
 }
 
 function TallyMarks({ pts }: { pts: number }) {
@@ -35,7 +37,7 @@ function TallyMarks({ pts }: { pts: number }) {
             const isCross = g.filled && g.count === 5 && i === 4;
             return (
               <span key={i} className="palito">
-                <svg viewBox="0 0 14 20" width="14" height="20">
+                <svg viewBox="0 0 14 20" width="16" height="24">
                   {isCross ? (
                     <line
                       x1="12"
@@ -67,7 +69,7 @@ function TallyMarks({ pts }: { pts: number }) {
   );
 }
 
-export default function ScorePanel({ scoreUs, scoreThem }: Props) {
+export default function ScorePanel({ scoreUs, scoreThem, lastEnvido, lastTruco }: Props) {
   return (
     <div className="panel-left">
       <div className="sec-title">Marcador</div>
@@ -88,24 +90,18 @@ export default function ScorePanel({ scoreUs, scoreThem }: Props) {
 
       <hr className="sep" />
 
-      <div className="sec-title" style={{ fontSize: "8px" }}>
+      <div className="sec-title">
         Cantos
       </div>
 
       <div className="canto-block">
         <div className="canto-item">
           <div className="canto-lbl">Envido</div>
-          <div className="canto-val off">-</div>
+          <div className="canto-val">{lastEnvido ?? "-"}</div>
         </div>
         <div className="canto-item">
           <div className="canto-lbl">Truco</div>
-          <div className="canto-val" style={{ color: "#e87040" }}>
-            Truco
-          </div>
-        </div>
-        <div className="canto-item">
-          <div className="canto-lbl">Respuesta</div>
-          <div className="canto-val off">-</div>
+          <div className="canto-val canto-val-truco">{lastTruco ?? "-"}</div>
         </div>
       </div>
     </div>

@@ -1,20 +1,18 @@
 "use client";
 
-import { useState } from "react";
-
-interface Message {
-  who: string;
-  text: string;
-}
+import { useEffect, useRef, useState } from "react";
+import type { ChatMessage } from "../../types/game.types";
 
 interface Props {
   playerName: string;
   playerScore: number;
+  messages: ChatMessage[];
+  onSend: (text: string) => void;
 }
 
-export default function ChatPanel({ playerName, playerScore }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ChatPanel({ playerName, playerScore, messages, onSend }: Props) {
   const [input, setInput] = useState("");
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const initials = playerName
     .split(" ")
@@ -26,14 +24,19 @@ export default function ChatPanel({ playerName, playerScore }: Props) {
   const send = () => {
     const txt = input.trim();
     if (!txt) return;
-    setMessages((prev) => [...prev, { who: playerName, text: txt }]);
+    onSend(txt);
     setInput("");
   };
+
+  useEffect(() => {
+    if (!listRef.current) return;
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages]);
 
   return (
     <div className="panel-right">
       <div className="chat-hdr">
-        <span className="chat-title">Mesa</span>
+        <span className="chat-title">Chat de Mesa</span>
       </div>
 
       <div className="player-chip">
@@ -45,13 +48,13 @@ export default function ChatPanel({ playerName, playerScore }: Props) {
         <div className="sbadge">{playerScore}</div>
       </div>
 
-      <div className="chat-msgs">
+      <div className="chat-msgs" ref={listRef}>
         {messages.length === 0 ? (
-          <p className="msg-empty">— Sin mensajes —</p>
+          <p className="msg-empty">Sin mensajes todavia</p>
         ) : (
           messages.map((m, i) => (
-            <div key={i} className="msg-item">
-              <span className="msg-who">{m.who}:</span>
+            <div key={`${m.alias}-${i}`} className={`msg-item ${m.system ? "msg-system" : ""}`}>
+              <span className="msg-who">{m.alias}:</span>
               <span className="msg-txt">{m.text}</span>
             </div>
           ))
@@ -67,7 +70,7 @@ export default function ChatPanel({ playerName, playerScore }: Props) {
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
         <button className="chat-send" onClick={send}>
-          ➤
+          Enviar
         </button>
       </div>
     </div>

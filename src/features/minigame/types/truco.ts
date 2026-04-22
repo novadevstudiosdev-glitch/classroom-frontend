@@ -1,4 +1,4 @@
-export type CantoType = "envido" | "truco" | "falta";
+export type CantoType = "envido" | "real-envido" | "falta-envido" | "truco";
 
 export interface Canto {
   type: CantoType;

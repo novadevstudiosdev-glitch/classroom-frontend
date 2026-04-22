@@ -13,16 +13,16 @@ export default function ActionButtons({ onCanto }: Props) {
         <button className="btn b-env" onClick={() => onCanto("envido", "Envido")}>
           Envido
         </button>
-        <button className="btn b-renv" onClick={() => onCanto("envido", "Real Envido")}>
+        <button className="btn b-renv" onClick={() => onCanto("real-envido", "Real Envido")}>
           Real envido
         </button>
-        <button className="btn b-falt" onClick={() => onCanto("falta", "Falta Envido")}>
+        <button className="btn b-falt" onClick={() => onCanto("falta-envido", "Falta Envido")}>
           Falta envido
         </button>
       </div>
       <div className="btn-row">
-        <button className="btn b-truco" onClick={() => onCanto("truco", "¡ TRUCO !")}>
-          ✦ TRUCO ✦
+        <button className="btn b-truco" onClick={() => onCanto("truco", "TRUCO")}>
+          TRUCO
         </button>
       </div>
       <button className="btn b-mazo">Ir al mazo</button>

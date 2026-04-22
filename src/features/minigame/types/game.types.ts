@@ -61,7 +61,7 @@ export interface TrucoPlayerView {
   teamAMembers: { socketId: string; alias: string }[];
   teamBMembers: { socketId: string; alias: string }[];
   myTeam: 'A' | 'B';
-  phase: 'playing' | 'show_envido' | 'hand_end' | 'game_over';
+  phase: 'playing' | 'show_envido' | 'show_envido_points' | 'hand_end' | 'game_over';
   handNum: number;
   dealerAlias: string;
   manoAlias: string;
@@ -70,11 +70,13 @@ export interface TrucoPlayerView {
   roundWinners: ('A' | 'B' | 'tie')[];
   lastPlayedCards: Record<string, TrucoCard>;
   currentRoundCards: Record<string, TrucoCard | null>;
+  playedCardsHistory: { alias: string; round: number; card: TrucoCard }[];
   envidoStatus: 'available' | 'pending' | 'resolved' | 'expired';
   envidoChain: TrucoEnvidoCall[];
   envidoResponderTeam: 'A' | 'B' | null;
   envidoResult: TrucoEnvidoResult | null;
-  envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | string } | null;
+  envidoPointsAwarded: boolean;
+  envidoLastResponse: { alias: string; response: 'quiero' | 'noquiero' | 'sonbuenas' | 'decirpuntos' | string } | null;
   pendingShowEnvido: string[];
   myEnvidoValue: number;
   florStatus: 'none' | 'pending' | 'resolved';

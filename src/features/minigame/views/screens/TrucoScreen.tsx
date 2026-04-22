@@ -4,7 +4,6 @@ import { useMinigameStore } from '../../store/minigame.store';
 import { GameSidebar } from '../../components/GameSidebar';
 import { BACK_URL, getCardImageUrl } from '../../components/SpanishCard';
 import type { TrucoCard, TableTheme } from '../../types/game.types';
-import type { CantoType } from '../../types/truco';
 import TrucoTable from '../../components/truco/TrucoTable';
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -158,6 +157,7 @@ export function TrucoScreen(props: Props) {
   const useRetroUi = (process.env.NEXT_PUBLIC_TRUCO_UI ?? '').toLowerCase() === 'retro';
   const myAlias = useMinigameStore((s) => s.myAlias);
   const view = useMinigameStore((s) => s.truco);
+  const roomChat = useMinigameStore((s) => s.roomChat);
 
   if (!useRetroUi) {
     return <LiveTrucoScreen {...props} />;
@@ -177,16 +177,8 @@ export function TrucoScreen(props: Props) {
   const opponentAlias = allAliases.find((alias) => alias !== myAlias) ?? "Rival";
   const opponentCardCount = view?.allPlayerCardCounts?.[opponentAlias] ?? Math.max(myHand.length, 3);
 
-  const handleCanto = (type: CantoType) => {
-    if (type === 'envido') {
-      props.sendTrucoAction({ type: 'envido' });
-      return;
-    }
-    if (type === 'falta') {
-      props.sendTrucoAction({ type: 'falta-envido' });
-      return;
-    }
-    props.sendTrucoAction({ type: 'truco' });
+  const handleAction = (type: string) => {
+    props.sendTrucoAction({ type });
   };
 
   const handlePlayCard = (card: TrucoCard) => {
@@ -203,7 +195,29 @@ export function TrucoScreen(props: Props) {
         hand={myHand}
         opponentName={opponentAlias}
         opponentCardCount={opponentCardCount}
-        onCanto={handleCanto}
+        currentTurnAlias={view?.currentTurnAlias}
+        canPlay={canPlay}
+        phase={view?.phase}
+        handNum={view?.handNum}
+        round={view?.round}
+        dealerAlias={view?.dealerAlias}
+        currentRoundCards={view?.currentRoundCards}
+        playedCardsHistory={view?.playedCardsHistory}
+        myTeam={view?.myTeam}
+        teamAMembers={view?.teamAMembers}
+        teamBMembers={view?.teamBMembers}
+        envidoStatus={view?.envidoStatus}
+        envidoChain={view?.envidoChain}
+        envidoResponderTeam={view?.envidoResponderTeam}
+        envidoResult={view?.envidoResult}
+        envidoLastResponse={view?.envidoLastResponse}
+        trucoStatus={view?.trucoStatus}
+        trucoChain={view?.trucoChain}
+        trucoResponderTeam={view?.trucoResponderTeam}
+        trucoLastResponse={view?.trucoLastResponse}
+        chatMessages={roomChat}
+        onSendChat={props.onSendChat}
+        onAction={handleAction}
         onPlayCard={handlePlayCard}
       />
     </div>
@@ -269,12 +283,27 @@ function getPositions(n: number): Pos[] {
   ];
 }
 
-/** Played card position = 62% of the way from player seat toward center of felt */
-function getPlayedCardPos(pos: Pos): { x: number; y: number } {
-  const cx = 50, cy = 48; // felt center (slightly above geometric center)
+/** Played card position with per-round lane separation to avoid overlap */
+function getPlayedCardPos(pos: Pos, roundIdx: number, isMe: boolean): { x: number; y: number } {
+  const cx = 50;
+  const cy = 48; // felt center (slightly above geometric center)
+  const vx = cx - pos.x;
+  const vy = cy - pos.y;
+  const len = Math.hypot(vx, vy) || 1;
+  const nx = vx / len;
+  const ny = vy / len;
+  const px = -ny;
+  const py = nx;
+
+  const towardCenter = 0.66;
+  const baseX = pos.x + vx * towardCenter;
+  const baseY = pos.y + vy * towardCenter;
+  const lane = (roundIdx - 1) * 4.6;
+  const depth = (roundIdx - 1) * (isMe ? 1.8 : -1.8);
+
   return {
-    x: pos.x + (cx - pos.x) * 0.62,
-    y: pos.y + (cy - pos.y) * 0.62,
+    x: baseX + px * lane + nx * depth,
+    y: baseY + py * lane + ny * depth,
   };
 }
 
@@ -300,6 +329,7 @@ function CallLogPanel({
   trucoChain,
   envidoStatus,
   envidoResult,
+  envidoReveals,
   trucoStatus,
   trucoAccepted,
   logLines,
@@ -310,6 +340,7 @@ function CallLogPanel({
   trucoChain: Array<{ alias: string; type: string }>;
   envidoStatus: string;
   envidoResult: { winnerAlias?: string; winnerTeam?: 'A' | 'B'; pts?: number } | null;
+  envidoReveals: Array<{ alias: string; value: number }>;
   trucoStatus: string;
   trucoAccepted: boolean;
   logLines: string[];
@@ -320,6 +351,13 @@ function CallLogPanel({
   const lastTruco = trucoChain[trucoChain.length - 1];
   const envidoName = (t: string) => t === 'realenvido' ? 'Real Envido' : t === 'faltaenvido' ? 'Falta Envido' : 'Envido';
   const trucoName = (t: string) => t === 'retruco' ? 'Retruco' : t === 'valecuatro' ? 'Vale Cuatro' : 'Truco';
+  const envidoRespLabel = (resp: string) => {
+    if (resp === 'noquiero') return 'No Quiero';
+    if (resp === 'quiero') return 'Quiero';
+    if (resp === 'sonbuenas') return 'Son Buenas';
+    if (resp === 'decirpuntos') return 'Dijo Puntos';
+    return resp;
+  };
 
   return (
     <div style={{
@@ -339,10 +377,15 @@ function CallLogPanel({
       </div>
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
         {envidoStatus === 'pending' ? 'Respuesta: pendiente'
-          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoLastResponse.response === 'noquiero' ? 'No Quiero' : envidoLastResponse.response === 'quiero' ? 'Quiero' : envidoLastResponse.response}`
+          : envidoLastResponse ? `Respuesta: ${envidoLastResponse.alias} dijo ${envidoRespLabel(envidoLastResponse.response)}`
           : envidoResult ? `Resultado: ${envidoResult.winnerAlias ?? 'equipo ganador'} (${envidoResult.pts ?? 0} pts)`
           : 'Resultado: -'}
       </div>
+      {envidoStatus === 'resolved' && envidoReveals.length > 0 && (
+        <div style={{ fontSize: 10, color: 'rgba(251,191,36,0.85)', lineHeight: 1.3 }}>
+          Puntos: {envidoReveals.map((r) => `${r.alias} ${r.value}`).join(' | ')}
+        </div>
+      )}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
       <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
         Truco: {lastTruco ? `${lastTruco.alias} canto ${trucoName(lastTruco.type)}` : '-'}
@@ -603,7 +646,7 @@ function PlayedCardOnFelt({
       position: 'absolute',
       left: `${x}%`, top: `${y}%`,
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) rotate(${tiltDeg}deg)`,
-      zIndex: dimmed ? 10 : 12,
+      zIndex: dimmed ? 24 : 28,
       filter: dimmed
         ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) grayscale(0.4)'
         : 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
@@ -881,7 +924,7 @@ function ActionPanel({
   const envidoChain = (view.envidoChain ?? []) as { type: string }[];
   const lastEnvido  = envidoChain[envidoChain.length - 1]?.type ?? null;
 
-  if (phase === 'show_envido' || phase === 'hand_end' || phase === 'game_over') return null;
+  if ((phase === 'show_envido' || phase === 'show_envido_points') || phase === 'hand_end' || phase === 'game_over') return null;
 
   const sections: React.ReactNode[] = [];
 
@@ -930,8 +973,12 @@ function ActionPanel({
   /* â”€â”€ Envido response (opponent called envido) â”€â”€ */
   if (envidoSt === 'pending' && envidoResp && phase === 'playing') {
     // lastEnvido comes from the engine chain (.type = 'envido'|'realenvido'|'faltaenvido' â€” no hyphens)
-    const canRaiseToReal  = lastEnvido === 'envido';
-    const canRaiseToFalta = lastEnvido === 'envido' || lastEnvido === 'realenvido';
+    const envidoCount = envidoChain.filter((c) => c.type === 'envido').length;
+    const hasRealEnvido = envidoChain.some((c) => c.type === 'realenvido');
+    const hasFaltaEnvido = envidoChain.some((c) => c.type === 'faltaenvido');
+    const canRaiseToEnvido = lastEnvido === 'envido' && envidoCount < 2 && !hasRealEnvido && !hasFaltaEnvido;
+    const canRaiseToReal  = !hasRealEnvido && !hasFaltaEnvido;
+    const canRaiseToFalta = !hasFaltaEnvido;
     const displayName = lastEnvido === 'realenvido' ? 'REAL ENVIDO'
       : lastEnvido === 'faltaenvido' ? 'FALTA ENVIDO'
       : (lastEnvido ?? '').toUpperCase();
@@ -941,12 +988,17 @@ function ActionPanel({
           QUIEREN EL {displayName}?
         </span>
         <Btn label="No Quiero" variant="danger" onClick={() => onAction({ type: 'no-quiero' })} />
+        <Btn label="Son Buenas" variant="ghost" onClick={() => onAction({ type: 'son-buenas' })} />
+        {canRaiseToEnvido && (
+          <Btn label="Envido" variant="primary" small onClick={() => onAction({ type: 'envido' })} />
+        )}
         {canRaiseToReal && (
           <Btn label="Real Envido" variant="primary" small onClick={() => onAction({ type: 'real-envido' })} />
         )}
         {canRaiseToFalta && (
           <Btn label="Falta Envido" variant="warning" small onClick={() => onAction({ type: 'falta-envido' })} />
         )}
+        <Btn label="Decir Puntos" variant="primary" onClick={() => onAction({ type: 'decir-puntos' })} />
         <Btn label="Quiero" variant="success" onClick={() => onAction({ type: 'quiero' })} />
       </div>
     );
@@ -1035,37 +1087,48 @@ function CallNotification({
   call: string; sub: string; color: string; onDismiss: () => void;
 }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 3500);
+    const t = setTimeout(onDismiss, 3000);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
   return (
     <div style={{
-      position: 'absolute', top: '28%', left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 40,
-      animation: 'callBounce 0.4s cubic-bezier(.34,1.56,.64,1)',
+      position: 'absolute',
+      top: '46%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 'clamp(320px, 68%, 900px)',
+      zIndex: 44,
+      animation: 'callBounce 0.36s cubic-bezier(.34,1.56,.64,1)',
       pointerEvents: 'none',
     }}>
       <div style={{
-        background: `linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,20,20,0.95))`,
-        border: `2px solid ${color}`,
-        borderRadius: 16,
-        padding: '14px 24px',
+        background: `linear-gradient(110deg, rgba(10,12,16,0.86), rgba(12,18,26,0.7) 46%, rgba(10,12,16,0.86))`,
+        border: `1px solid ${color}55`,
+        borderRadius: 18,
+        padding: '16px 26px 14px',
         textAlign: 'center',
-        boxShadow: `0 0 40px ${color}44, 0 8px 32px rgba(0,0,0,0.6)`,
-        minWidth: 180,
+        backdropFilter: 'blur(12px)',
+        boxShadow: `0 16px 42px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 36px ${color}22`,
       }}>
         <div style={{
-          fontSize: 22, fontWeight: 900, color,
-          letterSpacing: '-0.02em', lineHeight: 1,
-          textShadow: `0 0 20px ${color}88`,
+          fontSize: 50,
+          fontWeight: 900,
+          color,
+          letterSpacing: '0.14em',
+          lineHeight: 1,
+          textTransform: 'uppercase',
+          textShadow: `0 0 24px ${color}55`,
         }}>
           {call}
         </div>
         <div style={{
-          fontSize: 12, color: 'rgba(255,255,255,0.6)',
-          fontWeight: 600, marginTop: 5,
+          fontSize: 15,
+          color: 'rgba(246, 232, 206, 0.85)',
+          fontWeight: 700,
+          marginTop: 8,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
         }}>
           {sub}
         </div>
@@ -1093,12 +1156,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   const [envidoTimer, setEnvidoTimer]   = useState(30);
   const envidoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Track all played cards for the current hand (across rounds)
-  const [historicCards, setHistoricCards] = useState<
-    Array<{ alias: string; card: TrucoCard; round: number }>
-  >([]);
-  const seenPlayedRef = useRef<Set<string>>(new Set());
-  const lastHandRef   = useRef(-1);
+  const historicCards = (view?.playedCardsHistory ?? []) as Array<{ alias: string; card: TrucoCard; round: number }>;
 
   // Turn timer (30 seconds per turn)
   const [turnTimer, setTurnTimer]   = useState(30);
@@ -1130,9 +1188,9 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
     if (view?.config?.tableTheme) setTheme(view.config.tableTheme);
   }, [view?.config?.tableTheme]);
 
-  // Countdown for show_envido phase
+  // Countdown for show_envido_points phase
   useEffect(() => {
-    if (view?.phase === 'show_envido') {
+    if (view?.phase === 'show_envido' || view?.phase === 'show_envido_points') {
       setEnvidoTimer(30);
       envidoTimerRef.current = setInterval(() => {
         setEnvidoTimer(t => {
@@ -1150,32 +1208,18 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   // Reset selected card on new hand / round
   useEffect(() => { setSelectedCard(null); }, [view?.handNum, view?.round]);
 
-  // Accumulate played cards so they stay on the table across rounds
   useEffect(() => {
-    if (!view) return;
-    const currentCards = view.currentRoundCards as Record<string, TrucoCard | null>;
-
-    if (view.handNum !== lastHandRef.current) {
-      lastHandRef.current = view.handNum;
-      seenPlayedRef.current = new Set();
-      setHistoricCards([]);
-      setCallHistory([]);
-      return;
-    }
-
-    const newEntries: Array<{ alias: string; card: TrucoCard; round: number }> = [];
-    for (const [alias, card] of Object.entries(currentCards)) {
-      if (!card) continue;
-      const key = `${view.handNum}-${view.round}-${alias}`;
-      if (!seenPlayedRef.current.has(key)) {
-        seenPlayedRef.current.add(key);
-        newEntries.push({ alias, card, round: view.round as number });
-      }
-    }
-    if (newEntries.length > 0) {
-      setHistoricCards(prev => [...prev, ...newEntries]);
-    }
-  }, [view]);
+    setCallHistory([]);
+    prevEnvidoChainLenRef.current = 0;
+    prevTrucoChainLenRef.current = 0;
+    prevHistEnvidoLenRef.current = 0;
+    prevHistTrucoLenRef.current = 0;
+    prevEnvidoResultRef.current = null;
+    prevHistEnvidoStatusRef.current = '';
+    prevHistTrucoStatusRef.current = '';
+    prevBubbleEnvidoStatusRef.current = '';
+    prevBubbleTrucoStatusRef.current = '';
+  }, [view?.handNum]);
 
   // Show call notification when envido, truco, or flor is called at our team
   useEffect(() => {
@@ -1191,25 +1235,35 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
     const trucoCh    = (view.trucoChain  ?? []) as { type: string; alias: string }[];
     const lastEnvido = envidoCh[envidoCh.length - 1];
     const lastTruco  = trucoCh[trucoCh.length - 1];
+    const envidoLabel = (type: string) => (
+      type === 'realenvido' ? 'REAL ENVIDO' :
+      type === 'faltaenvido' ? 'FALTA ENVIDO' :
+      'ENVIDO'
+    );
+    const trucoLabel = (type: string) => (
+      type === 'retruco' ? 'RETRUCO' :
+      type === 'valecuatro' ? 'VALE CUATRO' :
+      'TRUCO'
+    );
 
     if (envidoSt === 'pending' && prevEnvidoStRef.current !== 'pending' && envidoResp && lastEnvido) {
       setCallNotif({
-        call: `!${lastEnvido.type.toUpperCase()}!`,
-        sub: `${lastEnvido.alias} te canto - lo queres?`,
+        call: envidoLabel(lastEnvido.type),
+        sub: `${lastEnvido.alias} canto - responde`,
         color: '#fbbf24',
       });
     }
     if (trucoSt === 'pending' && prevTrucoStRef.current !== 'pending' && trucoResp && lastTruco) {
       setCallNotif({
-        call: `!${lastTruco.type.toUpperCase()}!`,
-        sub: `${lastTruco.alias} te canto - lo queres?`,
+        call: trucoLabel(lastTruco.type),
+        sub: `${lastTruco.alias} canto - responde`,
         color: '#ef4444',
       });
     }
     if (florSt === 'pending' && prevFlorStRef.current !== 'pending' && florResp) {
       setCallNotif({
-        call: '!FLOR!',
-        sub: 'El rival canto flor - que respondes?',
+        call: 'FLOR',
+        sub: 'El rival canto flor - responde',
         color: '#10b981',
       });
     }
@@ -1379,7 +1433,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
   const cardCounts   = (view.allPlayerCardCounts ?? {}) as Record<string, number>;
   const alreadyPlayed = !!currentRound[myAlias];
   const canPlay      = isMyTurn && view.phase === 'playing' && !alreadyPlayed;
-  const needShowEnvido = view.phase === 'show_envido' &&
+  const needShowEnvido = (view.phase === 'show_envido' || view.phase === 'show_envido_points') &&
     Array.isArray(view.pendingShowEnvido) &&
     (view.pendingShowEnvido as string[]).includes(myAlias);
   const envidoChain = (view.envidoChain ?? []) as Array<{ alias: string; type: string }>;
@@ -1553,7 +1607,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           const seatIdx = seating.indexOf(alias);
           const pos     = positions[seatIdx];
           if (!pos) return null;
-          const { x, y } = getPlayedCardPos(pos);
+          const { x, y } = getPlayedCardPos(pos, round, alias === myAlias);
           const currentRoundNum = view.round as number;
           const isCurrent = round === currentRoundNum && !!currentRound[alias];
           return (
@@ -1579,7 +1633,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           if (alreadyInHistory) return null; // avoid duplicate
           const pos = positions[seatIdx];
           if (!pos) return null;
-          const { x, y } = getPlayedCardPos(pos);
+          const { x, y } = getPlayedCardPos(pos, view.round as number, alias === myAlias);
           return (
             <PlayedCardOnFelt
               key={`curr-${alias}`}
@@ -1679,6 +1733,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
           trucoChain={trucoChain}
           envidoStatus={view.envidoStatus}
           envidoResult={view.envidoResult}
+          envidoReveals={(view.envidoResult?.reveals ?? []).map((r: { alias: string; value: number }) => ({ alias: r.alias, value: r.value }))}
           trucoStatus={view.trucoStatus}
           trucoAccepted={view.trucoAccepted}
           logLines={callHistory}
@@ -1738,7 +1793,7 @@ function LiveTrucoScreen({ sendTrucoAction, onSendChat, onExitGame: _onExitGame 
         )}
 
         {/* â”€â”€ Envido shown cards overlay â”€â”€ */}
-        {view.phase === 'show_envido' &&
+        {(view.phase === 'show_envido' || view.phase === 'show_envido_points') &&
           view.envidoResult?.reveals &&
           view.envidoResult.reveals.some((r: { cards?: TrucoCard[] }) => r.cards && r.cards.length > 0) && (
           <div style={{

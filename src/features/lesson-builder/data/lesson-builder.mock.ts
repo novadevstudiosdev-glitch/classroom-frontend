@@ -9,6 +9,10 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
     { id: "duration", label: "Duración total", value: "45 min" },
     { id: "students", label: "Estudiantes", value: "24" },
   ],
+  video: {
+    title: "Introducción a sumas y restas",
+    subtitle: "Repaso rápido antes de empezar con los ejercicios.",
+  },
   exercises: [
     {
       id: "ex-1",
@@ -54,6 +58,16 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
       description: "Desafío mixto con puntaje acumulado.",
     },
   ],
+  aiTools: {
+    title: "Herramientas IA",
+    subtitle: "Sugerencias automáticas para enriquecer la clase.",
+    items: [
+      { id: "explain", label: "Explicar un concepto" },
+      { id: "examples", label: "Generar ejemplos" },
+      { id: "quiz", label: "Crear quiz" },
+      { id: "adapt", label: "Adaptar dificultad" },
+    ],
+  },
   settings: {
     grade: "4° Primaria",
     subject: "Matemáticas",
@@ -65,3 +79,4 @@ export const LESSON_BUILDER_MOCK: LessonBuilderData = {
     averageTime: "14 min",
   },
 };
+

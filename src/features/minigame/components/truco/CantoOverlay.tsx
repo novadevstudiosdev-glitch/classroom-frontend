@@ -31,7 +31,7 @@ export default function CantoOverlay({ canto, onDismiss }: Props) {
         <div className={wordClass}>{canto.word}</div>
         <div className="canto-sub">Hace clic para responder</div>
         <button className="canto-dismiss" onClick={handleDismiss}>
-          ✕
+          x
         </button>
       </div>
     </div>
