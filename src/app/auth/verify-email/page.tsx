@@ -8,18 +8,17 @@ import { extractApiErrorMessage } from "@/lib/axios/extract-api-error-message";
 type VerificationStatus = "loading" | "success" | "error";
 
 export default function VerifyEmailPage() {
-  const [status, setStatus] = useState<VerificationStatus>("loading");
-  const [message, setMessage] = useState("Verificando tu cuenta...");
+  const token =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("token")
+      : null;
+  const [status, setStatus] = useState<VerificationStatus>(token ? "loading" : "error");
+  const [message, setMessage] = useState(
+    token ? "Verificando tu cuenta..." : "Falta el token de verificacion en el enlace."
+  );
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const token = searchParams.get("token");
-
-    if (!token) {
-      setStatus("error");
-      setMessage("Falta el token de verificacion en el enlace.");
-      return;
-    }
+    if (!token) return;
 
     let isMounted = true;
 
@@ -46,7 +45,7 @@ export default function VerifyEmailPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <main className="min-h-screen bg-[#0b1230] text-white p-4 sm:p-6 md:p-8 flex items-center justify-center">
