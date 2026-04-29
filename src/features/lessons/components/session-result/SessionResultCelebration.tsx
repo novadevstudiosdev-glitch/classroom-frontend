@@ -1,14 +1,11 @@
 const SessionResultCelebration = () => {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-6 text-center shadow-lg">
+    <section className="relative overflow-hidden p-2 text-center">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-8 top-4 animate-bounce text-2xl">✨</div>
-        <div className="absolute right-8 top-8 animate-pulse text-2xl">🎉</div>
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce text-2xl">🌟</div>
       </div>
-      <p className="relative text-sm font-semibold text-white/90">
+      <h4 className="relative text-xl font-extrabold text-white drop-shadow-[0_6px_16px_rgba(2,6,26,0.55)]">
         ¡Excelente trabajo! Completaste la sesión.
-      </p>
+      </h4>
     </section>
   );
 };
