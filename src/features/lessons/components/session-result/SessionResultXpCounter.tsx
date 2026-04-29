@@ -18,11 +18,15 @@ const SessionResultXpCounter = ({ earnedXp }: SessionResultXpCounterProps) => {
   }, [earnedXp]);
 
   return (
-    <section className="mx-auto flex h-60 w-60 flex-col items-center justify-center rounded-full border bg-gradient-to-br from-[#FFD700] to-[#FF9500] text-[#1a0f00] p-5 text-center shadow-[0_18px_40px_rgba(13,148,136,0.4)]">
-      <h3 className="text-xl font-bold uppercase text-[#3B82F6]">XP ganado</h3>
-      <h1 className="mt-2  font-black text-[red]">+{displayXp}</h1>
+    <section className="mx-auto grid h-64 w-80 grid-rows-[72px_132px] place-items-center text-center">
+      <h3 className="self-end text-3xl font-black uppercase tracking-[0.12em] text-transparent bg-clip-text bg-gradient-to-r from-[#1d4ed8] to-[#6d28d9] drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">
+        XP ganado
+      </h3>
+      <p className="self-start text-center text-8xl font-black leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FFD700] to-[#FF9500] drop-shadow-[0_6px_4px_rgba(120,53,15,0.45)]">
+        +{displayXp}
+      </p>
     </section>
-  ); 
+  );
 };
 
 export default SessionResultXpCounter;

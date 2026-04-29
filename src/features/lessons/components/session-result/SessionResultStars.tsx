@@ -17,11 +17,20 @@ const SessionResultStars = ({ stars }: SessionResultStarsProps) => {
   }, [stars]);
 
   return (
-    <section className="p-5 text-center ">
-      <p className="text-xl font-bold uppercase text-white/70">Estrellas</p>
-      <div className="mt-3 flex items-center justify-center gap-3 text-4xl">
+    <section className="mx-auto grid h-64 w-80 grid-rows-[72px_132px] place-items-center text-center">
+      <h3 className="self-end text-3xl font-black uppercase tracking-[0.12em] text-transparent bg-clip-text bg-gradient-to-r from-[#2DD4BF] to-[#00E5FF]">
+        Estrellas
+      </h3>
+      <div className="self-start flex items-center justify-center gap-4 text-7xl leading-none pt-8">
         {Array.from({ length: 3 }).map((_, idx) => (
-          <span key={`star-${idx}`} className={idx < visibleStars ? "scale-220  text-[#FFD000] p-8" : "text-white/20"}>
+          <span
+            key={`star-${idx}`}
+            className={
+              idx < visibleStars
+                ? "text-[#FFD000] drop-shadow-[0_0_24px_rgba(255,208,0,0.9)]"
+                : "text-white/20"
+            }
+          >
             ★
           </span>
         ))}
