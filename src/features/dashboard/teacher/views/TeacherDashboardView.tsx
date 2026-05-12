@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArchiveClassModal,
   EditClassModal,
@@ -10,6 +11,7 @@ import {
   TeacherDashboardBottomNavigation,
 } from "@/features/dashboard/teacher/components";
 import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
+import { useAuthStore } from "@/store/auth/auth.store";
 import { TeacherClass } from "../types";
 import {
   CLASS_PROGRESS_MATRIX_MOCK,
@@ -44,6 +46,8 @@ const DEMO_ATTENTION_STUDENTS = [
 ];
 
 const TeacherDashboardView = () => {
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<TeacherClass | null>(null);
@@ -277,6 +281,11 @@ const TeacherDashboardView = () => {
     return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
     <div className="relative min-h-screen">
       <div className="fixed inset-0 z-0">
@@ -284,7 +293,7 @@ const TeacherDashboardView = () => {
       </div>
 
       <div className="landing-module-shell relative z-10 pb-24">
-        <TeacherDashboardTopbar />
+        <TeacherDashboardTopbar onLogout={handleLogout} />
 
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl space-y-6">

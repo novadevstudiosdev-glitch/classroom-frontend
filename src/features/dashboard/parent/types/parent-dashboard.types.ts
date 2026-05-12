@@ -88,6 +88,7 @@ export type ParentChildrenSelectorProps = {
 
 export type ParentDashboardTopbarProps = {
   profile: ParentProfile;
+  onLogout?: () => void;
 };
 
 export type ParentStreakCardProps = {
