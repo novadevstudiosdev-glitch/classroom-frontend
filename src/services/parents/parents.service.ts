@@ -36,9 +36,26 @@ export type ParentProfile = {
   children: ParentLinkedStudent[];
 };
 
+export type ParentChildSummary = {
+  student_id: string;
+  alias: string;
+  avatar_id: string | null;
+  level: number | null;
+  xp_total: number | null;
+  bio: string | null;
+  status_message: string | null;
+  email: string;
+  active_classrooms: number;
+};
+
 export async function getParentProfile() {
   const response = await axiosClient.get<ParentProfile>("/parents/me");
   return extractData<ParentProfile>(response.data);
+}
+
+export async function getParentChildren() {
+  const response = await axiosClient.get<ParentChildSummary[]>("/parents/me/children");
+  return extractData<ParentChildSummary[]>(response.data);
 }
 
 export async function linkChildByEmail(email: string) {
