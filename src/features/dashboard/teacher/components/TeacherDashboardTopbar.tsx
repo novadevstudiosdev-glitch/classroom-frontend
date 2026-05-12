@@ -5,10 +5,18 @@ import { Bell, LogOut, Settings } from "lucide-react";
 import { DashboardTopbar } from "@/shared/components/ui";
 
 type TeacherDashboardTopbarProps = {
+  initials: string;
+  userName: string;
+  planLabel?: string;
   onLogout?: () => void;
 };
 
-const TeacherDashboardTopbar = ({ onLogout }: TeacherDashboardTopbarProps) => {
+const TeacherDashboardTopbar = ({
+  initials,
+  userName,
+  planLabel = "Plan",
+  onLogout,
+}: TeacherDashboardTopbarProps) => {
   const [openMenu, setOpenMenu] = useState<"notifications" | "settings" | null>(null);
 
   const toggleMenu = (menu: "notifications" | "settings") => {
@@ -22,9 +30,9 @@ const TeacherDashboardTopbar = ({ onLogout }: TeacherDashboardTopbarProps) => {
 
   return (
     <DashboardTopbar
-      initials="MC"
-      userName="María Clara Rodríguez"
-      planLabel="Plan Gratuito"
+      initials={initials}
+      userName={userName}
+      planLabel={planLabel}
       rightContent={
         <div className="flex flex-shrink-0 items-center gap-2">
           <div className="relative">

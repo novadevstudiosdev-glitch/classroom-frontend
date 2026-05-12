@@ -8,3 +8,4 @@ export { default as ParentWeeklyActivityChart } from "./ParentWeeklyActivityChar
 export { default as ParentWeeklyXpChart } from "./ParentWeeklyXpChart";
 export { default as ParentCompletedLessonsList } from "./ParentCompletedLessonsList";
 export { default as ParentBottomNavigation } from "./ParentBottomNavigation";
+export { default as ParentRegistrationMissingAlert } from "./ParentRegistrationMissingAlert";
