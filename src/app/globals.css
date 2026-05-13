@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
+/* 🌌 VARIABLES GLOBALES */
+:root {
+  --color-primary: #3054FF;
+  --color-secondary: #007D15;
+  --color-accent: #FFD000;
+  --color-purple: #8B67FF;
+
+  --color-bg-dark: #050816;
+  --color-bg-deep: #0a0f2c;
+
+  --font-main: 'Nunito', sans-serif;
+
+  --radius-main: 1rem;
+  --transition-main: all 0.3s ease;
+}
+
+/* 🌍 BASE GLOBAL */
+html,
+body {
+  background-color: #07061a;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: #07061a;
+  background-image:
+    radial-gradient(circle at 14% 10%, rgba(108, 99, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 85% 24%, rgba(255, 107, 157, 0.16), transparent 36%),
+    radial-gradient(circle at 62% 72%, rgba(45, 212, 191, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 76%, rgba(108, 99, 255, 0.1), transparent 32%),
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.22) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 80% 18%, rgba(255, 255, 255, 0.2) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 65% 50%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1.5px),
+    linear-gradient(to bottom, #06051a 0%, #0a0f2c 45%, #07061a 100%);
+  background-size: auto, auto, auto, auto, 220px 220px, 260px 260px, 300px 300px, auto;
+  background-attachment: fixed;
+  color: rgb(255, 255, 255);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 🧠 TIPOGRAFÍA */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+p {
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* 🔥 UTILIDADES */
+
+.text-gradient {
+  background: linear-gradient(90deg, #3054FF, #8B67FF);
+  -webkit-background-clip: text;
+  background-clip: text; /* 👈 FIX del warning */
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-primary {
+  box-shadow: 0 0 40px rgba(48, 84, 255, 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 40px rgba(255, 208, 0, 0.4);
+}
+
+/* 🟦 BOTONES */
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-main);
+  font-weight: 700;
+  transition: var(--transition-main);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(48, 84, 255, 0.4);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: rgb(0, 0, 0);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-main);
+  font-weight: 700;
+}
+
+/* ✨ SCROLL */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+@layer components {
+  .landing-module-shell {
+    @apply min-h-screen text-white;
+  }
+
+  .landing-module-content {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .landing-module-card {
+    @apply rounded-2xl border border-white/15 bg-white/10 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.25)];
+  }
+
+  .landing-module-title {
+    @apply text-2xl font-extrabold text-white;
+  }
+
+  .landing-module-subtitle {
+    @apply text-sm text-white/70;
+  }
+
+  .landing-module-link {
+    @apply inline-flex items-center gap-1 text-sm font-semibold text-red-300 transition-colors hover:text-red-200;
+  }
+
+  .cosmic-hero {
+    @apply relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#090a23] p-6 shadow-[0_24px_80px_rgba(3,5,24,0.55)] md:p-8;
+  }
+
+  .cosmic-hero::before {
+    content: "";
+    @apply pointer-events-none absolute -left-24 -top-20 h-60 w-60 rounded-full blur-3xl;
+    background: radial-gradient(circle, rgba(108, 99, 255, 0.35), transparent 70%);
+  }
+
+  .cosmic-hero::after {
+    content: "";
+    @apply pointer-events-none absolute -bottom-28 -right-20 h-64 w-64 rounded-full blur-3xl;
+    background: radial-gradient(circle, rgba(255, 107, 157, 0.2), transparent 72%);
+  }
+
+  .cosmic-hero-content {
+    @apply relative z-10;
+  }
+
+  .cosmic-badge {
+    @apply mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/65;
+  }
+
+  .cosmic-badge-dot {
+    @apply h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)];
+  }
+
+  .cosmic-title {
+    @apply text-3xl font-black leading-tight tracking-tight text-white md:text-4xl;
+  }
+
+  .cosmic-subtitle {
+    @apply mt-2 text-sm text-white/65;
+  }
+
+  .cosmic-grid {
+    @apply mt-6 grid gap-3 md:grid-cols-3;
+  }
+
+  .cosmic-stat {
+    @apply rounded-2xl bg-white/10 px-4 py-4 text-center backdrop-blur-sm;
+  }
+
+  .cosmic-stat-value {
+    @apply text-2xl font-black text-white md:text-3xl;
+  }
+
+  .cosmic-stat-label {
+    @apply mt-1 text-xs font-bold uppercase tracking-[0.12em] text-white/60;
+  }
+
+  .cosmic-panel {
+    @apply rounded-2xl border border-white/15 bg-white/10 p-5 shadow-[0_14px_36px_rgba(2,4,20,0.35)] backdrop-blur-sm;
+  }
+}
+
