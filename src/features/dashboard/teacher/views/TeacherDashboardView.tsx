@@ -1,15 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   TeacherDashboardBottomNavigation,
   TeacherDashboardHero,
   TeacherDashboardTopbar,
+  TeacherClassesSection,
+  TeacherInsightsSidebar,
+  TeacherStudentsSection,
 } from "@/features/dashboard/teacher/components";
 import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
 import { useAuthStore } from "@/store/auth/auth.store";
 import type { TeacherClass } from "../types";
+import { useTeacherIdentityStore } from "../store/teacher-identity.store";
+import { getTeacherFullName } from "../utils/teacher-identity.utils";
 import {
   getTeacherClassProgress,
   getTeacherClassrooms,
@@ -25,29 +30,8 @@ import {
 const bottomNavigationItems = [
   { id: "home", icon: "🏠", label: "Inicio", isActive: true, href: "/dashboard/teacher" },
   { id: "lessons", icon: "📚", label: "Lecciones", href: "/lessons" },
-  { id: "builder", icon: "🧩", label: "Builder", href: "/lesson-builder" },
+  { id: "builder", icon: "🧩", label: "Crear ejercicios", href: "/lesson-builder" },
 ];
-
-const getFullName = (profile: TeacherProfile) => {
-  return `${profile.first_name} ${profile.last_name}`.trim();
-};
-
-const getInitials = (name: string) => {
-  return (
-    name
-      .split(" ")
-      .filter(Boolean)
-      .map((part) => part.charAt(0))
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "D"
-  );
-};
-
-const formatPlan = (plan?: string) => {
-  if (!plan) return "Plan";
-  return `Plan ${plan.charAt(0).toUpperCase()}${plan.slice(1)}`;
-};
 
 const formatToday = () => {
   return new Intl.DateTimeFormat("es-AR", {
@@ -58,24 +42,8 @@ const formatToday = () => {
   }).format(new Date());
 };
 
-const getClassCompletion = (
-  classId: string,
-  progress: TeacherClassProgress | null,
-) => {
-  if (!progress || progress.classroom_id !== classId || progress.lessons.length === 0) {
-    return 0;
-  }
-
-  const possibleCells = progress.students.length * progress.lessons.length;
-  if (possibleCells === 0) return 0;
-
-  const completedCells = progress.progress.filter((item) => item.status === "completed").length;
-  return Math.round((completedCells / possibleCells) * 100);
-};
-
 const TeacherDashboardView = () => {
-  const router = useRouter();
-  const { initialized, isAuthenticated, status, user, logout } = useAuthStore();
+  const { initialized, isAuthenticated, status, user } = useAuthStore();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [classes, setClasses] = useState<TeacherClass[]>([]);
   const [studentStats, setStudentStats] = useState<TeacherStudentStats | null>(null);
@@ -87,13 +55,13 @@ const TeacherDashboardView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isClassLoading, setIsClassLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const setTeacherIdentityFromProfile = useTeacherIdentityStore((state) => state.setFromProfile);
 
   const isWaitingForAuth =
     !initialized || status === "loading" || (isAuthenticated && !user);
   const canSeeTeacherDashboard = initialized && isAuthenticated && user?.role === "teacher";
 
-  if (!isLoggingOut && !isWaitingForAuth && !canSeeTeacherDashboard) {
+  if (!isWaitingForAuth && !canSeeTeacherDashboard) {
     notFound();
   }
 
@@ -112,7 +80,7 @@ const TeacherDashboardView = () => {
         getTeacherStudentStats(),
       ]);
 
-      const fullName = getFullName(teacherProfile);
+      const fullName = getTeacherFullName(teacherProfile);
       if (
         !teacherProfile.id ||
         !teacherProfile.user_id ||
@@ -124,6 +92,7 @@ const TeacherDashboardView = () => {
       }
 
       setProfile(teacherProfile);
+      setTeacherIdentityFromProfile(teacherProfile);
       setClasses(classroomRows);
       setStudentStats(stats);
       setSelectedClassId((currentClassId) => {
@@ -141,7 +110,7 @@ const TeacherDashboardView = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [canSeeTeacherDashboard]);
+  }, [canSeeTeacherDashboard, setTeacherIdentityFromProfile]);
 
   useEffect(() => {
     void loadDashboard();
@@ -197,7 +166,6 @@ const TeacherDashboardView = () => {
     };
   }, [canSeeTeacherDashboard, selectedClassId]);
 
-  const teacherName = profile ? getFullName(profile) : "";
   const selectedClass = useMemo(
     () => classes.find((item) => item.id === selectedClassId) ?? null,
     [classes, selectedClassId],
@@ -243,17 +211,11 @@ const TeacherDashboardView = () => {
     [studentStats],
   );
 
-  const handleLogout = () => {
-    setIsLoggingOut(true);
-    logout();
-    router.replace("/");
-  };
-
-  if (isWaitingForAuth || isLoggingOut) {
+  if (isWaitingForAuth) {
     return (
       <main className="landing-module-shell min-h-screen bg-[#070c22] p-6">
         <div className="landing-module-card text-white/80">
-          {isLoggingOut ? "Cerrando sesion..." : "Validando acceso..."}
+          Validando acceso...
         </div>
       </main>
     );
@@ -266,14 +228,7 @@ const TeacherDashboardView = () => {
       </div>
 
       <div className="landing-module-shell relative z-10 pb-24">
-        {profile ? (
-          <TeacherDashboardTopbar
-            initials={getInitials(teacherName)}
-            userName={teacherName}
-            planLabel={formatPlan(profile.plan_type)}
-            onLogout={handleLogout}
-          />
-        ) : null}
+        {profile ? <TeacherDashboardTopbar /> : null}
 
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -301,175 +256,29 @@ const TeacherDashboardView = () => {
 
                 <section className="grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
                   <div className="space-y-6">
-                    <article className="cosmic-panel border-0 shadow-[0_18px_40px_rgba(2,6,26,0.58)]">
-                      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                        <h3 className="text-xl font-black text-white">Mis clases</h3>
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/70">
-                          {classes.length} clases
-                        </span>
-                      </div>
+                    <TeacherClassesSection
+                      classes={classes}
+                      selectedClassId={selectedClassId}
+                      classProgress={classProgress}
+                      onSelectClass={setSelectedClassId}
+                    />
 
-                      {classes.length === 0 ? (
-                        <p className="rounded-xl bg-white/8 p-4 text-sm text-white/70">
-                          Todavia no tienes clases creadas.
-                        </p>
-                      ) : (
-                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                          {classes.map((item) => {
-                            const isSelected = item.id === selectedClassId;
-                            const completion = getClassCompletion(item.id ?? "", classProgress);
-
-                            return (
-                              <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => setSelectedClassId(item.id ?? "")}
-                                className={`rounded-xl px-3 py-3 text-left transition ${
-                                  isSelected ? "bg-white/18" : "bg-white/10 hover:bg-white/15"
-                                }`}
-                              >
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                  <p className="text-sm font-bold text-white">{item.name}</p>
-                                  <span className="rounded-full bg-emerald-500/25 px-2 py-1 text-[10px] font-bold text-emerald-200">
-                                    Activa
-                                  </span>
-                                </div>
-                                <p className="text-xs text-white/65">Codigo: {item.code}</p>
-                                <p className="text-xs text-white/65">
-                                  {item.studentCount} alumnos · {completion}% completado
-                                </p>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </article>
-
-                    <article className="cosmic-panel border-0 shadow-[0_18px_40px_rgba(2,6,26,0.58)]">
-                      <div className="mb-4">
-                        <h4 className="text-xl font-black text-white">
-                          {selectedClass?.name ?? "Selecciona una clase"}
-                        </h4>
-                        {selectedClass ? (
-                          <p className="text-sm text-white/70">Codigo: {selectedClass.code}</p>
-                        ) : null}
-                      </div>
-
-                      {isClassLoading ? (
-                        <p className="rounded-xl bg-white/8 p-4 text-sm text-white/70">
-                          Cargando alumnos...
-                        </p>
-                      ) : null}
-
-                      {!isClassLoading && selectedClass ? (
-                        <>
-                          <input
-                            type="text"
-                            value={studentSearchTerm}
-                            onChange={(event) => setStudentSearchTerm(event.target.value)}
-                            placeholder="Buscar alumno por nombre..."
-                            className="mb-3 w-full rounded-xl bg-white/12 px-3 py-2 text-sm text-white outline-none ring-1 ring-white/20 placeholder:text-white/45"
-                          />
-
-                          {filteredStudents.length === 0 ? (
-                            <p className="rounded-xl bg-white/8 p-4 text-sm text-white/70">
-                              No hay alumnos para mostrar.
-                            </p>
-                          ) : (
-                            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                              {filteredStudents.map((student) => (
-                                <button
-                                  key={student.student_id}
-                                  type="button"
-                                  onClick={() => setSelectedStudentId(student.student_id)}
-                                  className={`rounded-xl px-3 py-3 text-left ${
-                                    student.student_id === selectedStudentId
-                                      ? "bg-sky-500/20 ring-1 ring-sky-300/40"
-                                      : "bg-white/8 hover:bg-white/12"
-                                  }`}
-                                >
-                                  <p className="text-sm font-bold text-white">{student.alias}</p>
-                                  <p className="text-xs text-white/65">
-                                    Nivel {student.level ?? "-"} · {student.avg_score_pct}% promedio
-                                  </p>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      ) : null}
-                    </article>
+                    <TeacherStudentsSection
+                      selectedClass={selectedClass}
+                      isClassLoading={isClassLoading}
+                      studentSearchTerm={studentSearchTerm}
+                      filteredStudents={filteredStudents}
+                      selectedStudentId={selectedStudentId}
+                      onSearchChange={setStudentSearchTerm}
+                      onSelectStudent={setSelectedStudentId}
+                    />
                   </div>
-
-                  <aside className="space-y-6">
-                    <article className="cosmic-panel border-0 shadow-[0_18px_40px_rgba(2,6,26,0.58)]">
-                      <h4 className="mb-4 text-lg font-black text-white">
-                        Alumnos que necesitan atencion
-                      </h4>
-                      {attentionStudents.length === 0 ? (
-                        <p className="rounded-xl bg-white/8 p-4 text-sm text-white/70">
-                          No hay alumnos marcados con baja participacion o tareas pendientes.
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {attentionStudents.map((student) => (
-                            <button
-                              key={student.student_id}
-                              type="button"
-                              onClick={() => setSelectedStudentId(student.student_id)}
-                              className="w-full rounded-xl bg-white/8 p-3 text-left hover:bg-white/12"
-                            >
-                              <p className="text-sm font-bold text-white">{student.alias}</p>
-                              <p className="text-xs text-orange-200">
-                                {student.pending_tasks} tareas pendientes · {student.participation_pct}% participacion
-                              </p>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </article>
-
-                    <article className="cosmic-panel border-0 shadow-[0_18px_40px_rgba(2,6,26,0.58)]">
-                      <h4 className="text-lg font-black text-white">Progreso del alumno</h4>
-                      <p className="mb-4 text-sm text-white/70">
-                        {selectedStudent?.alias ?? "Selecciona un alumno"}
-                      </p>
-
-                      {selectedStudent ? (
-                        <div className="mb-4 grid gap-2 sm:grid-cols-3">
-                          <div className="rounded-xl bg-white/8 px-3 py-2 text-sm text-white/85">
-                            Promedio: <span className="font-bold text-white">{selectedStudent.avg_score_pct}%</span>
-                          </div>
-                          <div className="rounded-xl bg-white/8 px-3 py-2 text-sm text-white/85">
-                            Participacion: <span className="font-bold text-white">{selectedStudent.participation_pct}%</span>
-                          </div>
-                          <div className="rounded-xl bg-white/8 px-3 py-2 text-sm text-white/85">
-                            Pendientes: <span className="font-bold text-white">{selectedStudent.pending_tasks}</span>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {selectedStudentProgress.length === 0 ? (
-                        <p className="rounded-xl bg-white/8 p-4 text-sm text-white/70">
-                          No hay lecciones asignadas para mostrar.
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {selectedStudentProgress.map((lesson) => (
-                            <div
-                              key={lesson.id}
-                              className="flex items-center justify-between rounded-lg bg-white/8 px-3 py-2 text-sm"
-                            >
-                              <span className="text-white/85">{lesson.title}</span>
-                              <span className="font-bold text-white">
-                                {lesson.score === null ? lesson.status : `${lesson.score}%`}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </article>
-                  </aside>
+                  <TeacherInsightsSidebar
+                    attentionStudents={attentionStudents}
+                    selectedStudent={selectedStudent}
+                    selectedStudentProgress={selectedStudentProgress}
+                    onSelectStudent={setSelectedStudentId}
+                  />
                 </section>
               </>
             ) : null}

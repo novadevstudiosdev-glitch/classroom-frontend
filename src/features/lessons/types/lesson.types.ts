@@ -9,6 +9,10 @@ export interface Lesson {
   description: string;
   content_json: LessonContentJson;
   status: LessonStatus;
+  education_level?: "primaria" | "secundaria" | "bachillerato";
+  grade?: string;
+  difficulty?: "facil" | "medio" | "dificil";
+  icon?: string;
   coverImage?: string;
   subject?: string;
   created_at?: string;
@@ -18,6 +22,11 @@ export interface Lesson {
 export interface CreateLessonRequest {
   title: string;
   description: string;
+  education_level?: "primaria" | "secundaria" | "bachillerato";
+  grade?: string;
+  subject?: string;
+  difficulty?: "facil" | "medio" | "dificil";
+  icon?: string;
   content_json: LessonContentJson;
 }
 

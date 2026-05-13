@@ -10,3 +10,6 @@ export { default as StudentsProgressTable } from "./StudentsProgressTable";
 export { default as TeacherDashboardHero } from "./TeacherDashboardHero";
 export { default as TeacherNeedsAttentionSection } from "./TeacherNeedsAttentionSection";
 export { default as TeacherDashboardBottomNavigation } from "./TeacherDashboardBottomNavigation";
+export { default as TeacherClassesSection } from "./TeacherClassesSection";
+export { default as TeacherStudentsSection } from "./TeacherStudentsSection";
+export { default as TeacherInsightsSidebar } from "./TeacherInsightsSidebar";

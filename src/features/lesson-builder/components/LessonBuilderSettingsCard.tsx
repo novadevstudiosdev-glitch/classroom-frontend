@@ -28,14 +28,12 @@ const LessonBuilderSettingsCard = ({ data }: LessonBuilderSettingsCardProps) => 
 
         <div className="space-y-1">
           <label className="text-xs font-semibold text-white/80">Dificultad:</label>
-          <select
-            defaultValue={data.difficulty}
-            className="w-full rounded-lg border border-white/25 bg-[#0f1636] px-3 py-2 text-sm text-white"
-          >
-            <option value="facil">Fácil</option>
-            <option value="medio">Medio</option>
-            <option value="dificil">Difícil</option>
-          </select>
+          <input
+            type="text"
+            value={data.difficulty || "Sin definir"}
+            readOnly
+            className="w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm text-white"
+          />
         </div>
       </form>
     </div>

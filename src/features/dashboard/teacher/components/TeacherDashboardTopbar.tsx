@@ -1,23 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, LogOut, Settings } from "lucide-react";
 import { DashboardTopbar } from "@/shared/components/ui";
+import { useAuthStore } from "@/store/auth/auth.store";
+import { useTeacherLogout } from "../hooks";
+import { useTeacherIdentityStore } from "../store/teacher-identity.store";
 
 type TeacherDashboardTopbarProps = {
-  initials: string;
-  userName: string;
+  initials?: string;
+  userName?: string;
   planLabel?: string;
   onLogout?: () => void;
 };
 
-const TeacherDashboardTopbar = ({
-  initials,
-  userName,
-  planLabel = "Plan",
-  onLogout,
-}: TeacherDashboardTopbarProps) => {
+const TeacherDashboardTopbar = ({ initials, userName, planLabel, onLogout }: TeacherDashboardTopbarProps) => {
   const [openMenu, setOpenMenu] = useState<"notifications" | "settings" | null>(null);
+  const { isAuthenticated, user } = useAuthStore();
+  const { identity, ensureLoaded } = useTeacherIdentityStore();
+  const teacherLogout = useTeacherLogout();
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "teacher") {
+      void ensureLoaded();
+    }
+  }, [ensureLoaded, isAuthenticated, user?.role]);
 
   const toggleMenu = (menu: "notifications" | "settings") => {
     setOpenMenu((currentMenu) => (currentMenu === menu ? null : menu));
@@ -25,14 +32,19 @@ const TeacherDashboardTopbar = ({
 
   const handleLogout = () => {
     setOpenMenu(null);
+    teacherLogout();
     onLogout?.();
   };
 
+  const resolvedUserName = userName ?? identity.teacherName;
+  const resolvedInitials = initials ?? identity.initials;
+  const resolvedPlanLabel = planLabel ?? identity.planLabel;
+
   return (
     <DashboardTopbar
-      initials={initials}
-      userName={userName}
-      planLabel={planLabel}
+      initials={resolvedInitials}
+      userName={resolvedUserName}
+      planLabel={resolvedPlanLabel}
       rightContent={
         <div className="flex flex-shrink-0 items-center gap-2">
           <div className="relative">
@@ -77,16 +89,14 @@ const TeacherDashboardTopbar = ({
                   Ajustes
                 </button>
 
-                {onLogout ? (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-red-100 hover:bg-red-500/15"
-                  >
-                    <LogOut size={18} />
-                    Cerrar sesion
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-red-100 hover:bg-red-500/15"
+                >
+                  <LogOut size={18} />
+                  Cerrar sesion
+                </button>
               </div>
             ) : null}
           </div>
