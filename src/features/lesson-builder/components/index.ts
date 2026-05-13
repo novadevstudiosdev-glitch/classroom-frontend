@@ -10,3 +10,5 @@ export { default as LessonBuilderMinigameCard } from "./LessonBuilderMinigameCar
 export { default as LessonBuilderExercisesSummaryCard } from "./LessonBuilderExercisesSummaryCard";
 export { default as LessonBuilderExercisesModal } from "./LessonBuilderExercisesModal";
 export { default as MinigamePicker } from "./MinigamePicker";
+
+export { default as LessonSelectorModal } from "./LessonSelectorModal";

@@ -84,7 +84,7 @@ export interface LessonBuilderAiToolsData {
 export interface LessonBuilderSettingsData {
   grade: string;
   subject: string;
-  difficulty: "facil" | "medio" | "dificil";
+  difficulty: "" | "facil" | "medio" | "dificil";
 }
 
 export interface LessonBuilderPerformanceData {
