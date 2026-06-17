@@ -1,4 +1,5 @@
-import type { TeacherClass, TeacherClassStudent } from "../services";
+import type { TeacherClass } from '../types';
+import type { TeacherClassStudent } from '../services';
 
 type TeacherStudentsSectionProps = {
   selectedClass: TeacherClass | null;
@@ -22,7 +23,7 @@ const TeacherStudentsSection = ({
   return (
     <article className="cosmic-panel border-0 shadow-[0_18px_40px_rgba(2,6,26,0.58)]">
       <div className="mb-4">
-        <h4 className="text-xl font-black text-white">{selectedClass?.name ?? "Selecciona una clase"}</h4>
+        <h4 className="text-xl font-black text-white">{selectedClass?.name ?? 'Selecciona una clase'}</h4>
         {selectedClass ? <p className="text-sm text-white/70">Codigo: {selectedClass.code}</p> : null}
       </div>
 
@@ -48,14 +49,12 @@ const TeacherStudentsSection = ({
                   type="button"
                   onClick={() => onSelectStudent(student.student_id)}
                   className={`rounded-xl px-3 py-3 text-left ${
-                    student.student_id === selectedStudentId
-                      ? "bg-sky-500/20 ring-1 ring-sky-300/40"
-                      : "bg-white/8 hover:bg-white/12"
+                    student.student_id === selectedStudentId ? 'bg-sky-500/20 ring-1 ring-sky-300/40' : 'bg-white/8 hover:bg-white/12'
                   }`}
                 >
                   <p className="text-sm font-bold text-white">{student.alias}</p>
                   <p className="text-xs text-white/65">
-                    Nivel {student.level ?? "-"} · {student.avg_score_pct}% promedio
+                    Nivel {student.level ?? '-'} · {student.avg_score_pct}% promedio
                   </p>
                 </button>
               ))}
