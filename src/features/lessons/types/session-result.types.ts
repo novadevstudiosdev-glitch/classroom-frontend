@@ -18,17 +18,14 @@ export interface CompleteLessonSessionInput {
 }
 
 export interface CompleteLessonSessionRequest {
-  correct_answers: number;
-  total_exercises: number;
+  score_pct: number;
 }
 
 export interface CompleteLessonSessionResponse {
-  lesson_id: string;
+  lesson_id?: string;
   lesson_title?: string;
   earned_xp: number;
   stars: 1 | 2 | 3;
-  correct_answers: number;
-  total_exercises: number;
   level_before: number;
   level_after: number;
 }

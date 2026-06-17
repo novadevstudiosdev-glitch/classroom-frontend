@@ -1,17 +1,13 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import {
-  AssignedLessonBlocks,
-  AssignedLessonHeader,
-  AssignedLessonSummary,
-} from "../components";
-import { AuthBackgroundCanvas } from "@/features/auth/components/AuthBackgroundCanvas";
-import { LESSONS_MOCK } from "../data";
-import { useLessonSession } from "../hooks";
-import { getLessonById } from "../services";
-import type { AssignedLessonViewProps, Lesson } from "../types";
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { AssignedLessonBlocks, AssignedLessonHeader, AssignedLessonSummary } from '../components';
+import { AuthBackgroundCanvas } from '@/features/auth/components/AuthBackgroundCanvas';
+import { LESSONS_MOCK } from '../data';
+import { useLessonSession } from '../hooks';
+import { getLessonById, startLessonProgress } from '../services';
+import type { AssignedLessonViewProps, Lesson } from '../types';
 
 const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
   const router = useRouter();
@@ -19,6 +15,7 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
   const [lesson, setLesson] = useState<Lesson | null>(() => LESSONS_MOCK.find((l) => l.id === lessonId) ?? null);
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [correctExercises, setCorrectExercises] = useState(0);
+  const [isStarting, setIsStarting] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -41,20 +38,47 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
     };
   }, [lessonId]);
 
+  // Iniciar progreso de la lección al montar el componente
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeProgress = async () => {
+      try {
+        setIsStarting(true);
+        await startLessonProgress(lessonId);
+        if (!mounted) return;
+        console.log(`[AssignedLessonView] Progreso de lección ${lessonId} iniciado`);
+      } catch (error) {
+        if (!mounted) return;
+        console.error(`[AssignedLessonView] Error al iniciar progreso:`, error);
+      } finally {
+        if (mounted) {
+          setIsStarting(false);
+        }
+      }
+    };
+
+    initializeProgress();
+
+    return () => {
+      mounted = false;
+    };
+  }, [lessonId]);
+
   const totalBlocks = useMemo(() => lesson?.content_json.blocks.length ?? 0, [lesson]);
   const lastBlockIndex = Math.max(0, totalBlocks - 1);
   const safeBlockIndex = Math.min(activeBlockIndex, lastBlockIndex);
   const totalExercises = useMemo(() => {
     const blocks = lesson?.content_json.blocks ?? [];
     return blocks.filter((block) =>
-      ["question", "multiple_choice", "fill_blank", "true_false", "match_columns", "order_elements"].includes(block.type),
+      ['question', 'multiple_choice', 'fill_blank', 'true_false', 'match_columns', 'order_elements'].includes(block.type),
     ).length;
   }, [lesson]);
 
-  if (!lesson) {
+  if (!lesson || isStarting) {
     return (
       <main className="landing-module-shell p-6">
-        <p className="text-white/80">Leccion no encontrada.</p>
+        <p className="text-white/80">{!lesson ? 'Leccion no encontrada.' : 'Iniciando lección...'}</p>
       </main>
     );
   }
@@ -76,20 +100,13 @@ const AssignedLessonView = ({ lessonId }: AssignedLessonViewProps) => {
             activeBlockIndex={safeBlockIndex}
             totalBlocks={totalBlocks}
             onContinue={async () => {
-              console.log("[AssignedLessonView] continuar desde bloque", safeBlockIndex);
+              console.log('[AssignedLessonView] continuar desde bloque', safeBlockIndex);
               const currentBlock = lesson.content_json.blocks[safeBlockIndex];
-              const isExerciseBlock = [
-                "question",
-                "multiple_choice",
-                "fill_blank",
-                "true_false",
-                "match_columns",
-                "order_elements",
-              ].includes(currentBlock.type);
+              const isExerciseBlock = ['question', 'multiple_choice', 'fill_blank', 'true_false', 'match_columns', 'order_elements'].includes(
+                currentBlock.type,
+              );
 
-              const nextCorrectExercises = isExerciseBlock
-                ? Math.min(correctExercises + 1, totalExercises)
-                : correctExercises;
+              const nextCorrectExercises = isExerciseBlock ? Math.min(correctExercises + 1, totalExercises) : correctExercises;
 
               if (safeBlockIndex >= lastBlockIndex) {
                 const sessionResult = await finalizeSession({
